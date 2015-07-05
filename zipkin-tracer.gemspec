@@ -20,9 +20,9 @@ require 'zipkin-tracer/version'
 Gem::Specification.new do |s|
   s.name                      = "zipkin-tracer"
   s.version                   = ZipkinTracer::VERSION
-  s.authors                   = ["Franklin Hu"]
-  s.email                     = ["franklin@twitter.com"]
-  s.homepage                  = "https://github.com/twitter/zipkin"
+  s.authors                   = ["Franklin Hu", "R Tyler Croy"]
+  s.email                     = ["franklin@twitter.com", 'tyler@monkeypox.org']
+  s.homepage                  = 'https://github.com/openzipkin/zipkin-tracer'
   s.summary                   = "Ruby tracing via Zipkin"
   s.description               = "Adds tracing instrumentation for ruby applications"
 
@@ -37,5 +37,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "rspec", "~> 3.0.0"
   s.add_development_dependency "rack-test"
+  s.add_development_dependency "rake"
   s.add_development_dependency "thin" # allow testing with thrift v0.9.1
 end
