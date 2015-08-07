@@ -41,6 +41,9 @@ describe ZipkinTracer::RackHandler do
       before(:each) { ::Trace.sample_rate = 0 }
 
       it 'does not sample a request' do
+        # mock should_sample? because it has a rand and produces
+        # non-deterministic results
+        allow(::Trace).to receive(:should_sample?) { false }
         expect(::Trace).to receive(:push) do |trace_id|
           expect(trace_id.sampled?).to be_falsy
         end
@@ -126,6 +129,7 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, :whitelist_plugin => lambda {|env| false}) }
 
       it 'does not sample the request' do
+        allow(::Trace).to receive(:should_sample?) { false }
         expect(::Trace).to receive(:push) do |trace_id|
           expect(trace_id.sampled?).to be_falsey
         end
