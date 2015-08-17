@@ -20,8 +20,8 @@ require 'zipkin-tracer/version'
 Gem::Specification.new do |s|
   s.name                      = "zipkin-tracer"
   s.version                   = ZipkinTracer::VERSION
-  s.authors                   = ["Franklin Hu", "R Tyler Croy"]
-  s.email                     = ["franklin@twitter.com", 'tyler@monkeypox.org']
+  s.authors                   = ["Franklin Hu", "R Tyler Croy", "James Way"]
+  s.email                     = ["franklin@twitter.com", 'tyler@monkeypox.org', 'jamescway@gmail.com']
   s.homepage                  = 'https://github.com/openzipkin/zipkin-tracer'
   s.summary                   = "Ruby tracing via Zipkin"
   s.description               = "Adds tracing instrumentation for ruby applications"
@@ -39,4 +39,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rack-test"
   s.add_development_dependency "rake"
   s.add_development_dependency "pry"
+
+  s.add_development_dependency 'hermann', "~> 0.25"
+  s.add_development_dependency "scribe", "~> 0.2.4"
 end
