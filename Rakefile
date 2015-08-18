@@ -15,6 +15,17 @@
 require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 
-RSpec::Core::RakeTask.new(:spec)
+def add_rspec_options(options=[])
+  if RUBY_PLATFORM == 'java'
+    options << '--tag ~platform:mri'
+  else
+    options << '--tag ~platform:java'
+  end
+  return options
+end
+
+RSpec::Core::RakeTask.new(:spec) do |r|
+  r.rspec_opts = add_rspec_options
+end
 
 task :default => :spec

@@ -17,6 +17,11 @@ require 'scribe'
 
 require 'zipkin-tracer/careless_scribe'
 
+if RUBY_PLATFORM == 'java'
+  require 'hermann/producer'
+  require 'zipkin-tracer/zipkin_kafka_tracer'
+end
+
 module ZipkinTracer extend self
 
   class RackHandler
@@ -31,32 +36,20 @@ module ZipkinTracer extend self
       @service_name = config[:service_name]
       @service_port = config[:service_port]
 
-      scribe =
-        if config[:scribe_server] then
-          Scribe.new(config[:scribe_server])
-        else
-          Scribe.new()
-        end
+      ::Trace.tracer = if config[:scribe_server] && defined?(::Scribe)
+        scribe = config[:scribe_server] ? Scribe.new(config[:scribe_server]) : Scribe.new()
+        scribe_max_buffer = config[:scribe_max_buffer] ? config[:scribe_max_buffer] : 10
+        ::Trace::ZipkinTracer.new(CarelessScribe.new(scribe), scribe_max_buffer)
+      elsif config[:zookeeper] && RUBY_PLATFORM == 'java' && defined?(::Hermann)
+        kafkaTracer = ::Trace::ZipkinKafkaTracer.new
+        kafkaTracer.connect(config[:zookeeper])
+        kafkaTracer
+      end
 
-      scribe_max_buffer =
-        if config[:scribe_max_buffer] then
-          config[:scribe_max_buffer]
-        else
-          10
-        end
-
-      @sample_rate =
-        if config[:sample_rate] then
-          config[:sample_rate]
-        else
-          0.1
-        end
-
+      @sample_rate = config[:sample_rate] ? config[:sample_rate] : 0.1
       @annotate_plugin = config[:annotate_plugin]     # call for trace annotation
       @filter_plugin = config[:filter_plugin]         # skip tracing if returns false
       @whitelist_plugin = config[:whitelist_plugin]   # force sampling if returns true
-
-      ::Trace.tracer = ::Trace::ZipkinTracer.new(CarelessScribe.new(scribe), scribe_max_buffer)
     end
 
     def call(env)

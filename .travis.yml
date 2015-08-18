@@ -3,4 +3,5 @@ rvm:
 - 2.1
 - 1.9.3
 - jruby
-- jruby-head
+- jruby-1.7.21
+
