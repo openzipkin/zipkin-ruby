@@ -22,6 +22,7 @@ where Rails.config.zipkin_tracer or config is a hash that can contain the follow
    response status, headers, and body; and can record annotations
  * `:filter_plugin` - plugin function which recieves Rack env and will skip tracing if it returns false
  * `:whitelist_plugin` - plugin function which recieves Rack env and will force sampling if it returns true
+ * `:zookeeper` - plugin function which uses zookeeper and kafka instead of scribe as the transport
 
 ## Warning
 
@@ -77,3 +78,22 @@ For example:
 
     # sample if request header specifies known device identifier
     lambda {|env| KNOWN_DEVICES.include?(env['HTTP_X_DEVICE_ID'])}
+
+### Kafka Tracer
+
+Kafka tracer inherits from Tracer which is found in Finagle.  It allows using Kafka as
+the transport instead of scribe.  If a config[:zookeeper] parameter is pass into the
+initialization of the RackHandler, then the gem will use Kafka.  Hermann is the kafka
+client library.  Hermann and the Scribe gems are optionally installed because we would
+only use one of the other.  In your application, you will need to explicitly install
+either Hermann or Scribe.
+
+Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper
+based broker discovery being JVM based.
+
+```
+# zipkin-kafka-tracer requires at minimim Hermann 0.25.0 or later
+  gem 'hermann', '~> 0.25'
+# Install scribe
+  gem 'scribe', "~> 0.2.4"
+```
