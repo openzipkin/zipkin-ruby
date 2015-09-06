@@ -1,8 +1,12 @@
 # ZipkinTracer
 
-Rack integration middleware for Zipkin tracing.
+[![Build Status](https://api.travis-ci.org/openzipkin/zipkin-tracer.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-tracer)
+
+Rack and Faraday integration middlewares for Zipkin tracing.
 
 ## Usage
+
+### Sending traces on incoming requests
 
 Options can be provided via Rails.config for a Rails 3+ app, or can be passed
 as a hash argument to the Rack plugin.
@@ -24,13 +28,37 @@ where Rails.config.zipkin_tracer or config is a hash that can contain the follow
  * `:whitelist_plugin` - plugin function which recieves Rack env and will force sampling if it returns true
  * `:zookeeper` - plugin function which uses zookeeper and kafka instead of scribe as the transport
 
-## Warning
+### Warning
 
 NOTE that access to the response body (available in the annotate
 plugin) may cause problems in the case that a response is being
 streamed; in general, this should be avoided (see the Rack
 specification for more detail and instructions for properly hijacking
 responses).
+
+
+### Sending traces on outgoing requests with Faraday
+
+First, for the Faraday middleware to have the correct trace ID, you should be using the rack middleware in your application.
+
+Then include ZipkinTracer::FaradayHandler as a Faraday middleware:
+
+    require 'faraday'
+    require 'zipkin-tracer'
+
+    conn = Faraday.new(:url => 'http://localhost:9292/') do |faraday|
+      # 'service_name' is optional (but recommended)
+      faraday.use ZipkinTracer::FaradayHandler, 'service_name'
+      # default Faraday stack
+      faraday.request :url_encoded
+      faraday.adapter Faraday.default_adapter
+    end
+
+Note that supplying the service name for the destination service is
+optional; the tracing will default to a service name derived from the
+first section of the destination URL (e.g. 'service.example.com' =>
+'service').
+
 
 ## Plugins
 
