@@ -39,7 +39,12 @@ responses).
 
 ### Sending traces on outgoing requests with Faraday
 
-First, for the Faraday middleware to have the correct trace ID, you should be using the rack middleware in your application.
+First, Faraday has to be part of your Gemfile:
+```
+gem 'faraday', '~> 0.8'
+```
+
+For the Faraday middleware to have the correct trace ID, the rack middleware should be used in your application as explained above.
 
 Then include ZipkinTracer::FaradayHandler as a Faraday middleware:
 
