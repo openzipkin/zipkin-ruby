@@ -49,6 +49,14 @@ describe ZipkinTracer::RackHandler do
       expect { |b| body.each &b }.to yield_with_args('hello')
     end
 
+    it 'calls the app even when the tracer raises while the call method is called' do
+      allow(::Trace).to receive(:record).and_raise(RuntimeError)
+      status, headers, body = subject.call(mock_env)
+      # return expected status
+      expect(status).to eq(200)
+      expect { |b| body.each &b }.to yield_with_args('hello')
+    end
+
     context 'with sample rate set to 0' do
       before(:each) { ::Trace.sample_rate = 0 }
 
