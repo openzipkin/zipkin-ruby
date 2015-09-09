@@ -15,6 +15,7 @@ require 'finagle-thrift'
 require 'finagle-thrift/trace'
 require 'scribe'
 
+require 'zipkin-tracer/config'
 require 'zipkin-tracer/careless_scribe'
 
 if RUBY_PLATFORM == 'java'
@@ -32,32 +33,26 @@ module ZipkinTracer extend self
       @app = app
       @lock = Mutex.new
 
-      config ||= app.config.zipkin_tracer # if not specified, try on app (e.g. Rails 3+)
-      @service_name = config[:service_name]
-      @service_port = config[:service_port]
+      config = Config.new(app, config)
 
-      ::Trace.tracer = if config[:scribe_server] && defined?(::Scribe)
-        scribe = config[:scribe_server] ? Scribe.new(config[:scribe_server]) : Scribe.new()
-        scribe_max_buffer = config[:scribe_max_buffer] ? config[:scribe_max_buffer] : 10
-        ::Trace::ZipkinTracer.new(CarelessScribe.new(scribe), scribe_max_buffer)
-      elsif config[:zookeeper] && RUBY_PLATFORM == 'java' && defined?(::Hermann)
+      ::Trace.tracer = if config.using_scribe?
+        scribe = config.scribe_server ? Scribe.new(config.scribe_server) : Scribe.new()
+        ::Trace::ZipkinTracer.new(CarelessScribe.new(scribe), config.scribe_max_buffer)
+      elsif config.using_kafka?
         kafkaTracer = ::Trace::ZipkinKafkaTracer.new
-        kafkaTracer.connect(config[:zookeeper])
+        kafkaTracer.connect(config.zookeeper)
         kafkaTracer
       end
+      @config = config
 
-      @sample_rate = config[:sample_rate] ? config[:sample_rate] : 0.1
-      @annotate_plugin = config[:annotate_plugin]     # call for trace annotation
-      @filter_plugin = config[:filter_plugin]         # skip tracing if returns false
-      @whitelist_plugin = config[:whitelist_plugin]   # force sampling if returns true
     end
 
     def call(env)
       # skip certain requests
       return @app.call(env) if filtered?(env)
 
-      ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(@service_name).with_port(@service_port)
-      ::Trace.sample_rate=(@sample_rate)
+      ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(@config.service_name).with_port(@config.service_port)
+      ::Trace.sample_rate=(@config.sample_rate)
       whitelisted = force_sample?(env)
       id = get_or_create_trace_id(env, whitelisted) # note that this depends on the sample rate being set
       tracing_filter(id, env, whitelisted) { @app.call(env) }
@@ -65,15 +60,15 @@ module ZipkinTracer extend self
 
     private
     def annotate(env, status, response_headers, response_body)
-      @annotate_plugin.call(env, status, response_headers, response_body) if @annotate_plugin
+      @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
     end
 
     def filtered?(env)
-      @filter_plugin && !@filter_plugin.call(env)
+      @config.filter_plugin && !@config.filter_plugin.call(env)
     end
 
     def force_sample?(env)
-      @whitelist_plugin && @whitelist_plugin.call(env)
+      @config.whitelist_plugin && @config.whitelist_plugin.call(env)
     end
 
     def tracing_filter(trace_id, env, whitelisted=false)
