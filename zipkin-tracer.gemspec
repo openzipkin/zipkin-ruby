@@ -34,13 +34,12 @@ Gem::Specification.new do |s|
   s.add_dependency "finagle-thrift", "~> 1.4.1"
   s.add_dependency "scribe", "~> 0.2.4"
   s.add_dependency "rack", "~> 1.6"
-  s.add_dependency "faraday", "~> 0.8"
-  s.add_dependency "thrift", "~> 0.9.0"
 
   s.add_development_dependency "rspec", "~> 3.3"
   s.add_development_dependency "rack-test", "~> 0.6"
   s.add_development_dependency "rake", '~> 10.0'
   s.add_development_dependency "pry", '~> 0.10'
+  s.add_development_dependency "faraday", '~> 0.8'
 
   s.add_development_dependency 'hermann', "~> 0.25"
 end

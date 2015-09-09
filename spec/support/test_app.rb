@@ -1,13 +1,13 @@
 require 'json'
 require 'faraday'
 
-# This handy little app consumes both the rack and faraday zipkin middlewares.  We'll use 
+# This handy little app consumes both the rack and faraday zipkin middlewares.  We'll use
 # this app to do some light integration testing on these middlewares.
 #
 class TestApp
   def call env
     store_current_trace_info # store so tests can look at historical data
-    
+
     req = Rack::Request.new(env)
     if req.path == '/hello_world'
       [ 200, {'Content-Type' => 'application/json'}, ['Hello World'] ]
@@ -25,7 +25,7 @@ class TestApp
       raise(RuntimeError, "Unrecognized path #{req.path}")
     end
   end
-  
+
   def store_current_trace_info
     current_trace_info = {
       'trace_id'        => ::Trace.id.trace_id.to_s,
@@ -35,7 +35,7 @@ class TestApp
     }
     self.class.add_trace(current_trace_info.to_json)
   end
-  
+
   # A 'scribe' to store our traces.
   class << self
     def read_traces
@@ -44,21 +44,21 @@ class TestApp
       file.close
       lines
     end
-    
+
     def add_trace(trace)
       `touch traces.txt` # create the traces file if it doesn't exist
       open(traces_file_name, 'a') { |f|
         f.puts trace
-      }      
+      }
     end
-    
+
     def clear_traces
       File.unlink traces_file_name
     end
-    
+
     def traces_file_name
       'traces.txt'
     end
   end
-  
+
 end
