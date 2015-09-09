@@ -40,6 +40,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake", '~> 10.0'
   s.add_development_dependency "pry", '~> 0.10'
   s.add_development_dependency "faraday", '~> 0.8'
-
   s.add_development_dependency 'hermann', "~> 0.25"
 end
