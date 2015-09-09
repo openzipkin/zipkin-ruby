@@ -72,7 +72,7 @@ module ZipkinTracer extend self
     end
 
     def tracing_filter(trace_id, env, whitelisted=false)
-      @lock.synchronize do
+      synchronize do
         ::Trace.push(trace_id)
         ::Trace.set_rpc_name(env["REQUEST_METHOD"]) # get/post and all that jazz
         ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", env["PATH_INFO"], "STRING", ::Trace.default_endpoint))
@@ -81,7 +81,7 @@ module ZipkinTracer extend self
       end
       status, headers, body = yield if block_given?
     ensure
-      @lock.synchronize do
+      synchronize do
         ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_SEND, ::Trace.default_endpoint))
         annotate(env, status, headers, body)
         ::Trace.pop
@@ -89,6 +89,14 @@ module ZipkinTracer extend self
     end
 
     private
+
+    def synchronize(&block)
+      @lock.synchronize do
+        yield
+      end
+    rescue# Nothing wonky that the tracer does should stop us from using the app!!!
+    end
+
     def get_or_create_trace_id(env, whitelisted, default_flags = ::Trace::Flags::EMPTY)
       trace_parameters = if B3_REQUIRED_HEADERS.all? { |key| env.has_key?(key) }
                            env.values_at(*B3_REQUIRED_HEADERS)
