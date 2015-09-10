@@ -40,9 +40,6 @@ module ZipkinTracer
       end
 
       it 'uses STDOUT if nothing was provided and not using rails' do
-        logger = 'TrusmisLogger'
-       # object_double("Rails", logger: logger).as_stubbed_const
-
         config = Config.new(nil, {})
         expect(config.logger).to be_kind_of(Logger)
       end
