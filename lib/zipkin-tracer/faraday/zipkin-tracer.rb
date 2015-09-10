@@ -44,6 +44,8 @@ module ZipkinTracer
       end
     end
 
+    private
+
     # get host IP for specified hostname, catching exceptions
     def host_ip_for(hostname)
       ::Trace::Endpoint.host_to_i32(hostname)
@@ -51,6 +53,6 @@ module ZipkinTracer
       # default to 0.0.0.0 if lookup fails
       0x00000000
     end
-    private :host_ip_for
+
   end
 end

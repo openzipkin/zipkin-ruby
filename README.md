@@ -27,6 +27,14 @@ where Rails.config.zipkin_tracer or config is a hash that can contain the follow
  * `:filter_plugin` - plugin function which recieves Rack env and will skip tracing if it returns false
  * `:whitelist_plugin` - plugin function which recieves Rack env and will force sampling if it returns true
  * `:zookeeper` - plugin function which uses zookeeper and kafka instead of scribe as the transport
+ * `:logger` - A logger class following the standard's library Logger interface (Log4r, Rails.logger, etc).
+
+
+ If The configuration do not provide a Scribe or a Zookeeper servers, then the middlewares will not
+ attempt to send traces. But they will still generate proper IDs and pass them to other services.
+ Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin,
+ you can still use this gem. Just do not specify any server :)
+
 
 ### Warning
 

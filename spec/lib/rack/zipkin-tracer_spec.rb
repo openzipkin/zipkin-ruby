@@ -34,8 +34,9 @@ describe ZipkinTracer::RackHandler do
     end
   end
 
+
   context 'configured without plugins' do
-    subject { middleware(app) }
+    subject { middleware(app, logger: Logger.new(nil)) }
 
     it 'traces a request' do
       expect(::Trace).to receive(:push).ordered

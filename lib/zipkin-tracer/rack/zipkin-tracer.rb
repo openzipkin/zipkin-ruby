@@ -94,7 +94,8 @@ module ZipkinTracer extend self
       @lock.synchronize do
         yield
       end
-    rescue# Nothing wonky that the tracer does should stop us from using the app!!!
+    rescue StandardError => e # Nothing wonky that the tracer does should stop us from using the app!!!
+      @config.logger.error("Exception #{e.message} while sending Zipkin traces. #{e.backtrace}")
     end
 
     def get_or_create_trace_id(env, whitelisted, default_flags = ::Trace::Flags::EMPTY)
