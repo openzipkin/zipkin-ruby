@@ -34,8 +34,9 @@ describe ZipkinTracer::RackHandler do
     end
   end
 
+
   context 'configured without plugins' do
-    subject { middleware(app) }
+    subject { middleware(app, logger: Logger.new(nil)) }
 
     it 'traces a request' do
       expect(::Trace).to receive(:push).ordered
@@ -50,7 +51,7 @@ describe ZipkinTracer::RackHandler do
     end
 
     it 'calls the app even when the tracer raises while the call method is called' do
-      allow(::Trace).to receive(:record).and_raise(RuntimeError)
+      allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
       status, headers, body = subject.call(mock_env)
       # return expected status
       expect(status).to eq(200)

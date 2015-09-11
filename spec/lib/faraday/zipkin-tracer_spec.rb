@@ -107,6 +107,12 @@ describe ZipkinTracer::FaradayHandler do
         process('', url)
       end
     end
+
+    it 'does not allow exceptions to raise to the application when recording raises' do
+      allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
+      expect{process('', url)}.not_to raise_error
+    end
+
   end
 
   context 'middleware configured (without service_name)' do
