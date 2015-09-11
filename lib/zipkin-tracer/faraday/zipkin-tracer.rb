@@ -33,18 +33,24 @@ module ZipkinTracer
 
         # annotate with method (GET/POST/etc.) and uri path
         ::Trace.set_rpc_name(env[:method].to_s.upcase)
-        ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", endpoint))
-        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, endpoint))
+        record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", endpoint))
+        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, endpoint))
         result = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
-          ::Trace.record(::Trace::BinaryAnnotation.new("http.status", [renv[:status]].pack('n'), "I16", endpoint))
+          record(::Trace::BinaryAnnotation.new("http.status", [renv[:status]].pack('n'), "I16", endpoint))
         end
-        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, endpoint))
+        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, endpoint))
         result
       end
     end
 
     private
+
+    def record(annotation)
+      ::Trace.record(annotation)
+    rescue Exception # Sockets errors inherit from Exception, not from StandardError
+      #TODO: if this class some day accepts a config hash, add a logger
+    end
 
     # get host IP for specified hostname, catching exceptions
     def host_ip_for(hostname)
