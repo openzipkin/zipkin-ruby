@@ -1,8 +1,9 @@
+require 'logger'
 module ZipkinTracer
 
   class Config
     attr_reader :service_name, :service_port, :scribe_server, :zookeeper, :sample_rate,
-      :scribe_max_buffer, :annotate_plugin, :filter_plugin, :whitelist_plugin
+      :scribe_max_buffer, :annotate_plugin, :filter_plugin, :whitelist_plugin, :logger
 
     def initialize(app, config_hash)
       config = config_hash || app_config(app)
@@ -15,6 +16,7 @@ module ZipkinTracer
       @annotate_plugin   = config[:annotate_plugin]   # call for trace annotation
       @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
       @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
+      @logger            = config[:logger]            || fallback_logger
     end
 
     def using_scribe?
@@ -26,6 +28,14 @@ module ZipkinTracer
     end
 
     private
+
+    def fallback_logger
+      if defined?(Rails) # If we happen to be inside a Rails app, use its logger
+        Rails.logger
+      else
+        Logger.new(STDOUT)
+      end
+    end
 
     DEFAULTS = {
       scribe_max_buffer: 10,

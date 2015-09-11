@@ -94,7 +94,10 @@ module ZipkinTracer extend self
       @lock.synchronize do
         yield
       end
-    rescue# Nothing wonky that the tracer does should stop us from using the app!!!
+    # Nothing wonky that the tracer does should stop us from using the app!!!
+    # Usually is better to rescue StandardError but the socket layer can launch Errno kind of exceptions
+    rescue Exception => e
+      @config.logger.error("Exception #{e.message} while sending Zipkin traces. #{e.backtrace}")
     end
 
     def get_or_create_trace_id(env, whitelisted, default_flags = ::Trace::Flags::EMPTY)

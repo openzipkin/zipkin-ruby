@@ -15,9 +15,9 @@ describe 'integrations' do
     @port2 = 4445
     @base_url2 = "http://localhost:#{@port2}"
     @pipe2 = IO.popen("rackup #{ru_location} -p #{@port2}")
-    sleep(1)
+    sleep(2)
     if RUBY_PLATFORM == 'java'
-      sleep(10) #Jruby starts slow
+      sleep(20) #Jruby starts slow
     end
 
   end

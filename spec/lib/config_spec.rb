@@ -10,7 +10,8 @@ end
 module ZipkinTracer
   RSpec.describe Config do
     [:service_name, :service_port, :scribe_server, :zookeeper, :sample_rate,
-      :scribe_max_buffer, :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
+     :scribe_max_buffer, :annotate_plugin, :filter_plugin, :whitelist_plugin,
+     :logger ].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
         config = Config.new(nil, {method => value})
@@ -27,6 +28,23 @@ module ZipkinTracer
       config = Config.new(nil, {})
       expect(config.scribe_max_buffer).to_not eq(nil)
     end
+
+    describe 'logger' do
+
+      it 'uses Rails logger if available' do
+        logger = 'TrusmisLogger'
+        object_double("Rails", logger: logger).as_stubbed_const
+
+        config = Config.new(nil, {})
+        expect(config.logger).to eq(logger)
+      end
+
+      it 'uses STDOUT if nothing was provided and not using rails' do
+        config = Config.new(nil, {})
+        expect(config.logger).to be_kind_of(Logger)
+      end
+    end
+
 
     describe '#using_scribe?' do
       it 'returns false if scribe server has not been set' do
