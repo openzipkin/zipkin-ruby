@@ -1,3 +1,6 @@
+#0.6.1
+Relax constraint on Rack from ~>1.6 to ~>1.3
+
 #0.6
 New configuration option :logger to setup a logger for error messages
 The Zipkin Rack middleware will not raise an error if sending information to Zipkin raises an error
