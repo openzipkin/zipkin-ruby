@@ -33,7 +33,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "finagle-thrift", "~> 1.4.1"
   s.add_dependency "scribe", "~> 0.2.4"
-  s.add_dependency "rack", "~> 1.6"
+  s.add_dependency "rack", "~> 1.5"
 
   s.add_development_dependency "rspec", "~> 3.3"
   s.add_development_dependency "rack-test", "~> 0.6"
