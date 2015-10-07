@@ -1,3 +1,6 @@
+#0.6.2
+Do not trace requests if the current application will not serve them.
+
 #0.6.1
 Relax constraint on Rack from ~>1.6 to ~>1.3
 

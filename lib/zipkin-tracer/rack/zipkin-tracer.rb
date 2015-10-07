@@ -49,7 +49,7 @@ module ZipkinTracer extend self
 
     def call(env)
       # skip certain requests
-      return @app.call(env) if filtered?(env)
+      return @app.call(env) if filtered?(env) || !routable_request?(env)
 
       ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(@config.service_name).with_port(@config.service_port)
       ::Trace.sample_rate=(@config.sample_rate)
@@ -59,6 +59,16 @@ module ZipkinTracer extend self
     end
 
     private
+
+    # If the request is not valid for this service, we do not what to trace it.
+    def routable_request?(env)
+      return true unless defined?(Rails) #If not running on a Rails app, we can't verify if it is invalid
+      Rails.application.routes.recognize_path(env["PATH_INFO"])
+      true
+    rescue ActionController::RoutingError
+      false
+    end
+
     def annotate(env, status, response_headers, response_body)
       @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
     end

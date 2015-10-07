@@ -22,6 +22,21 @@ describe ZipkinTracer::RackHandler do
     allow(::Trace::Endpoint).to receive(:host_to_i32).and_return(host_ip)
   }
 
+
+  shared_examples_for 'traces the request' do
+    it 'traces the request' do
+      expect(::Trace).to receive(:push).ordered
+      expect(::Trace).to receive(:set_rpc_name).ordered
+      expect(::Trace).to receive(:pop).ordered
+      expect(::Trace).to receive(:record).exactly(3).times
+      status, headers, body = subject.call(mock_env)
+
+      # return expected status
+      expect(status).to eq(200)
+      expect { |b| body.each &b }.to yield_with_args('hello')
+    end
+  end
+
   context 'configured to use kafka', :platform => :java do
     let(:zookeeper) { 'localhost:2181' }
     let(:zipkinKafkaTracer) { double('ZipkinKafkaTracer') }
@@ -34,21 +49,44 @@ describe ZipkinTracer::RackHandler do
     end
   end
 
+  context 'Using Rails' do
+    subject { middleware(app, logger: Logger.new(nil)) }
+
+    context 'accessing a valid URL of our service' do
+      before do
+        rails = double("Rails")
+        allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_return({controller: 'trusmis', action: 'new'})
+        stub_const("Rails", rails)
+      end
+      it_should_behave_like 'traces the request'
+    end
+
+    context 'accessing an invalid URL our our service' do
+      before do
+        rails = double("Rails")
+        stub_const('ActionController::RoutingError', StandardError)
+        allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_raise(ActionController::RoutingError)
+        stub_const("Rails", rails)
+      end
+
+      it 'calls the app' do
+        status, headers, body = subject.call(mock_env)
+        # return expected status
+        expect(status).to eq(200)
+        expect { |b| body.each &b }.to yield_with_args('hello')
+      end
+
+      it 'does not trace the request' do
+        expect(::Trace).not_to receive(:push)
+        expect(::Trace).not_to receive(:record)
+      end
+    end
+  end
 
   context 'configured without plugins' do
     subject { middleware(app, logger: Logger.new(nil)) }
 
-    it 'traces a request' do
-      expect(::Trace).to receive(:push).ordered
-      expect(::Trace).to receive(:set_rpc_name).ordered
-      expect(::Trace).to receive(:pop).ordered
-      expect(::Trace).to receive(:record).exactly(3).times
-      status, headers, body = subject.call(mock_env)
-
-      # return expected status
-      expect(status).to eq(200)
-      expect { |b| body.each &b }.to yield_with_args('hello')
-    end
+    it_should_behave_like 'traces the request'
 
     it 'calls the app even when the tracer raises while the call method is called' do
       allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
@@ -112,17 +150,14 @@ describe ZipkinTracer::RackHandler do
   context 'configured with filter plugin that allows all' do
     subject { middleware(app, :filter_plugin => lambda {|env| true}) }
 
-    it 'traces the request' do
-      expect(::Trace).to receive(:push)
-      status, _, _ = subject.call(mock_env)
-      expect(status).to eq(200)
-    end
+    it_should_behave_like 'traces the request'
+
   end
 
   context 'configured with filter plugin that allows none' do
     subject { middleware(app, :filter_plugin => lambda {|env| false}) }
 
-    it 'traces the request' do
+    it 'does not trace the request' do
       expect(::Trace).not_to receive(:push)
       status, _, _ = subject.call(mock_env)
       expect(status).to eq(200)
