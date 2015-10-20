@@ -1,3 +1,6 @@
+#0.6.3
+Properly pop the Id from the traces stacks when finishing the Faraday tracer
+
 #0.6.2
 Do not trace requests if the current application will not serve them.
 

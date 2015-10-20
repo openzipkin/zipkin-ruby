@@ -22,26 +22,28 @@ module ZipkinTracer
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       service_name = @service_name || url.host.split('.').first # default to url-derived service name
-      endpoint = ::Trace::Endpoint.new(host_ip_for(url.host), url.port, service_name)
 
-      ::Trace.unwind do
+      endpoint = ::Trace::Endpoint.new(host_ip_for(url.host), url.port, service_name)
+      response = nil
+      begin
         trace_id = ::Trace.id
         ::Trace.push(trace_id.next_id)
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = ::Trace.id.send(method).to_s
         end
-
         # annotate with method (GET/POST/etc.) and uri path
         ::Trace.set_rpc_name(env[:method].to_s.upcase)
         record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", endpoint))
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, endpoint))
-        result = @app.call(env).on_complete do |renv|
+        response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
-          record(::Trace::BinaryAnnotation.new("http.status", [renv[:status]].pack('n'), "I16", endpoint))
+          record(::Trace::BinaryAnnotation.new("http.status", renv[:status].to_s, "STRING", endpoint))
         end
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, endpoint))
-        result
+      ensure
+        ::Trace.pop
       end
+      response
     end
 
     private
