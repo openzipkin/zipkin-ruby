@@ -8,7 +8,7 @@ module ZipkinTracer
     def initialize(app, config_hash)
       config = config_hash || app_config(app)
       @service_name      = config[:service_name]
-      @service_port      = config[:service_port]
+      @service_port      = config[:service_port]      || DEFAULTS[:service_port]
       @scribe_server     = config[:scribe_server]
       @zookeeper         = config[:zookeeper]
       @sample_rate       = config[:sample_rate]       || DEFAULTS[:sample_rate]
@@ -39,7 +39,8 @@ module ZipkinTracer
 
     DEFAULTS = {
       scribe_max_buffer: 10,
-      sample_rate: 0.1
+      sample_rate: 0.1,
+      service_port: 80
     }
 
     def app_config(app)

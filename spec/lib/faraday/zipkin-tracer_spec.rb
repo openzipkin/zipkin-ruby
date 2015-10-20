@@ -66,7 +66,7 @@ describe ZipkinTracer::FaradayHandler do
     context 'with tracing id' do
       let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
 
-      it 'sets the X-B3 request headers' do
+      it 'sets the X-B3 request headers with a new spanID' do
         expect_tracing
         result = nil
         ::Trace.push(trace_id) do
@@ -78,6 +78,12 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-SpanId']).to match(/^#{HEX_REGEX}{16}$/)
         expect(result[:request_headers]['X-B3-Sampled']).to eq('true')
         expect(result[:request_headers]['X-B3-Flags']).to eq('1')
+      end
+
+      it 'the original spanID is restored after the calling the middleware' do
+        ::Trace.push(trace_id)
+        result = process('', url).env
+        expect(::Trace.id).to eq(trace_id)
       end
     end
 

@@ -29,6 +29,11 @@ module ZipkinTracer
       expect(config.scribe_max_buffer).to_not eq(nil)
     end
 
+    it 'sets defaults for service_port' do
+      config = Config.new(nil, {})
+      expect(config.service_port).to_not eq(nil)
+    end
+
     describe 'logger' do
 
       it 'uses Rails logger if available' do
