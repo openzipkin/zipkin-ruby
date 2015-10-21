@@ -1,3 +1,8 @@
+#0.7
+The ruby client does not wait to receive ACK from the collector. Just send traces
+Connecting to the collector now happens in a different thread
+The server annotations will not add information about the URL hit if hit by a zipkin enabled client
+
 #0.6.3
 Properly pop the Id from the traces stacks when finishing the Faraday tracer
 
