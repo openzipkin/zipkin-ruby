@@ -36,23 +36,23 @@ module ZipkinTracer extend self
       config = Config.new(app, config)
 
       ::Trace.tracer = if config.using_scribe?
-        scribe = config.scribe_server ? Scribe.new(config.scribe_server) : Scribe.new()
-        ::Trace::ZipkinTracer.new(CarelessScribe.new(scribe), config.scribe_max_buffer)
+        ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
       elsif config.using_kafka?
         kafkaTracer = ::Trace::ZipkinKafkaTracer.new
         kafkaTracer.connect(config.zookeeper)
         kafkaTracer
+      else
+        ::Trace::NullTracer.new
       end
-      @config = config
+      ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(config.service_name).with_port(config.service_port)
+      ::Trace.sample_rate=(config.sample_rate)
 
+      @config = config
     end
 
     def call(env)
       # skip certain requests
       return @app.call(env) if filtered?(env) || !routable_request?(env)
-
-      ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(@config.service_name).with_port(@config.service_port)
-      ::Trace.sample_rate=(@config.sample_rate)
       whitelisted = force_sample?(env)
       id = get_or_create_trace_id(env, whitelisted) # note that this depends on the sample rate being set
       tracing_filter(id, env, whitelisted) { @app.call(env) }
@@ -84,21 +84,31 @@ module ZipkinTracer extend self
     def tracing_filter(trace_id, env, whitelisted=false)
       synchronize do
         ::Trace.push(trace_id)
-        ::Trace.set_rpc_name(env["REQUEST_METHOD"]) # get/post and all that jazz
-        ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", env["PATH_INFO"], "STRING", ::Trace.default_endpoint))
+        #if called by a service, the caller already added the information
+        add_request_information(env) unless called_with_zipkin_headers?(env)
         ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_RECV, ::Trace.default_endpoint))
         ::Trace.record(::Trace::Annotation.new('whitelisted', ::Trace.default_endpoint)) if whitelisted
       end
       status, headers, body = yield if block_given?
     ensure
       synchronize do
-        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_SEND, ::Trace.default_endpoint))
         annotate(env, status, headers, body)
+        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_SEND, ::Trace.default_endpoint))
         ::Trace.pop
       end
+      [status, headers, body]
     end
 
     private
+
+    def add_request_information(env)
+      ::Trace.set_rpc_name(env["REQUEST_METHOD"]) # get/post and all that jazz
+      ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", env["PATH_INFO"], "STRING", ::Trace.default_endpoint))
+    end
+
+    def called_with_zipkin_headers?(env)
+      B3_REQUIRED_HEADERS.all? { |key| env.has_key?(key) }
+    end
 
     def synchronize(&block)
       @lock.synchronize do
@@ -111,7 +121,7 @@ module ZipkinTracer extend self
     end
 
     def get_or_create_trace_id(env, whitelisted, default_flags = ::Trace::Flags::EMPTY)
-      trace_parameters = if B3_REQUIRED_HEADERS.all? { |key| env.has_key?(key) }
+      trace_parameters = if called_with_zipkin_headers?(env)
                            env.values_at(*B3_REQUIRED_HEADERS)
                          else
                            new_id = Trace.generate_id

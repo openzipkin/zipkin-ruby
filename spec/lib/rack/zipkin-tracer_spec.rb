@@ -37,15 +37,57 @@ describe ZipkinTracer::RackHandler do
     end
   end
 
-  context 'configured to use kafka', :platform => :java do
-    let(:zookeeper) { 'localhost:2181' }
-    let(:zipkinKafkaTracer) { double('ZipkinKafkaTracer') }
+  describe 'initializer' do
+    context 'configured to use kafka', :platform => :java do
+      let(:zookeeper) { 'localhost:2181' }
+      let(:zipkinKafkaTracer) { double('ZipkinKafkaTracer') }
 
-    it 'creates a zipkin kafka tracer' do
-      allow(::Trace::ZipkinKafkaTracer).to receive(:new) { zipkinKafkaTracer }
-      expect(::Trace).to receive(:tracer=).with(zipkinKafkaTracer)
-      expect(zipkinKafkaTracer).to receive(:connect)
-      middleware(app, :zookeeper => zookeeper)
+      it 'creates a zipkin kafka tracer' do
+        allow(::Trace::ZipkinKafkaTracer).to receive(:new) { zipkinKafkaTracer }
+        expect(::Trace).to receive(:tracer=).with(zipkinKafkaTracer)
+        expect(zipkinKafkaTracer).to receive(:connect)
+        middleware(app, :zookeeper => zookeeper)
+      end
+    end
+
+    context 'configured to use scribe' do
+      subject { middleware(app, logger: Logger.new(nil), scribe_server: 'fake_scribe_server') }
+      it_should_behave_like 'traces the request'
+
+      it 'creates a zipkin scribe tracer' do
+        expect(::Trace::ZipkinTracer).to receive(:new)
+        middleware(app, logger: Logger.new(nil), scribe_server: 'fake_scribe_server')
+      end
+    end
+
+    context 'no transport configured' do
+      subject { middleware(app, logger: Logger.new(nil)) }
+      it_should_behave_like 'traces the request'
+
+      it 'creates a null scribe tracer' do
+        expect(::Trace::NullTracer).to receive(:new)
+        middleware(app, logger: Logger.new(nil))
+      end
+    end
+
+    describe 'sample rate initialization' do
+      let(:sample_rate) { 0.42 }
+      subject { middleware(app, logger: Logger.new(nil), sample_rate: sample_rate) }
+      it 'sets the sample rate' do
+        expect(::Trace).to receive(:sample_rate=).with(sample_rate)
+        subject.call(mock_env)
+      end
+
+    end
+
+  end
+
+  context 'Zipkin headers are passed to the middlewawre' do
+    subject { middleware(app, logger: Logger.new(nil)) }
+    let(:env) {mock_env(',', ZipkinTracer::RackHandler::B3_REQUIRED_HEADERS.map {|a| Hash[a, 1] }.inject(:merge))}
+    it 'does not set the RPC method' do
+      expect(::Trace).not_to receive(:set_rpc_name)
+      status, headers, body = subject.call(env)
     end
   end
 
