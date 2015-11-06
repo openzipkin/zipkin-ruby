@@ -1,3 +1,9 @@
+# 0.7.2
+Rescue possible errors when lookup of the hostname fails
+
+# 0.7.1
+Remove Scribe from direct dependencies list
+
 #0.7
 The ruby client does not wait to receive ACK from the collector. Just send traces
 Connecting to the collector now happens in a different thread
