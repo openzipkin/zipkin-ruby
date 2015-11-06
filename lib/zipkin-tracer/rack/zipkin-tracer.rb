@@ -44,7 +44,7 @@ module ZipkinTracer extend self
       else
         ::Trace::NullTracer.new
       end
-      ::Trace.default_endpoint = ::Trace.default_endpoint.with_service_name(config.service_name).with_port(config.service_port)
+      ::Trace.default_endpoint = ::Trace::Endpoint.new( local_ip, config.service_port , config.service_name)
       ::Trace.sample_rate=(config.sample_rate)
 
       @config = config
@@ -134,6 +134,14 @@ module ZipkinTracer extend self
 
       Trace::TraceId.new(*trace_parameters)
     end
+
+    def local_ip
+      ::Trace::Endpoint.host_to_i32(Socket.gethostname)
+    rescue
+      # Default to local if lockup fails
+      ::Trace::Endpoint.host_to_i32('127.0.0.1')
+    end
+
   end
 
 end
