@@ -51,7 +51,7 @@ describe ZipkinTracer::FaradayHandler do
 
     def expect_tracing
       # expect SEND then RECV
-      expect(::Trace).to receive(:set_rpc_name).with('POST')
+      expect(::Trace).to receive(:set_rpc_name).with('post')
       expect(::Trace).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)).twice # http.uri, http.status
       expect(::Trace).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_SEND)

@@ -26,7 +26,7 @@ describe ZipkinTracer::RackHandler do
   shared_examples_for 'traces the request' do
     it 'traces the request' do
       expect(::Trace).to receive(:push).ordered
-      expect(::Trace).to receive(:set_rpc_name).ordered
+      expect(::Trace).to receive(:set_rpc_name).ordered.with('get')
       expect(::Trace).to receive(:pop).ordered
       expect(::Trace).to receive(:record).exactly(3).times
       status, headers, body = subject.call(mock_env)

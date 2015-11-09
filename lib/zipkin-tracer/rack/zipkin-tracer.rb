@@ -102,7 +102,7 @@ module ZipkinTracer extend self
     private
 
     def add_request_information(env)
-      ::Trace.set_rpc_name(env["REQUEST_METHOD"]) # get/post and all that jazz
+      ::Trace.set_rpc_name(env["REQUEST_METHOD"].to_s.downcase) # get/post and all that jazz
       ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", env["PATH_INFO"], "STRING", ::Trace.default_endpoint))
     end
 
