@@ -1,3 +1,6 @@
+# 0.7.3
+Send method name (get, post, etc) as lowercase (zipkin > 1.22 expect them lowercase)
+
 # 0.7.2
 Rescue possible errors when lookup of the hostname fails
 

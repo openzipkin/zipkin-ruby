@@ -32,7 +32,7 @@ module ZipkinTracer
           env[:request_headers][header] = ::Trace.id.send(method).to_s
         end
         # annotate with method (GET/POST/etc.) and uri path
-        ::Trace.set_rpc_name(env[:method].to_s.upcase)
+        ::Trace.set_rpc_name(env[:method].to_s.downcase)
         record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", endpoint))
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, endpoint))
         response = @app.call(env).on_complete do |renv|
