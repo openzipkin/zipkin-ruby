@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 module ZipkinTracer
-  VERSION = "0.7.3"
+  VERSION = "0.8.0"
 end
 

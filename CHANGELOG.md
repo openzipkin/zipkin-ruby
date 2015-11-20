@@ -1,3 +1,7 @@
+# 0.8.0
+To proper follow the correct spec, now the annotations cr/cs set the local service as servicename
+Added a 'sa' annotation to indicate the remote service servicename
+
 # 0.7.3
 Send method name (get, post, etc) as lowercase (zipkin > 1.22 expect them lowercase)
 

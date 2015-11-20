@@ -21,9 +21,9 @@ module ZipkinTracer
     def call(env)
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
-      service_name = @service_name || url.host.split('.').first # default to url-derived service name
+      local_endpoint = ::Trace.default_endpoint # The rack middleware set this up for us.
+      remote_endpoint = callee_endpoint(url)  # The endpoint we are calling.
 
-      endpoint = ::Trace::Endpoint.new(host_ip_for(url.host), url.port, service_name)
       response = nil
       begin
         trace_id = ::Trace.id
@@ -33,13 +33,14 @@ module ZipkinTracer
         end
         # annotate with method (GET/POST/etc.) and uri path
         ::Trace.set_rpc_name(env[:method].to_s.downcase)
-        record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", endpoint))
-        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, endpoint))
+        record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", local_endpoint))
+        record(::Trace::BinaryAnnotation.new("sa", "1", "BYTE", remote_endpoint))
+        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, local_endpoint))
         response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
-          record(::Trace::BinaryAnnotation.new("http.status", renv[:status].to_s, "STRING", endpoint))
+          record(::Trace::BinaryAnnotation.new("http.status", renv[:status].to_s, "STRING", local_endpoint))
         end
-        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, endpoint))
+        record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, local_endpoint))
       ensure
         ::Trace.pop
       end
@@ -52,6 +53,11 @@ module ZipkinTracer
       ::Trace.record(annotation)
     rescue Exception # Sockets errors inherit from Exception, not from StandardError
       #TODO: if this class some day accepts a config hash, add a logger
+    end
+
+    def callee_endpoint(url)
+      service_name = @service_name || url.host.split('.').first || 'unknown' # default to url-derived service name
+      ::Trace::Endpoint.new(host_ip_for(url.host), url.port, service_name)
     end
 
     # get host IP for specified hostname, catching exceptions
