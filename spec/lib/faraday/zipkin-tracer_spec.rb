@@ -24,7 +24,8 @@ describe ZipkinTracer::FaradayHandler do
 
   let(:hostname) { 'service.example.com' }
   let(:host_ip) { 0x11223344 }
-  let(:raw_url) { "https://#{hostname}/some/path/here" }
+  let(:url_path) { '/some/path/here' }
+  let(:raw_url) { "https://#{hostname}#{url_path}" }
 
   def process(body, url, headers={})
     env = {
@@ -38,6 +39,7 @@ describe ZipkinTracer::FaradayHandler do
 
   before(:each) {
     ::Trace.sample_rate = 0.1 # make sure initialized
+    allow(::Trace).to receive(:default_endpoint)
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
   }
 
@@ -52,14 +54,26 @@ describe ZipkinTracer::FaradayHandler do
     def expect_tracing
       # expect SEND then RECV
       expect(::Trace).to receive(:set_rpc_name).with('post')
-      expect(::Trace).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)).twice # http.uri, http.status
+      expect(::Trace).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+        expect(ann.key).to eq('http.uri')
+        expect(ann.value).to eq(url_path)
+      end
+      expect(::Trace).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+        expect(ann.key).to eq('sa')
+        expect(ann.value).to eq(1)
+        expect_host(ann.host, host_ip, service_name)
+      end
+      expect(::Trace).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+        expect(ann.key).to eq('http.status')
+        expect(ann.value).to eq(200)
+      end
       expect(::Trace).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_SEND)
-        expect_host(ann.host, host_ip, service_name)
+        expect_host(ann.host, '127.0.0.1', service_name)
       end.ordered
       expect(::Trace).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_RECV)
-        expect_host(ann.host, host_ip, service_name)
+        expect_host(ann.host, '127.0.0.1', service_name)
       end.ordered
     end
 
