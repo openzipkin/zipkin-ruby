@@ -34,7 +34,7 @@ module ZipkinTracer
         # annotate with method (GET/POST/etc.) and uri path
         ::Trace.set_rpc_name(env[:method].to_s.downcase)
         record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", local_endpoint))
-        record(::Trace::BinaryAnnotation.new("sa", "1", "BYTE", remote_endpoint))
+        record(::Trace::BinaryAnnotation.new("sa", "1", "BOOL", remote_endpoint))
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, local_endpoint))
         response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
