@@ -1,3 +1,7 @@
+# 0.8.1
+Set caller service name using domain environment variable. If the value
+is not set, it will fall back to the configuration file default.
+
 # 0.8.0
 To proper follow the correct spec, now the annotations cr/cs set the local service as servicename
 Added a 'sa' annotation to indicate the remote service servicename
