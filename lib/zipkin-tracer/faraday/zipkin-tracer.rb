@@ -22,7 +22,7 @@ module ZipkinTracer
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       local_endpoint = ::Trace.default_endpoint # The rack middleware set this up for us.
-      remote_endpoint = callee_endpoint(url) # The endpoint we are calling.
+      remote_endpoint = callee_endpoint(url, local_endpoint.ip_format) # The endpoint we are calling.
 
       response = nil
       begin
@@ -55,18 +55,9 @@ module ZipkinTracer
       #TODO: if this class some day accepts a config hash, add a logger
     end
 
-    def callee_endpoint(url)
+    def callee_endpoint(url, ip_format)
       service_name = @service_name || url.host.split('.').first || 'unknown' # default to url-derived service name
-      ::Trace::Endpoint.new(host_ip_for(url.host), url.port, service_name)
+      ::Trace::Endpoint.make_endpoint(url.host, url.port, service_name, ip_format)
     end
-
-    # get host IP for specified hostname, catching exceptions
-    def host_ip_for(hostname)
-      ::Trace::Endpoint.host_to_i32(hostname)
-    rescue
-      # default to 0.0.0.0 if lookup fails
-      0x00000000
-    end
-
   end
 end

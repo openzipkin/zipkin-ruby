@@ -27,3 +27,5 @@
 
 # do not include Gemfile.lock in gem source
 Gemfile.lock
+
+.byebug_history

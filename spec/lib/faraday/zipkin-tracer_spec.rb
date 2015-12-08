@@ -121,11 +121,11 @@ describe ZipkinTracer::FaradayHandler do
     end
 
     context 'when looking up hostname raises' do
-      let(:host_ip) { 0x00000000 } # expect stubbed 'null' IP
+      let(:host_ip) { 0x7f000001 } # expect stubbed 'null' IP
 
-      before(:each) {
+      before do
         allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_raise(SocketError)
-      }
+      end
 
       it 'traces with stubbed endpoint address' do
         expect_tracing

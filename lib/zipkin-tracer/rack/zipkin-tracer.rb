@@ -17,11 +17,13 @@ require 'scribe'
 
 require 'zipkin-tracer/config'
 require 'zipkin-tracer/careless_scribe'
+require 'zipkin-tracer/zipkin_json_tracer'
 
 if RUBY_PLATFORM == 'java'
   require 'hermann/producer'
   require 'zipkin-tracer/zipkin_kafka_tracer'
 end
+
 
 module ZipkinTracer extend self
 
@@ -34,19 +36,30 @@ module ZipkinTracer extend self
       @lock = Mutex.new
 
       config = Config.new(app, config)
+      SuckerPunch.logger = config.logger
+      adapter = config.adapter
 
-      ::Trace.tracer = if config.using_scribe?
-        ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
-      elsif config.using_kafka?
-        kafkaTracer = ::Trace::ZipkinKafkaTracer.new
-        kafkaTracer.connect(config.zookeeper)
-        kafkaTracer
-      else
-        ::Trace::NullTracer.new
+      ::Trace.tracer = case adapter
+        when :json
+          ::Trace::ZipkinJsonTracer.new(config.json_api_host, config.traces_buffer)
+        when :scribe
+          ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
+        when :kafka
+          kafkaTracer = ::Trace::ZipkinKafkaTracer.new
+          kafkaTracer.connect(config.zookeeper)
+          kafkaTracer
+        else
+          ::Trace::NullTracer.new
       end
 
-      ::Trace.default_endpoint = ::Trace::Endpoint.new(local_ip, config.service_port, service_name(config.service_name))
-      ::Trace.sample_rate=(config.sample_rate)
+      ip_format = config.adapter == :json ? :string : :i32
+      ::Trace.default_endpoint = ::Trace::Endpoint.make_endpoint(
+        nil, # auto detect hostname
+        config.service_port,
+        service_name(config.service_name),
+        ip_format
+      )
+      ::Trace.sample_rate = config.sample_rate
 
       @config = config
     end
@@ -69,7 +82,7 @@ module ZipkinTracer extend self
 
     # If the request is not valid for this service, we do not what to trace it.
     def routable_request?(env)
-      return true unless defined?(Rails) #If not running on a Rails app, we can't verify if it is invalid
+      return true unless defined?(Rails) # If not running on a Rails app, we can't verify if it is invalid
       Rails.application.routes.recognize_path(env['PATH_INFO'])
       true
     rescue ActionController::RoutingError
@@ -106,8 +119,6 @@ module ZipkinTracer extend self
       [status, headers, body]
     end
 
-    private
-
     def add_request_information(env)
       ::Trace.set_rpc_name(env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
       ::Trace.record(::Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', ::Trace.default_endpoint))
@@ -121,8 +132,8 @@ module ZipkinTracer extend self
       @lock.synchronize do
         yield
       end
-    # Nothing wonky that the tracer does should stop us from using the app!!!
-    # Usually is better to rescue StandardError but the socket layer can launch Errno kind of exceptions
+      # Nothing wonky that the tracer does should stop us from using the app!!!
+      # Usually is better to rescue StandardError but the socket layer can launch Errno kind of exceptions
     rescue Exception => e
       @config.logger.error("Exception #{e.message} while sending Zipkin traces. #{e.backtrace}")
     end
@@ -141,14 +152,5 @@ module ZipkinTracer extend self
 
       Trace::TraceId.new(*trace_parameters)
     end
-
-    def local_ip
-      ::Trace::Endpoint.host_to_i32(Socket.gethostname)
-    rescue
-      # Default to local if lockup fails
-      ::Trace::Endpoint.host_to_i32('127.0.0.1')
-    end
-
   end
-
 end

@@ -1,9 +1,10 @@
 language: ruby
 rvm:
+- 2.2
 - 2.1
-- 1.9.3
-- jruby
-- jruby-1.7.21
+- 2.0
+- jruby-1.7.23
+- jruby-9.0.4.0
 deploy:
   provider: rubygems
   api_key:
