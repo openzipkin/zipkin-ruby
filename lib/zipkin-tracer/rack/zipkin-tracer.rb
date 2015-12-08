@@ -29,7 +29,7 @@ module ZipkinTracer extend self
     B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED]
     B3_OPT_HEADERS = %w[HTTP_X_B3_FLAGS]
 
-    def initialize(app, config=nil)
+    def initialize(app, config = nil)
       @app = app
       @lock = Mutex.new
 
@@ -44,7 +44,8 @@ module ZipkinTracer extend self
       else
         ::Trace::NullTracer.new
       end
-      ::Trace.default_endpoint = ::Trace::Endpoint.new( local_ip, config.service_port , config.service_name)
+
+      ::Trace.default_endpoint = ::Trace::Endpoint.new(local_ip, config.service_port, service_name(config.service_name))
       ::Trace.sample_rate=(config.sample_rate)
 
       @config = config
@@ -53,6 +54,7 @@ module ZipkinTracer extend self
     def call(env)
       # skip certain requests
       return @app.call(env) if filtered?(env) || !routable_request?(env)
+
       whitelisted = force_sample?(env)
       id = get_or_create_trace_id(env, whitelisted) # note that this depends on the sample rate being set
       tracing_filter(id, env, whitelisted) { @app.call(env) }
@@ -60,10 +62,15 @@ module ZipkinTracer extend self
 
     private
 
+    # Use the Domain environment variable to extract the service name, otherwise use the default config name
+    def service_name(default_name)
+      ENV["DOMAIN"].to_s.empty? ? default_name : ENV["DOMAIN"].split('.').first
+    end
+
     # If the request is not valid for this service, we do not what to trace it.
     def routable_request?(env)
       return true unless defined?(Rails) #If not running on a Rails app, we can't verify if it is invalid
-      Rails.application.routes.recognize_path(env["PATH_INFO"])
+      Rails.application.routes.recognize_path(env['PATH_INFO'])
       true
     rescue ActionController::RoutingError
       false
@@ -81,7 +88,7 @@ module ZipkinTracer extend self
       @config.whitelist_plugin && @config.whitelist_plugin.call(env)
     end
 
-    def tracing_filter(trace_id, env, whitelisted=false)
+    def tracing_filter(trace_id, env, whitelisted = false)
       synchronize do
         ::Trace.push(trace_id)
         #if called by a service, the caller already added the information
@@ -102,8 +109,8 @@ module ZipkinTracer extend self
     private
 
     def add_request_information(env)
-      ::Trace.set_rpc_name(env["REQUEST_METHOD"].to_s.downcase) # get/post and all that jazz
-      ::Trace.record(::Trace::BinaryAnnotation.new("http.uri", env["PATH_INFO"], "STRING", ::Trace.default_endpoint))
+      ::Trace.set_rpc_name(env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
+      ::Trace.record(::Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', ::Trace.default_endpoint))
     end
 
     def called_with_zipkin_headers?(env)
@@ -125,9 +132,9 @@ module ZipkinTracer extend self
                            env.values_at(*B3_REQUIRED_HEADERS)
                          else
                            new_id = Trace.generate_id
-                           [new_id, nil, new_id, ("true" if whitelisted || Trace.should_sample?)]
+                           [new_id, nil, new_id, ('true' if whitelisted || Trace.should_sample?)]
                          end
-      trace_parameters[3] = (trace_parameters[3] == "true")
+      trace_parameters[3] = (trace_parameters[3] == 'true')
 
       trace_parameters += env.values_at(*B3_OPT_HEADERS) # always check flags
       trace_parameters[4] = (trace_parameters[4] || default_flags).to_i

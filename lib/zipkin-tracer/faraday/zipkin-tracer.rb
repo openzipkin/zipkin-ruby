@@ -6,14 +6,14 @@ require 'uri'
 module ZipkinTracer
   class FaradayHandler < ::Faraday::Middleware
     B3_HEADERS = {
-      :trace_id => "X-B3-TraceId",
-      :parent_id => "X-B3-ParentSpanId",
-      :span_id => "X-B3-SpanId",
-      :sampled => "X-B3-Sampled",
-      :flags => "X-B3-Flags"
+      trace_id: 'X-B3-TraceId',
+      parent_id: 'X-B3-ParentSpanId',
+      span_id: 'X-B3-SpanId',
+      sampled: 'X-B3-Sampled',
+      flags: 'X-B3-Flags'
     }.freeze
 
-    def initialize(app, service_name=nil)
+    def initialize(app, service_name = nil)
       @app = app
       @service_name = service_name
     end
@@ -22,7 +22,7 @@ module ZipkinTracer
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       local_endpoint = ::Trace.default_endpoint # The rack middleware set this up for us.
-      remote_endpoint = callee_endpoint(url)  # The endpoint we are calling.
+      remote_endpoint = callee_endpoint(url) # The endpoint we are calling.
 
       response = nil
       begin
@@ -33,12 +33,12 @@ module ZipkinTracer
         end
         # annotate with method (GET/POST/etc.) and uri path
         ::Trace.set_rpc_name(env[:method].to_s.downcase)
-        record(::Trace::BinaryAnnotation.new("http.uri", url.path, "STRING", local_endpoint))
-        record(::Trace::BinaryAnnotation.new("sa", "1", "BOOL", remote_endpoint))
+        record(::Trace::BinaryAnnotation.new('http.uri', url.path, 'STRING', local_endpoint))
+        record(::Trace::BinaryAnnotation.new('sa', '1', 'BOOL', remote_endpoint))
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_SEND, local_endpoint))
         response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
-          record(::Trace::BinaryAnnotation.new("http.status", renv[:status].to_s, "STRING", local_endpoint))
+          record(::Trace::BinaryAnnotation.new('http.status', renv[:status].to_s, 'STRING', local_endpoint))
         end
         record(::Trace::Annotation.new(::Trace::Annotation::CLIENT_RECV, local_endpoint))
       ensure
