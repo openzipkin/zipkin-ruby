@@ -16,7 +16,10 @@ as a hash argument to the Rack plugin.
 
 where Rails.config.zipkin_tracer or config is a hash that can contain the following keys:
 
- * `:service_name` (REQUIRED) - the name of the service being traced
+ * `:service_name` (REQUIRED) - the name of the service being traced. There are two ways to configure this
+   value. Either write the service name in the config file or set the "DOMAIN"
+   environment variable (e.g. 'test-service.example.com' or 'test-service'). The
+   environment variable takes precedence over the config file value.
  * `:service_port` (REQUIRED) - the port of the service being traced (e.g. 80 or 443)
  * `:scribe_server` (default from scribe gem) - the address of the scribe server where traces are delivered
  * `:scribe_max_buffer` (default: 10) - the number of annotations stored until automatic flush
