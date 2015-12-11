@@ -18,30 +18,33 @@ $:.unshift lib unless $:.include?(lib)
 require 'zipkin-tracer/version'
 
 Gem::Specification.new do |s|
-  s.name                      = "zipkin-tracer"
+  s.name                      = 'zipkin-tracer'
   s.version                   = ZipkinTracer::VERSION
-  s.authors                   = ["Franklin Hu", "R Tyler Croy", "James Way"]
-  s.email                     = ["franklin@twitter.com", 'tyler@monkeypox.org', 'jamescway@gmail.com']
+  s.authors                   = ['Franklin Hu', 'R Tyler Croy', 'James Way', 'Jordi Polo', 'Julien Feltesse', 'Scott Steeg']
+  s.email                     = ['franklin@twitter.com', 'tyler@monkeypox.org', 'jamescway@gmail.com', 'jcarres@mdsol.com', 'jfeltesse@mdsol.com', 'ssteeg@mdsol.com']
   s.homepage                  = 'https://github.com/openzipkin/zipkin-tracer'
-  s.summary                   = "Ruby tracing via Zipkin"
-  s.description               = "Adds tracing instrumentation for ruby applications"
+  s.summary                   = 'Ruby tracing via Zipkin'
+  s.description               = 'Adds tracing instrumentation for ruby applications'
 
-  s.required_rubygems_version = ">= 1.3.5"
+  s.required_rubygems_version = '>= 1.3.5'
 
-  s.files                     = Dir.glob("{bin,lib}/**/*")
+  s.files                     = Dir.glob('{bin,lib}/**/*')
   s.require_path              = 'lib'
 
-  s.add_dependency "finagle-thrift", "~> 1.4.1"
-  s.add_dependency "rack", "~> 1.3"
+  s.add_dependency 'finagle-thrift', '~> 1.4.1'
+  s.add_dependency 'rack', '~> 1.3'
   s.add_dependency 'sucker_punch', '~> 1.0'
 
-  s.add_development_dependency "rspec", "~> 3.3"
-  s.add_development_dependency "rack-test", "~> 0.6"
-  s.add_development_dependency "rake", '~> 10.0'
-  s.add_development_dependency "pry", '~> 0.10'
-  s.add_development_dependency "faraday", '~> 0.8'
+  s.add_development_dependency 'rspec', '~> 3.3'
+  s.add_development_dependency 'rack-test', '~> 0.6'
+  s.add_development_dependency 'rake', '~> 10.0'
+  s.add_development_dependency 'pry', '~> 0.10'
+  s.add_development_dependency 'faraday', '~> 0.8'
+  s.add_development_dependency 'timecop', '~> 0.8'
+  s.add_development_dependency 'webmock', '~> 1.22'
 
-  # install one or the other (Scribe or Hermann)
-  s.add_development_dependency 'hermann', "~> 0.25"
-  s.add_development_dependency "scribe", "~> 0.2.4"
+  # manually install the gem depending on the adapter you want to use
+  # multi_json might not be needed if your project already uses a JSON gem
+  s.add_development_dependency 'hermann', '~> 0.25'
+  s.add_development_dependency 'scribe', '~> 0.2.4'
 end

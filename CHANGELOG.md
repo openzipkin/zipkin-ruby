@@ -1,3 +1,6 @@
+# 0.9.0
+Add a JSON tracer (ZipkinJsonTracer).
+
 # 0.8.1
 Set caller service name using domain environment variable. If the value
 is not set, it will fall back to the configuration file default.

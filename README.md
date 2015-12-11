@@ -31,10 +31,13 @@ where Rails.config.zipkin_tracer or config is a hash that can contain the follow
  * `:whitelist_plugin` - plugin function which recieves Rack env and will force sampling if it returns true
  * `:zookeeper` - plugin function which uses zookeeper and kafka instead of scribe as the transport
  * `:logger` - A logger class following the standard's library Logger interface (Log4r, Rails.logger, etc).
+ * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use JSON over HTTP instead of Scribe or Kafka
+ * `:traces_buffer` (default: 100) - the number of annotations stored until automatic flush
+   (note that annotations are also flushed when the request is complete)
 
 
- If The configuration do not provide a Scribe or a Zookeeper servers, then the middlewares will not
- attempt to send traces. But they will still generate proper IDs and pass them to other services.
+ If the configuration does not provide either a JSON, Scribe or Zookeeper server then the middlewares will not
+ attempt to send traces although they will still generate proper IDs and pass them to other services.
  Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin,
  you can still use this gem. Just do not specify any server :)
 
@@ -141,3 +144,11 @@ based broker discovery being JVM based.
 # Install scribe
   gem 'scribe', "~> 0.2.4"
 ```
+
+### JSON Tracer
+
+Like the other tracers, it inherits from the Tracer found in Finagle.
+If the configuration specifies a `json_api_host` then the gem will serialize the traces to JSON
+and POST them to the defined host (the path to which the data is posted is `/api/v1/spans`).
+If a `traces_buffer` value is provided it will buffer the traces call so as not to hammer your zipkin
+instance. The default is `10`.

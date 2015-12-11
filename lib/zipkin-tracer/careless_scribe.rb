@@ -16,7 +16,7 @@ require 'sucker_punch'
 
 
 module ScribeThrift
-  # This is here just for the monkey partching
+  # This is here just for the monkey patching
   class Client
     # This method in the original class was both sending and receiving logs.
     # The original class: https://github.com/twitter/scribe/blob/master/vendor/gen-rb/scribe.rb
@@ -46,12 +46,10 @@ class AsyncScribe
   rescue ThriftClient::NoServersAvailable, Thrift::Exception
     # I couldn't care less
   end
-
 end
 
 # Scribe which rescue thrift errors to avoid them to raise to the client
 class CarelessScribe
-
   def initialize(scribe_server_address)
     @server_address = scribe_server_address
   end
@@ -66,5 +64,4 @@ class CarelessScribe
   rescue ThriftClient::NoServersAvailable, Thrift::Exception
     # I couldn't care less
   end
-
 end
