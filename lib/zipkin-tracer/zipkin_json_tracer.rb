@@ -1,6 +1,6 @@
 require 'json'
 require 'faraday'
-require 'finagle-thrift'
+require 'sucker_punch'
 require 'finagle-thrift/tracer'
 
 class AsyncJsonApiClient

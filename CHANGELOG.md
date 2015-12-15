@@ -1,3 +1,6 @@
+# 0.9.1
+Make Scribe actually optional by inspecting the conf first and requiring after.
+
 # 0.9.0
 Add a JSON tracer (ZipkinJsonTracer).
 

@@ -13,19 +13,10 @@
 # limitations under the License.
 require 'finagle-thrift'
 require 'finagle-thrift/trace'
-require 'scribe'
-
+require 'sucker_punch'
 require 'zipkin-tracer/config'
-require 'zipkin-tracer/careless_scribe'
-require 'zipkin-tracer/zipkin_json_tracer'
 
-if RUBY_PLATFORM == 'java'
-  require 'hermann/producer'
-  require 'zipkin-tracer/zipkin_kafka_tracer'
-end
-
-
-module ZipkinTracer extend self
+module ZipkinTracer
 
   class RackHandler
     B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED]
@@ -41,10 +32,13 @@ module ZipkinTracer extend self
 
       ::Trace.tracer = case adapter
         when :json
+          require 'zipkin-tracer/zipkin_json_tracer'
           ::Trace::ZipkinJsonTracer.new(config.json_api_host, config.traces_buffer)
         when :scribe
+          require 'zipkin-tracer/careless_scribe'
           ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
         when :kafka
+          require 'zipkin-tracer/zipkin_kafka_tracer'
           kafkaTracer = ::Trace::ZipkinKafkaTracer.new
           kafkaTracer.connect(config.zookeeper)
           kafkaTracer

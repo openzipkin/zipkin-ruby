@@ -44,7 +44,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'webmock', '~> 1.22'
 
   # manually install the gem depending on the adapter you want to use
-  # multi_json might not be needed if your project already uses a JSON gem
   s.add_development_dependency 'hermann', '~> 0.25'
   s.add_development_dependency 'scribe', '~> 0.2.4'
 end
