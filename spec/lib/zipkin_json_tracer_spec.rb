@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'zipkin-tracer/zipkin_json_tracer'
 
 describe Trace::ZipkinJsonTracer do
   let(:span_id) { 'c3a555b04cf7e099' }

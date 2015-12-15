@@ -25,9 +25,9 @@ module ZipkinTracer
     def adapter
       if !!@json_api_host
         :json
-      elsif !!(@scribe_server && defined?(::Scribe))
+      elsif !!@scribe_server
         :scribe
-      elsif !!(@zookeeper && RUBY_PLATFORM == 'java' && defined?(::Hermann))
+      elsif !!@zookeeper && RUBY_PLATFORM == 'java'
         :kafka
       else
         nil

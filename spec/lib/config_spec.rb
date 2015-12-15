@@ -48,12 +48,6 @@ module ZipkinTracer
       end
 
       context 'scribe' do
-        it 'does not return :scribe if Scribe is not in the project' do
-          hide_const('Scribe')
-          config = Config.new(nil, scribe_server: 'http://server.yes.net')
-          expect(config.adapter).to be_nil
-        end
-
         it 'returns :scribe if the scribe server has been set' do
           require 'scribe'
           config = Config.new(nil, scribe_server: 'http://server.yes.net')
@@ -67,12 +61,6 @@ module ZipkinTracer
         it 'does not return :kafka if zookeeper has not been set' do
           config = Config.new(nil, {})
           stub_const('Hermann', 'CoolGem')
-          expect(config.adapter).to be_nil
-        end
-
-        it 'does not return :kafka if Hermann is not in the project' do
-          hide_const('Hermann')
-          config = Config.new(nil, zookeeper: 'http://server.yes.net')
           expect(config.adapter).to be_nil
         end
 
