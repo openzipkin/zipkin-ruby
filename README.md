@@ -31,10 +31,6 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
 
 
-If the configuration does not provide either a JSON, Zookeeper or Scribe server then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
-Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin you can still use this gem. Just do not specify any server :)
-
-
 ### Sending traces on outgoing requests with Faraday
 
 First, Faraday has to be part of your Gemfile:
@@ -60,6 +56,7 @@ end
 
 Note that supplying the service name for the destination service is optional;
 the tracing will default to a service name derived from the first section of the destination URL (e.g. 'service.example.com' => 'service').
+
 
 ## Tracers
 
@@ -91,6 +88,13 @@ gem 'hermann', '~> 0.25'
 The original tracer, it uses scribe and thrift to send traces.
 
 You need to explicitly install the gem (`gem 'scribe', '~> 0.2.4'`) and set `:scribe_server` in the config.
+
+
+### Null
+
+If the configuration does not provide either a JSON, Zookeeper or Scribe server then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
+
+Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin you can still use this gem. Just do not specify any server :)
 
 
 
