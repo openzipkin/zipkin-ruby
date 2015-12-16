@@ -13,3 +13,6 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-tracer
+before_install:
+  - rvm @global do gem uninstall bundler -a -x
+  - rvm @global do gem install bundler -v 1.10.6
