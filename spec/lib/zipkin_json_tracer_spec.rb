@@ -12,7 +12,7 @@ describe Trace::ZipkinJsonTracer do
 
   let(:json_api_host) { 'http://json.example.com' }
   let(:traces_buffer) { 1 }
-  let(:tracer) { described_class.new(json_api_host, traces_buffer) }
+  let(:tracer) { described_class.new(json_api_host: json_api_host, traces_buffer: traces_buffer) }
 
   describe '#record' do
     context 'not sampling' do

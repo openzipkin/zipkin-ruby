@@ -33,7 +33,7 @@ module ZipkinTracer
       ::Trace.tracer = case adapter
         when :json
           require 'zipkin-tracer/zipkin_json_tracer'
-          ::Trace::ZipkinJsonTracer.new(config.json_api_host, config.traces_buffer)
+          ::Trace::ZipkinJsonTracer.new(json_api_host: config.json_api_host, traces_buffer: config.traces_buffer)
         when :scribe
           require 'zipkin-tracer/careless_scribe'
           ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
