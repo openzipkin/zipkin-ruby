@@ -18,6 +18,8 @@ class AsyncJsonApiClient
 end
 
 module Trace
+  # This class sends information to the Zipkin API.
+  # The API accepts a JSON representation of a list of spans
   class ZipkinJsonTracer < ZipkinTracerBase
     def flush!
       AsyncJsonApiClient.new.async.perform(@options[:json_api_host], @spans.values.dup)

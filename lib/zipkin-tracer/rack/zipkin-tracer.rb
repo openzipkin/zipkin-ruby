@@ -39,9 +39,7 @@ module ZipkinTracer
           ::Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
-          kafkaTracer = ::Trace::ZipkinKafkaTracer.new
-          kafkaTracer.connect(config.zookeeper)
-          kafkaTracer
+          ::Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
         else
           ::Trace::NullTracer.new
       end

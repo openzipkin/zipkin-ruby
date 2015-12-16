@@ -3,10 +3,15 @@ require 'finagle-thrift'
 require 'finagle-thrift/tracer'
 
 module Trace
+  # This class is a base for tracers sending information to Zipkin.
+  # It knows about zipkin types of annotations and send traces when the server
+  # is done with its request
+  # Traces dealing with zipkin should inherit from this class and implement the
+  # flush! method which actually sends the information
   class ZipkinTracerBase < Tracer
     TRACER_CATEGORY = "zipkin".freeze
 
-    def initialize(options)
+    def initialize(options={})
       @traces_buffer = options[:traces_buffer] || raise(ArgumentError, 'A proper buffer must be setup for the Zipkin tracer')
       @options = options
       reset
@@ -37,15 +42,14 @@ module Trace
     end
 
     def flush!
+      raise "not implemented"
     end
 
     private
 
     def get_span_for_id(id)
       key = id.span_id.to_s
-      @spans[key] ||= begin
-        Span.new("", id)
-      end
+      @spans[key] ||= Span.new("", id)
     end
 
     def reset

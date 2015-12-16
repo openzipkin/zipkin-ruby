@@ -7,7 +7,7 @@ zipkin_tracer_config = {
   service_port: 9410,
   sample_rate: 1,
   traces_buffer: 1,
-  log_api_host: '127.0.0.1:9410'
+  json_api_host: '127.0.0.1:9410'
 }
 
 use ZipkinTracer::RackHandler, zipkin_tracer_config
