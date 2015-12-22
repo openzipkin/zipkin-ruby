@@ -67,6 +67,14 @@ module ZipkinTracer
 
     private
 
+    def record(annotation)
+      ::Trace.record(annotation)
+    # Nothing wonky that the tracer does should stop us from using the app!!!
+    # Usually is better to rescue StandardError but the socket layer can launch Errno kind of exceptions
+    rescue Exception
+      # Ignore low level errors
+    end
+
     # Use the Domain environment variable to extract the service name, otherwise use the default config name
     def service_name(default_name)
       ENV["DOMAIN"].to_s.empty? ? default_name : ENV["DOMAIN"].split('.').first
@@ -93,19 +101,19 @@ module ZipkinTracer
       @config.whitelist_plugin && @config.whitelist_plugin.call(env)
     end
 
-    def tracing_filter(trace_id, env, whitelisted = false)
+    def tracing_filter(trace_id, env, whitelisted)
       synchronize do
         ::Trace.push(trace_id)
         #if called by a service, the caller already added the information
         add_request_information(env) unless called_with_zipkin_headers?(env)
-        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_RECV, ::Trace.default_endpoint))
-        ::Trace.record(::Trace::Annotation.new('whitelisted', ::Trace.default_endpoint)) if whitelisted
+        record(::Trace::Annotation.new(::Trace::Annotation::SERVER_RECV, ::Trace.default_endpoint))
+        record(::Trace::Annotation.new('whitelisted', ::Trace.default_endpoint)) if whitelisted
       end
-      status, headers, body = yield if block_given?
+      status, headers, body = yield
     ensure
       synchronize do
         annotate(env, status, headers, body)
-        ::Trace.record(::Trace::Annotation.new(::Trace::Annotation::SERVER_SEND, ::Trace.default_endpoint))
+        record(::Trace::Annotation.new(::Trace::Annotation::SERVER_SEND, ::Trace.default_endpoint))
         ::Trace.pop
       end
       [status, headers, body]
@@ -113,7 +121,7 @@ module ZipkinTracer
 
     def add_request_information(env)
       ::Trace.set_rpc_name(env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
-      ::Trace.record(::Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', ::Trace.default_endpoint))
+      record(::Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', ::Trace.default_endpoint))
     end
 
     def called_with_zipkin_headers?(env)
@@ -124,9 +132,7 @@ module ZipkinTracer
       @lock.synchronize do
         yield
       end
-      # Nothing wonky that the tracer does should stop us from using the app!!!
-      # Usually is better to rescue StandardError but the socket layer can launch Errno kind of exceptions
-    rescue Exception => e
+    rescue => e
       @config.logger.error("Exception #{e.message} while sending Zipkin traces. #{e.backtrace}")
     end
 

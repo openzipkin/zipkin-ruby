@@ -3,16 +3,25 @@ require 'spec_helper'
 
 describe ZipkinTracer::RackHandler do
   def middleware(app, config={})
-    ZipkinTracer::RackHandler.new(app, { logger: Logger.new(nil) }.merge(config))
+    described_class.new(app, { logger: Logger.new(nil) }.merge(config))
   end
 
   def mock_env(path = '/', params = {})
-    @request = Rack::MockRequest.env_for(path, params)
+    Rack::MockRequest.env_for(path, params)
   end
+
+  def expect_host(host)
+    expect(host).to be_a_kind_of(::Trace::Endpoint)
+    expect(host.ipv4).to eq(host_ip)
+  end
+
+  let(:app_status) { 200 }
+  let(:app_headers) { { 'Content-Type' => 'text/plain' } }
+  let(:app_body) { 'hello' }
 
   let(:app) {
     lambda { |env|
-      [200, { 'Content-Type' => 'text/plain' }, ['hello']]
+      [app_status, app_headers, [app_body]]
     }
   }
 
@@ -28,12 +37,23 @@ describe ZipkinTracer::RackHandler do
       expect(::Trace).to receive(:push).ordered
       expect(::Trace).to receive(:set_rpc_name).ordered.with('get')
       expect(::Trace).to receive(:pop).ordered
-      expect(::Trace).to receive(:record).exactly(3).times
+      expect(subject).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+        expect(ann.key).to eq('http.uri')
+        expect_host(ann.host)
+      end
+      expect(subject).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+        expect(ann.value).to eq(::Trace::Annotation::SERVER_RECV)
+        expect_host(ann.host)
+      end
+      expect(subject).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+        expect(ann.value).to eq(::Trace::Annotation::SERVER_SEND)
+        expect_host(ann.host)
+      end
       status, headers, body = subject.call(mock_env)
 
-      # return expected status
-      expect(status).to eq(200)
-      expect { |b| body.each &b }.to yield_with_args('hello')
+      expect(status).to eq(app_status)
+      expect(headers).to eq(app_headers)
+      expect { |b| body.each &b }.to yield_with_args(app_body)
     end
   end
 
@@ -54,6 +74,12 @@ describe ZipkinTracer::RackHandler do
 
     context 'configured to use json' do
       subject { middleware(app, json_api_host: 'fake_json_api_host') }
+
+      let(:host_ip) { '127.0.0.1' }
+      before do
+        # A hack for our code to not be able to resolve localhost
+        allow(Socket).to receive(:getaddrinfo).and_raise SocketError
+      end
       it_should_behave_like 'traces the request'
 
       it 'creates a zipkin json tracer' do
@@ -214,6 +240,7 @@ describe ZipkinTracer::RackHandler do
       expect(::Trace).to receive(:push).ordered
       expect(::Trace).to receive(:set_rpc_name).ordered
       expect(::Trace).to receive(:pop).ordered
+
       expect(::Trace).to receive(:record).exactly(5).times
       status, headers, body = subject.call(mock_env)
 
@@ -248,7 +275,19 @@ describe ZipkinTracer::RackHandler do
         expect(::Trace).to receive(:push) do |trace_id|
           expect(trace_id.sampled?).to be true
         end
-        expect(::Trace).to receive(:record).exactly(4).times # extra whitelisted annotation
+
+        expect(subject).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+          expect(ann.key).to eq('http.uri')
+        end
+        expect(subject).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+          expect(ann.value).to eq(::Trace::Annotation::SERVER_RECV)
+        end
+        expect(subject).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+          expect(ann.value).to eq('whitelisted')
+        end
+        expect(subject).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+          expect(ann.value).to eq(::Trace::Annotation::SERVER_SEND)
+        end
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end
@@ -257,15 +296,8 @@ describe ZipkinTracer::RackHandler do
     context 'configured with filter plugin that allows none' do
       subject { middleware(app, whitelist_plugin: lambda { |env| false }) }
 
-      it 'does not sample the request' do
-        allow(::Trace).to receive(:should_sample?) { false }
-        expect(::Trace).to receive(:push) do |trace_id|
-          expect(trace_id.sampled?).to be false
-        end
-        expect(::Trace).to receive(:record).exactly(3).times # normal annotations
-        status, _, _ = subject.call(mock_env)
-        expect(status).to eq(200)
-      end
+      it_should_behave_like 'traces the request'
+
     end
   end
 end
