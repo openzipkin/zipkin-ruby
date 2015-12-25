@@ -42,6 +42,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'faraday', '~> 0.8'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 1.22'
+  s.add_development_dependency 'mutant-rspec'
+  s.add_development_dependency 'byebug'
 
   # manually install the gem depending on the adapter you want to use
   s.add_development_dependency 'hermann', '~> 0.25'

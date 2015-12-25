@@ -37,6 +37,7 @@ describe ZipkinTracer::FaradayHandler do
   end
 
   before do
+    Trace.tracer = Trace::NullTracer.new
     ::Trace.sample_rate = 0.1 # make sure initialized
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
@@ -131,11 +132,6 @@ describe ZipkinTracer::FaradayHandler do
         expect_tracing
         process('', url)
       end
-    end
-
-    it 'does not allow exceptions to raise to the application when ::Trace.record raises' do
-      allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
-      expect{process('', url)}.not_to raise_error
     end
 
   end

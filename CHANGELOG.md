@@ -1,3 +1,7 @@
+# 0.9.2
+Bugfix: Tracer is now Threadsafe
+Bugfix: Always create trace IDs even when the trace  will not be sent to zipkin (other parts of the app may use them).
+
 # 0.9.1
 Make Scribe actually optional by inspecting the conf first and requiring after.
 

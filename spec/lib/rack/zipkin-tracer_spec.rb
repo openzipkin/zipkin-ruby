@@ -3,7 +3,8 @@ require 'spec_helper'
 
 describe ZipkinTracer::RackHandler do
   def middleware(app, config={})
-    described_class.new(app, { logger: Logger.new(nil) }.merge(config))
+    configuration = { logger: logger, sample_rate: 1}.merge(config)
+    described_class.new(app, configuration)
   end
 
   def mock_env(path = '/', params = {})
@@ -17,11 +18,13 @@ describe ZipkinTracer::RackHandler do
 
   let(:app_status) { 200 }
   let(:app_headers) { { 'Content-Type' => 'text/plain' } }
-  let(:app_body) { 'hello' }
+  let(:app_body) { path }
+  let(:path) { '/'}
+  let(:logger) { Logger.new(nil) }
 
   let(:app) {
     lambda { |env|
-      [app_status, app_headers, [app_body]]
+      [app_status, app_headers, [env['PATH_INFO']]]
     }
   }
 
@@ -31,12 +34,11 @@ describe ZipkinTracer::RackHandler do
     allow(::Trace::Endpoint).to receive(:host_to_i32).and_return(host_ip)
   end
 
-
   shared_examples_for 'traces the request' do
     it 'traces the request' do
-      expect(::Trace).to receive(:push).ordered
+      expect(::Trace).to receive(:push).and_call_original.ordered
       expect(::Trace).to receive(:set_rpc_name).ordered.with('get')
-      expect(::Trace).to receive(:pop).ordered
+      expect(::Trace).to receive(:pop).and_call_original.ordered
       expect(subject).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
         expect(ann.key).to eq('http.uri')
         expect_host(ann.host)
@@ -50,7 +52,6 @@ describe ZipkinTracer::RackHandler do
         expect_host(ann.host)
       end
       status, headers, body = subject.call(mock_env)
-
       expect(status).to eq(app_status)
       expect(headers).to eq(app_headers)
       expect { |b| body.each &b }.to yield_with_args(app_body)
@@ -83,7 +84,7 @@ describe ZipkinTracer::RackHandler do
       it_should_behave_like 'traces the request'
 
       it 'creates a zipkin json tracer' do
-        expect(::Trace::ZipkinJsonTracer).to receive(:new)
+        expect(Trace::ZipkinJsonTracer).to receive(:new)
         middleware(app, json_api_host: 'fake_json_api_host')
       end
     end
@@ -105,15 +106,6 @@ describe ZipkinTracer::RackHandler do
       it 'creates a null scribe tracer' do
         expect(::Trace::NullTracer).to receive(:new)
         middleware(app)
-      end
-    end
-
-    describe 'sample rate initialization' do
-      let(:sample_rate) { 0.42 }
-      subject { middleware(app, sample_rate: sample_rate) }
-      it 'sets the sample rate' do
-        expect(::Trace).to receive(:sample_rate=).with(sample_rate)
-        subject.call(mock_env)
       end
     end
 
@@ -140,13 +132,13 @@ describe ZipkinTracer::RackHandler do
     end
   end
 
-  context 'Zipkin headers are passed to the middlewawre' do
+  context 'Zipkin headers are passed to the middleware' do
     subject { middleware(app) }
     let(:env) {mock_env(',', ZipkinTracer::RackHandler::B3_REQUIRED_HEADERS.map {|a| Hash[a, 1] }.inject(:merge))}
 
     it 'does not set the RPC method' do
       expect(::Trace).not_to receive(:set_rpc_name)
-      status, headers, body = subject.call(env)
+      subject.call(env)
     end
   end
 
@@ -174,7 +166,7 @@ describe ZipkinTracer::RackHandler do
         status, headers, body = subject.call(mock_env)
         # return expected status
         expect(status).to eq(200)
-        expect { |b| body.each &b }.to yield_with_args('hello')
+        expect { |b| body.each &b }.to yield_with_args(app_body)
       end
 
       it 'does not trace the request' do
@@ -189,33 +181,45 @@ describe ZipkinTracer::RackHandler do
 
     it_should_behave_like 'traces the request'
 
-    it 'calls the app even when the tracer raises while the call method is called' do
-      allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
-      status, headers, body = subject.call(mock_env)
-      # return expected status
-      expect(status).to eq(200)
-      expect { |b| body.each &b }.to yield_with_args('hello')
+    context 'record raises socket related errors' do
+      it 'calls the app normally' do
+        allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
+        status, headers, body = subject.call(mock_env)
+        # return expected status
+        expect(status).to eq(200)
+        expect { |b| body.each &b }.to yield_with_args(app_body)
+      end
     end
 
-    context 'with sample rate set to 0' do
-      before(:each) { ::Trace.sample_rate = 0 }
-
-      it 'does not sample a request' do
-        # mock should_sample? because it has a rand and produces
-        # non-deterministic results
-        allow(::Trace).to receive(:should_sample?) { false }
-        expect(::Trace).to receive(:push) do |trace_id|
-          expect(trace_id.sampled?).to be false
-        end
-        status, headers, body = subject.call(mock_env())
+    context 'Zipkin methods raise exceptions' do
+      it 'calls the app normally' do
+        allow(Trace).to receive(:set_rpc_name).and_raise(StandardError)
+        status, headers, body = subject.call(mock_env)
         # return expected status
+        expect(status).to eq(200)
+        expect { |b| body.each &b }.to yield_with_args(app_body)
+      end
+
+      it 'errors are logged' do
+        allow(Trace).to receive(:set_rpc_name).and_raise(StandardError)
+        expect(logger).to receive(:error).with(/Exception StandardError while sending Zipkin traces.*/)
+        subject.call(mock_env)
+      end
+    end
+
+
+    context 'with sample rate set to 0' do
+      subject { middleware(app, { sample_rate: 0 }) }
+
+      it 'Trace is created but it is not sent to zipkin' do
+        expect(::Trace).to receive(:push).and_call_original
+        expect(::Trace).not_to receive(:record)
+        status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end
 
       it 'always samples if debug flag is passed in header' do
-        expect(::Trace).to receive(:push) do |trace_id|
-          expect(trace_id.sampled?).to be true
-        end
+        expect(::Trace).to receive(:push).and_call_original
         status, headers, body = subject.call(
           mock_env('/', 'HTTP_X_B3_FLAGS' => ::Trace::Flags::DEBUG.to_s))
 
@@ -237,7 +241,7 @@ describe ZipkinTracer::RackHandler do
     subject { middleware(app, annotate_plugin: annotate) }
 
     it 'traces a request with additional annotations' do
-      expect(::Trace).to receive(:push).ordered
+      expect(::Trace).to receive(:push).and_call_original.ordered
       expect(::Trace).to receive(:set_rpc_name).ordered
       expect(::Trace).to receive(:pop).ordered
 
@@ -258,24 +262,20 @@ describe ZipkinTracer::RackHandler do
   context 'configured with filter plugin that allows none' do
     subject { middleware(app, filter_plugin: lambda { |env| false }) }
 
-    it 'does not trace the request' do
-      expect(::Trace).not_to receive(:push)
+    it 'does not send the trace to zipkin' do
+      expect(::Trace).to receive(:push).and_call_original
+      expect(::Trace).not_to receive(:record)
       status, _, _ = subject.call(mock_env)
       expect(status).to eq(200)
     end
   end
 
   context 'with sample rate set to 0' do
-    before(:each) { ::Trace.sample_rate = 0 }
 
     context 'configured with whitelist plugin that forces sampling' do
-      subject { middleware(app, whitelist_plugin: lambda { |env| true }) }
+      subject { middleware(app, whitelist_plugin: lambda { |env| true }, sample_rate: 0) }
 
       it 'samples the request' do
-        expect(::Trace).to receive(:push) do |trace_id|
-          expect(trace_id.sampled?).to be true
-        end
-
         expect(subject).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
           expect(ann.key).to eq('http.uri')
         end
