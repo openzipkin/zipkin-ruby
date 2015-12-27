@@ -1,5 +1,6 @@
 language: ruby
 rvm:
+  - 2.3.0
   - 2.2
   - 2.1
   - 2.0
@@ -20,3 +21,4 @@ notifications:
     on_success: change
     on_failure: always
     on_start: false
+script: "bundle exec rspec"

@@ -28,16 +28,17 @@ module ZipkinTracer
       @app = app
       @lock = Mutex.new
       @config = Config.new(app, config).freeze
-      TracerFactory.new.tracer(@config)
+      @tracer = TracerFactory.new.tracer(@config)
     end
 
     def call(env)
       zipkin_env = ZipkinEnv.new(env, @config)
-      with_trace_id(zipkin_env.trace_id) do
-        if !Trace.id.sampled? || !routable_request?(env)
+      trace_id = zipkin_env.trace_id
+      with_trace_id(trace_id) do
+        if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
-          trace!(zipkin_env) { @app.call(env) }
+          trace!(trace_id, zipkin_env) { @app.call(env) }
         end
       end
     end
@@ -52,7 +53,7 @@ module ZipkinTracer
     end
 
     def record(annotation)
-      Trace.record(annotation)
+      @tracer.record(@trace_id, annotation)
     end
 
     # If the request is not valid for this service, we do not what to trace it.
@@ -68,24 +69,24 @@ module ZipkinTracer
       @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
     end
 
-    def trace!(zipkin_env, &block)
+    def trace!(trace_id, zipkin_env, &block)
       synchronize do
         #if called by a service, the caller already added the information
-        trace_request_information(zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
-        record(Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
-        record(Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
+        trace_request_information(trace_id, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
+        @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
+        @tracer.record(trace_id, Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
       end
       status, headers, body = yield
     ensure
       synchronize do
         annotate_plugin(zipkin_env.env, status, headers, body)
-        record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
+        @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
       end
     end
 
-    def trace_request_information(env)
-      Trace.set_rpc_name(env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
-      record(Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', Trace.default_endpoint))
+    def trace_request_information(trace_id, env)
+      @tracer.set_rpc_name(trace_id, env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
+      @tracer.record(trace_id, Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', Trace.default_endpoint))
     end
 
     def synchronize(&block)
@@ -120,11 +121,11 @@ module ZipkinTracer
       end
 
       def called_with_zipkin_headers?
-        B3_REQUIRED_HEADERS.all? { |key| @env.has_key?(key) }
+        @called_with_zipkin_headers ||= B3_REQUIRED_HEADERS.all? { |key| @env.has_key?(key) }
       end
 
       def force_sample?
-        @config.whitelist_plugin && @config.whitelist_plugin.call(@env)
+        @force_sample ||= @config.whitelist_plugin && @config.whitelist_plugin.call(@env)
       end
 
       private
@@ -134,7 +135,7 @@ module ZipkinTracer
       end
 
       def should_trace?(parent_trace_sampled)
-        if parent_trace_sampled  #A service upstream decided this goes in all the way
+        if parent_trace_sampled  # A service upstream decided this goes in all the way
           parent_trace_sampled == 'true'
         else
           force_sample? || current_trace_sampled? && !filtered?

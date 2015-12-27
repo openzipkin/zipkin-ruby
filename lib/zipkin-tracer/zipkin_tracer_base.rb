@@ -12,12 +12,12 @@ module Trace
     TRACER_CATEGORY = "zipkin".freeze
 
     def initialize(options={})
+      @options = options
       @traces_buffer = options[:traces_buffer] || raise(ArgumentError, 'A proper buffer must be setup for the Zipkin tracer')
       reset
     end
 
     def record(id, annotation)
-      return unless id.sampled?
       span = get_span_for_id(id)
 
       case annotation
@@ -36,7 +36,6 @@ module Trace
     end
 
     def set_rpc_name(id, name)
-      return unless id.sampled?
       span = get_span_for_id(id)
       span.name = name.to_s
     end

@@ -24,7 +24,7 @@ module Trace
         trans = Thrift::MemoryBufferTransport.new(buf)
         oprot = Thrift::BinaryProtocol.new(trans)
         span.to_thrift.write(oprot)
-        @producer.push(buf, :topic => @topic).value!
+        @producer.push(buf, topic: @topic).value!
       end
     rescue Exception
       # Ignore socket errors, etc
