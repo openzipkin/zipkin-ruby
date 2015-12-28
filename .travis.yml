@@ -1,10 +1,10 @@
 language: ruby
 rvm:
-- 2.2
-- 2.1
-- 2.0
-- jruby-1.7.23
-- jruby-9.0.4.0
+  - 2.2
+  - 2.1
+  - 2.0
+  - jruby-1.7.23
+  - jruby-9.0.4.0
 deploy:
   provider: rubygems
   api_key:
@@ -13,9 +13,6 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-tracer
-before_install:
-  - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.10.6
 notifications:
   webhooks:
     urls:
