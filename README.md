@@ -158,3 +158,29 @@ For example:
 # sample if request header specifies known device identifier
 lambda { |env| KNOWN_DEVICES.include?(env['HTTP_X_DEVICE_ID']) }
 ```
+
+## Development
+
+This project uses Rspec. Make sure your PRs contain proper tests.
+We have two rake task to help finding performance issues:
+```
+rake benchmark
+```
+Will run a benchmark testing all the different tracers and giving you
+their relative speed.
+
+```
+rake run_once
+```
+Will run the rack middleware, optionally the faraday middleware. Please
+modify the code to run the middleware you want to test.
+The best way to use this rake test is together with rbtrace.
+First run the task in background:
+```
+rake run_once &
+```
+Take note of the PID that displays in your terminal and run:
+```
+rbtrace -p PID -f
+```
+It will print out the methods used and the time each took.

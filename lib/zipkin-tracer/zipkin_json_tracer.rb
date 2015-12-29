@@ -1,4 +1,5 @@
 require 'json'
+require 'sucker_punch'
 require 'zipkin-tracer/zipkin_tracer_base'
 
 
@@ -21,8 +22,15 @@ module Trace
   # This class sends information to the Zipkin API.
   # The API accepts a JSON representation of a list of spans
   class ZipkinJsonTracer < ZipkinTracerBase
+
+    def initialize(options)
+      SuckerPunch.logger = options[:logger]
+      @json_api_host = options[:json_api_host]
+      super(options)
+    end
+
     def flush!
-      AsyncJsonApiClient.new.async.perform(@options[:json_api_host], @spans.values.dup)
+      AsyncJsonApiClient.new.async.perform(@json_api_host, spans.values.dup)
     end
   end
 end

@@ -1,3 +1,8 @@
+# 0.10.0
+Always create trace IDs even when the trace  will not be sent to zipkin (other parts of the app may use them).
+Bugfix: Tracer is now Threadsafe
+Development improvement: Benchmark Rake task to help finding performance issues
+
 # 0.9.1
 Make Scribe actually optional by inspecting the conf first and requiring after.
 

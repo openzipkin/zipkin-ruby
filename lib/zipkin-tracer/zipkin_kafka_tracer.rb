@@ -19,14 +19,15 @@ module Trace
     end
 
     def flush!
-      topic = opts[:topic] || DEFAULT_KAFKA_TOPIC
-      messages = @spans.values.map do |span|
+      messages = spans.values.map do |span|
         buf = ''
         trans = Thrift::MemoryBufferTransport.new(buf)
         oprot = Thrift::BinaryProtocol.new(trans)
         span.to_thrift.write(oprot)
-        @producer.push(buf, :topic => topic).value!
+        @producer.push(buf, topic: @topic).value!
       end
+    rescue Exception
+      # Ignore socket errors, etc
     end
   end
 end

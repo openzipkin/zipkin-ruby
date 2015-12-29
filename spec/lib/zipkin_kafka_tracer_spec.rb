@@ -20,14 +20,10 @@ if RUBY_PLATFORM == 'java'
     describe '#initialize' do
       context 'with default settings' do
 
-
         it 'has default topic' do
           expect(tracer.instance_variable_get(:@topic)).to eq Trace::ZipkinKafkaTracer::DEFAULT_KAFKA_TOPIC
         end
-        it 'initializes instance variables' do
-          expect(tracer.instance_variable_get(:@spans)).to be_a(Hash)
-          expect(tracer.instance_variable_get(:@spans).length).to eq 0
-        end
+
         it 'connects to zookeeper to create the producer' do
           expect(tracer.instance_variable_get(:@producer)).to eq producer
         end
@@ -62,12 +58,6 @@ if RUBY_PLATFORM == 'java'
       let(:binary_annotation) { MockTrace::BinaryAnnotation.new }
       let(:annotation)        { MockTrace::Annotation.new }
 
-      it 'returns if id already sampled' do
-        allow(id).to receive(:sampled?) { false }
-        expect(tracer).to_not receive(:get_span_for_id)
-        tracer.record(id, annotation)
-      end
-
       context 'processing annotation' do
         before do
           allow(id).to receive(:sampled?) { true }
@@ -88,12 +78,6 @@ if RUBY_PLATFORM == 'java'
 
     describe '#set_rpc_name' do
       let(:name) { 'name' }
-
-      it 'returns if id already sampled' do
-        allow(id).to receive(:sampled?) { false }
-        expect(tracer).to_not receive(:get_span_for_id)
-        tracer.set_rpc_name(id, name)
-      end
 
       it 'sets the span name' do
         allow(id).to receive(:sampled?) { true }

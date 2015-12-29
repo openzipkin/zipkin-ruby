@@ -12,13 +12,12 @@ module Trace
     TRACER_CATEGORY = "zipkin".freeze
 
     def initialize(options={})
-      @traces_buffer = options[:traces_buffer] || raise(ArgumentError, 'A proper buffer must be setup for the Zipkin tracer')
       @options = options
+      @traces_buffer = options[:traces_buffer] || raise(ArgumentError, 'A proper buffer must be setup for the Zipkin tracer')
       reset
     end
 
     def record(id, annotation)
-      return unless id.sampled?
       span = get_span_for_id(id)
 
       case annotation
@@ -27,16 +26,16 @@ module Trace
       when Annotation
         span.annotations << annotation
       end
+      count = current_count
+      set_current_count(count + 1)
 
-      @count += 1
-      if @count >= @traces_buffer || (annotation.is_a?(Annotation) && annotation.value == Annotation::SERVER_SEND)
+      if current_count >= @traces_buffer || (annotation.is_a?(Annotation) && annotation.value == Annotation::SERVER_SEND)
         flush!
         reset
       end
     end
 
     def set_rpc_name(id, name)
-      return unless id.sampled?
       span = get_span_for_id(id)
       span.name = name.to_s
     end
@@ -47,14 +46,26 @@ module Trace
 
     private
 
+    def spans
+      Thread.current[:zipkin_spans] ||= {}
+    end
+
+    def current_count
+      Thread.current[:zipkin_spans_count] ||= 0
+    end
+
+    def set_current_count(count)
+      Thread.current[:zipkin_spans_count] = count
+    end
+
     def get_span_for_id(id)
       key = id.span_id.to_s
-      @spans[key] ||= Span.new("", id)
+      spans[key] ||= Span.new("", id)
     end
 
     def reset
-      @count = 0
-      @spans = {}
+      Thread.current[:zipkin_spans] = {}
+      set_current_count(0)
     end
   end
 end

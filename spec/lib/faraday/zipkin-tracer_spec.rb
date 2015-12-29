@@ -25,18 +25,20 @@ describe ZipkinTracer::FaradayHandler do
   let(:host_ip) { 0x11223344 }
   let(:url_path) { '/some/path/here' }
   let(:raw_url) { "https://#{hostname}#{url_path}" }
+  let(:tracer) { Trace.tracer }
 
   def process(body, url, headers = {})
     env = {
       method: :post,
       url: url,
       body: body,
-      request_headers: Faraday::Utils::Headers.new(headers),
+      request_headers: {}, #Faraday::Utils::Headers.new(headers),
     }
     middleware.call(env)
   end
 
   before do
+    Trace.tracer = Trace::NullTracer.new
     ::Trace.sample_rate = 0.1 # make sure initialized
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
@@ -52,30 +54,30 @@ describe ZipkinTracer::FaradayHandler do
 
     def expect_tracing
       # expect SEND then RECV
-      expect(::Trace).to receive(:set_rpc_name).with('post')
+      expect(tracer).to receive(:set_rpc_name).with(anything, 'post')
 
-      expect(middleware).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('http.uri')
         expect(ann.value).to eq(url_path)
       end
 
-      expect(middleware).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('sa')
         expect(ann.value).to eq('1')
         expect_host(ann.host, host_ip, service_name)
       end
 
-      expect(middleware).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |ann|
+      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('http.status')
         expect(ann.value).to eq('200')
       end
 
-      expect(middleware).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+      expect(tracer).to receive(:record).with(anything, instance_of(Trace::Annotation)) do |_, ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_SEND)
         expect_host(ann.host, '127.0.0.1', service_name)
       end.ordered
 
-      expect(middleware).to receive(:record).with(instance_of(::Trace::Annotation)) do |ann|
+      expect(tracer).to receive(:record).with(anything, instance_of(Trace::Annotation)) do |_, ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_RECV)
         expect_host(ann.host, '127.0.0.1', service_name)
       end.ordered
@@ -131,11 +133,6 @@ describe ZipkinTracer::FaradayHandler do
         expect_tracing
         process('', url)
       end
-    end
-
-    it 'does not allow exceptions to raise to the application when ::Trace.record raises' do
-      allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
-      expect{process('', url)}.not_to raise_error
     end
 
   end

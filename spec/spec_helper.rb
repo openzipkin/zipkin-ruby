@@ -1,5 +1,4 @@
 require 'zipkin-tracer'
-require 'pry'
 require 'timecop'
 require 'webmock/rspec'
 require 'sucker_punch/testing/inline'

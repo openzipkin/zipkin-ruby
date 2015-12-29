@@ -1,7 +1,14 @@
 require 'finagle-thrift'
 require 'finagle-thrift/trace'
+require 'zipkin-tracer/zipkin_tracer_base'
 
 module Trace
+
+  # We need this to access the tracer from the Faraday middleware.
+  def self.tracer
+    @tracer
+  end
+
   class Span
     def to_h
       {

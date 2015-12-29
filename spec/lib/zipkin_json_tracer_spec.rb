@@ -12,16 +12,10 @@ describe Trace::ZipkinJsonTracer do
 
   let(:json_api_host) { 'http://json.example.com' }
   let(:traces_buffer) { 1 }
-  let(:tracer) { described_class.new(json_api_host: json_api_host, traces_buffer: traces_buffer) }
+  let(:default_options) { { json_api_host: json_api_host, traces_buffer: traces_buffer } }
+  let(:tracer) { described_class.new(default_options) }
 
   describe '#record' do
-    context 'not sampling' do
-      let(:sampled) { false }
-      it 'returns without doing anything' do
-        expect(tracer).to_not receive(:get_span_for_id)
-        tracer.record(trace_id, annotation)
-      end
-    end
 
     context 'sampling' do
       let(:nb_traces) { 3 }
@@ -82,16 +76,16 @@ describe Trace::ZipkinJsonTracer do
     end
   end
 
+  describe '#initialize' do
+    let(:logger) { nil }
+    it 'sets the SuckerPunch logger' do
+      expect(SuckerPunch).to receive(:logger=).with(logger)
+      described_class.new(default_options.merge(logger: logger))
+    end
+  end
+
   describe '#set_rpc_name' do
     let(:rpc_name) { 'this_is_an_rpc' }
-
-    context 'not sampling' do
-      let(:sampled) { false }
-      it 'returns without doing anything' do
-        expect(tracer).to_not receive(:get_span_for_id)
-        tracer.set_rpc_name(trace_id, rpc_name)
-      end
-    end
 
     context 'sampling' do
       it 'sets the span name' do
