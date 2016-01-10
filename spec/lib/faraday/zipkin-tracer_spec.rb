@@ -39,7 +39,7 @@ describe ZipkinTracer::FaradayHandler do
 
   before do
     Trace.tracer = Trace::NullTracer.new
-    ::Trace.sample_rate = 0.1 # make sure initialized
+    ::Trace.sample_rate = 1 # make sure initialized
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
   end
@@ -102,9 +102,11 @@ describe ZipkinTracer::FaradayHandler do
       end
 
       it 'the original spanID is restored after the calling the middleware' do
-        ::Trace.push(trace_id)
-        result = process('', url).env
-        expect(::Trace.id).to eq(trace_id)
+        old_trace_id = Trace.id
+        ::Trace.push(trace_id) do
+          process('', url).env
+        end
+        expect(::Trace.id).to eq(old_trace_id)
       end
     end
 
@@ -122,6 +124,48 @@ describe ZipkinTracer::FaradayHandler do
       end
     end
 
+    context 'Trace has not been sampled' do
+      let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, false, 0) }
+
+      it 'sets the X-B3 request headers with a new spanID' do
+        result = nil
+        ::Trace.push(trace_id) do
+          result = process('', url).env
+        end
+
+        expect(result[:request_headers]['X-B3-TraceId']).to eq('0000000000000001')
+        expect(result[:request_headers]['X-B3-ParentSpanId']).to eq('0000000000000003')
+        expect(result[:request_headers]['X-B3-SpanId']).not_to eq('0000000000000003')
+        expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
+        expect(result[:request_headers]['X-B3-Sampled']).to eq('false')
+        expect(result[:request_headers]['X-B3-Flags']).to eq('0')
+      end
+
+      it 'the original spanID is restored after the calling the middleware' do
+        old_trace_id = Trace.id
+        ::Trace.push(trace_id) do
+          process('', url).env
+        end
+        expect(::Trace.id).to eq(old_trace_id)
+      end
+
+      it 'does not trace the request' do
+        expect(tracer).not_to receive(:set_rpc_name)
+        expect(tracer).not_to receive(:record)
+        ::Trace.push(trace_id) do
+           process('', url).env
+        end
+      end
+
+      it 'does not create any annotation' do
+        expect(Trace::BinaryAnnotation).not_to receive(:new)
+        expect(Trace::Annotation).not_to receive(:new)
+        ::Trace.push(trace_id) do
+           process('', url).env
+        end
+      end
+    end
+
     context 'when looking up hostname raises' do
       let(:host_ip) { 0x7f000001 } # expect stubbed 'null' IP
 
@@ -136,6 +180,7 @@ describe ZipkinTracer::FaradayHandler do
     end
 
   end
+
 
   context 'middleware configured (without service_name)' do
     let(:middleware) { described_class.new(wrapped_app) }

@@ -1,3 +1,8 @@
+# 0.10.1
+Performance optimization: Do not create tracing related objects in the Faraday middleware if we
+are not sampling.
+Fix benchmark Rake task so it uses the proper Faraday middlewares
+
 # 0.10.0
 Always create trace IDs even when the trace  will not be sent to zipkin (other parts of the app may use them).
 Bugfix: Tracer is now Threadsafe
