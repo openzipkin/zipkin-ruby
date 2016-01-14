@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   s.files                     = Dir.glob('{bin,lib}/**/*')
   s.require_path              = 'lib'
 
+  s.add_dependency 'faraday', '~> 0.8'
   s.add_dependency 'finagle-thrift', '~> 1.4.1'
   s.add_dependency 'rack', '~> 1.3'
   s.add_dependency 'sucker_punch', '~> 1.0'
@@ -38,7 +39,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '~> 3.3'
   s.add_development_dependency 'rack-test', '~> 0.6'
   s.add_development_dependency 'rake', '~> 10.0'
-  s.add_development_dependency 'faraday', '~> 0.8'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 1.22'
 
