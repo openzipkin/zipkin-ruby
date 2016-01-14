@@ -1,3 +1,6 @@
+# 0.10.3
+Avoid requiring finagle-thrift when possible to avoid a hard dependency on Thrift
+
 # 0.10.2
 Add faraday as a dependency
 

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 require 'scribe'
+require 'finagle-thrift' #depends on the thift gem
 require 'sucker_punch'
-
 
 module ScribeThrift
   # This is here just for the monkey patching

@@ -1,4 +1,3 @@
-require 'finagle-thrift'
 require 'finagle-thrift/trace'
 require 'zipkin-tracer/zipkin_tracer_base'
 

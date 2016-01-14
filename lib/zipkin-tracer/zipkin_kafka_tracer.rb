@@ -1,5 +1,3 @@
-require 'finagle-thrift'
-require 'finagle-thrift/tracer'
 require 'hermann/producer'
 require 'hermann/discovery/zookeeper'
 require 'zipkin-tracer/zipkin_tracer_base'

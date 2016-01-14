@@ -2,7 +2,6 @@ require 'json'
 require 'sucker_punch'
 require 'zipkin-tracer/zipkin_tracer_base'
 
-
 class AsyncJsonApiClient
   include SuckerPunch::Job
   SPANS_PATH = '/api/v1/spans'

@@ -1,6 +1,6 @@
 require 'faraday'
-require 'finagle-thrift'
 require 'finagle-thrift/trace'
+require 'finagle-thrift/tracer'
 require 'uri'
 
 module ZipkinTracer

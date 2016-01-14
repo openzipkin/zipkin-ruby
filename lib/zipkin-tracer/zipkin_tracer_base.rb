@@ -1,5 +1,4 @@
 require 'faraday'
-require 'finagle-thrift'
 require 'finagle-thrift/tracer'
 
 module Trace

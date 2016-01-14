@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-require 'finagle-thrift'
 require 'finagle-thrift/trace'
+require 'finagle-thrift/tracer'
 require 'zipkin-tracer/config'
 require 'zipkin-tracer/tracer_factory'
 
