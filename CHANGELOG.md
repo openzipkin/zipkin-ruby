@@ -1,3 +1,6 @@
+# 0.10.2
+Add faraday as a dependency
+
 # 0.10.1
 Performance optimization: Do not create tracing related objects in the Faraday middleware if we
 are not sampling.
