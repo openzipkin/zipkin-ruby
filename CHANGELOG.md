@@ -1,3 +1,6 @@
+# 0.10.4
+Add local tracing
+
 # 0.10.3
 Avoid requiring finagle-thrift when possible to avoid a hard dependency on Thrift
 
