@@ -1,3 +1,8 @@
+# 0.11.0
+Use local spans instead of thread-safe variables to improve performance
+Add new "with_new_span" method to the tracer api to allow creating
+custom spans
+
 # 0.10.3
 Avoid requiring finagle-thrift when possible to avoid a hard dependency on Thrift
 

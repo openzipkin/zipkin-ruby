@@ -9,6 +9,8 @@ describe Trace::ZipkinJsonTracer do
   let(:dummy_endpoint) { Trace::Endpoint.new('127.0.0.1', 9411, 'DummyService') }
   let(:annotation) { Trace::Annotation.new(Trace::Annotation::SERVER_RECV, dummy_endpoint) }
   let(:binary_annotation) { Trace::BinaryAnnotation.new('http.uri', '/', 'STRING', dummy_endpoint) }
+  let(:name) { 'GET' }
+  let(:span) { tracer.start_span(trace_id, name) }
 
   let(:json_api_host) { 'http://json.example.com' }
   let(:traces_buffer) { 1 }
@@ -20,7 +22,7 @@ describe Trace::ZipkinJsonTracer do
     context 'sampling' do
       let(:nb_traces) { 3 }
       let(:span_hash) { {
-        name: '',
+        name: name,
         traceId: span_id,
         id: span_id,
         parentId: nil,
@@ -50,12 +52,20 @@ describe Trace::ZipkinJsonTracer do
 
         it 'records a binary annotation' do
           stub_post_request.([span_hash.merge(binaryAnnotations: dummy_binary_annotations)])
-          nb_traces.times { tracer.record(trace_id, binary_annotation) }
+          nb_traces.times do
+            tracer.with_new_span(trace_id, name) do |span|
+              span.record(binary_annotation)
+            end
+          end
         end
 
         it 'records an annotation' do
           stub_post_request.([span_hash.merge(annotations: dummy_annotations)])
-          nb_traces.times { tracer.record(trace_id, annotation) }
+          nb_traces.times do
+            tracer.with_new_span(trace_id, name) do |span|
+              span.record(annotation)
+            end
+          end
         end
       end
 
@@ -65,12 +75,20 @@ describe Trace::ZipkinJsonTracer do
 
         it 'records several binary annotations' do
           stub_post_request.([span_hash.merge(binaryAnnotations: dummy_binary_annotations * 3)])
-          (nb_traces * 2).times { tracer.record(trace_id, binary_annotation) }
+          (nb_traces * 2).times do
+            tracer.with_new_span(trace_id, name) do |span|
+              span.record(binary_annotation)
+            end
+          end
         end
 
         it 'records several annotations' do
           stub_post_request.([span_hash.merge(annotations: dummy_annotations * 3)])
-          (nb_traces * 2).times { tracer.record(trace_id, annotation) }
+          (nb_traces * 2).times do
+            tracer.with_new_span(trace_id, name) do |span|
+              span.record(annotation)
+            end
+          end
         end
       end
     end
@@ -84,7 +102,7 @@ describe Trace::ZipkinJsonTracer do
     end
   end
 
-  describe '#set_rpc_name' do
+  describe '#start_span' do
     let(:rpc_name) { 'this_is_an_rpc' }
 
     context 'sampling' do
@@ -92,7 +110,7 @@ describe Trace::ZipkinJsonTracer do
         span = Trace::Span.new('', trace_id)
         allow(tracer).to receive(:get_span_for_id).and_return(span)
         expect(span).to receive(:name=).with(rpc_name)
-        tracer.set_rpc_name(trace_id, rpc_name)
+        tracer.start_span(trace_id, rpc_name)
       end
     end
   end

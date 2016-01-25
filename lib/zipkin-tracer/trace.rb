@@ -9,6 +9,20 @@ module Trace
   end
 
   class Span
+    attr_reader :size
+
+    # We record information into spans, then we send these spans to zipkin
+    def record(annotation)
+      @size ||= 0
+      case annotation
+      when BinaryAnnotation
+        binary_annotations << annotation
+      when Annotation
+        annotations << annotation
+      end
+      @size = @size + 1
+    end
+
     def to_h
       {
         name: @name,

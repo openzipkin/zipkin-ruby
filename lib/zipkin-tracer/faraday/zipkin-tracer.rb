@@ -49,16 +49,17 @@ module ZipkinTracer
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
       remote_endpoint = callee_endpoint(url, local_endpoint.ip_format) # The endpoint we are calling.
-      # annotate with method (GET/POST/etc.) and uri path
-      @tracer.set_rpc_name(trace_id, env[:method].to_s.downcase)
-      @tracer.record(trace_id, Trace::BinaryAnnotation.new(URI_KEY, url.path, STRING_TYPE, local_endpoint))
-      @tracer.record(trace_id, Trace::BinaryAnnotation.new(SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, BOOLEAN_TYPE, remote_endpoint))
-      @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::CLIENT_SEND, local_endpoint))
-      response = @app.call(env).on_complete do |renv|
-        # record HTTP status code on response
-        @tracer.record(trace_id, Trace::BinaryAnnotation.new(STATUS_KEY, renv[:status].to_s, STRING_TYPE, local_endpoint))
+      @tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
+        # annotate with method (GET/POST/etc.) and uri path
+        span.record(Trace::BinaryAnnotation.new(URI_KEY, url.path, STRING_TYPE, local_endpoint))
+        span.record(Trace::BinaryAnnotation.new(SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, BOOLEAN_TYPE, remote_endpoint))
+        span.record(Trace::Annotation.new(Trace::Annotation::CLIENT_SEND, local_endpoint))
+        response = @app.call(env).on_complete do |renv|
+          # record HTTP status code on response
+          span.record(Trace::BinaryAnnotation.new(STATUS_KEY, renv[:status].to_s, STRING_TYPE, local_endpoint))
+        end
+        span.record(Trace::Annotation.new(Trace::Annotation::CLIENT_RECV, local_endpoint))
       end
-      @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::CLIENT_RECV, local_endpoint))
       response
     end
 
