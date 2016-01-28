@@ -1,4 +1,3 @@
-
 module ZipkinTracer
   class TracerFactory
     def tracer(config)
@@ -10,12 +9,13 @@ module ZipkinTracer
           options = { json_api_host: config.json_api_host, traces_buffer: config.traces_buffer, logger: config.logger }
           Trace::ZipkinJsonTracer.new(options)
         when :scribe
-          require 'zipkin-tracer/careless_scribe'
-          Trace::ZipkinTracer.new(CarelessScribe.new(config.scribe_server), config.scribe_max_buffer)
+          require 'zipkin-tracer/zipkin_scribe_tracer'
+          Trace::ScribeTracer.new(scribe_server: config.scribe_server, traces_buffer: config.scribe_max_buffer)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
           Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
         else
+          require 'zipkin-tracer/zipkin_null_tracer'
           Trace::NullTracer.new
       end
       Trace.tracer = tracer

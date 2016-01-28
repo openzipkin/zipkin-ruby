@@ -93,7 +93,7 @@ end
 desc "Runs a zipkin middleware once."
 task :run_once do
   empty_app = EmptyMiddleware.new(nil)
-  app = FaradayMiddleware.new(nil)
+  app = FaradayMiddleware.new
 
   logger = Logger.new(Tempfile.new('fakelog'))
   null_configuration = { logger: logger, sample_rate: 1}
@@ -113,7 +113,7 @@ task :benchmark do
 
   empty_app = EmptyMiddleware.new(nil)
 
-  null_configuration = { logger: logger, sample_rate: 1}
+  null_configuration = { sample_rate: 1 }
   json_configuration = null_configuration.merge({ json_api_host: fake_url })
   scribe_configuration = null_configuration.merge({ scribe_server: fake_url })
 

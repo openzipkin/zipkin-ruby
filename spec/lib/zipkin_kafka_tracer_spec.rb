@@ -4,12 +4,17 @@ require 'zipkin-tracer/zipkin_kafka_tracer'
 # needed the if statement because rspec tags are broken
 if RUBY_PLATFORM == 'java'
   describe Trace::ZipkinKafkaTracer, :platform => :java do
-    let(:id)   { double('id') }
-    let(:span) { double('span') }
+    let(:span_id) { 'c3a555b04cf7e099' }
+    let(:parent_id) { 'f0e71086411b1445' }
+    let(:sampled) { true }
+    let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, sampled, Trace::Flags::EMPTY) }
+    let(:name) { 'test' }
     let(:tracer) { described_class.new }
     let(:zookeepers) { 'localhost:2181'     }
     let(:zk)         { double('broker_ids') }
     let(:producer)   { double('producer')   }
+    let(:span) { tracer.start_span(trace_id, name) }
+
 
     before do
       allow(Hermann::Discovery::Zookeeper).to receive(:new) { zk }
@@ -60,30 +65,28 @@ if RUBY_PLATFORM == 'java'
 
       context 'processing annotation' do
         before do
-          allow(id).to receive(:sampled?) { true }
-          allow(tracer).to receive(:get_span_for_id) { span }
           expect(tracer).to receive(:flush!)
         end
 
         it 'records a binary annotation' do
-          expect(span).to receive(:binary_annotations) { [] }
-          tracer.record(id, binary_annotation)
+          tracer.with_new_span(trace_id, name) do |span|
+            span.record(binary_annotation)
+          end
         end
         it 'records an annotation' do
-          expect(span).to receive(:annotations) { [] }
-          tracer.record(id, annotation)
+          tracer.with_new_span(trace_id, name) do |span|
+            span.record(binary_annotation)
+          end
         end
       end
     end
 
-    describe '#set_rpc_name' do
+    describe '#start_span' do
       let(:name) { 'name' }
 
       it 'sets the span name' do
-        allow(id).to receive(:sampled?) { true }
-        allow(tracer).to receive(:get_span_for_id) { span }
         expect(span).to receive(:name=).with(name)
-        tracer.set_rpc_name(id, name)
+        tracer.start_span(trace_id, name)
       end
     end
   end

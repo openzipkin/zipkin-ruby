@@ -38,7 +38,9 @@ module ZipkinTracer
         if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
-          trace!(trace_id, zipkin_env) { @app.call(env) }
+          @tracer.with_new_span(trace_id, zipkin_env.env['REQUEST_METHOD'].to_s.downcase) do |span|
+            trace!(span, zipkin_env) { @app.call(env) }
+          end
         end
       end
     end
@@ -50,10 +52,6 @@ module ZipkinTracer
       yield
     ensure
       Trace.pop
-    end
-
-    def record(annotation)
-      @tracer.record(@trace_id, annotation)
     end
 
     # If the request is not valid for this service, we do not what to trace it.
@@ -69,24 +67,23 @@ module ZipkinTracer
       @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
     end
 
-    def trace!(trace_id, zipkin_env, &block)
+    def trace!(span, zipkin_env, &block)
       synchronize do
         #if called by a service, the caller already added the information
-        trace_request_information(trace_id, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
-        @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
-        @tracer.record(trace_id, Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
+        trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
+        span.record(Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
+        span.record(Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
       end
       status, headers, body = yield
     ensure
       synchronize do
         annotate_plugin(zipkin_env.env, status, headers, body)
-        @tracer.record(trace_id, Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
+        span.record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
       end
     end
 
-    def trace_request_information(trace_id, env)
-      @tracer.set_rpc_name(trace_id, env['REQUEST_METHOD'].to_s.downcase) # get/post and all that jazz
-      @tracer.record(trace_id, Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', Trace.default_endpoint))
+    def trace_request_information(span, env)
+      span.record(Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', Trace.default_endpoint))
     end
 
     def synchronize(&block)

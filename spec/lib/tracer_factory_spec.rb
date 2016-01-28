@@ -43,10 +43,11 @@ describe ZipkinTracer::TracerFactory do
     end
 
     context 'configured to use scribe' do
+      require 'zipkin-tracer/zipkin_scribe_tracer'
       let(:config) { configuration(scribe_server: 'fake_scribe_server') }
 
       it 'creates a zipkin kafka tracer' do
-        allow(::Trace::ZipkinTracer).to receive(:new) { tracer }
+        allow(::Trace::ScribeTracer).to receive(:new) { tracer }
         expect(::Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
       end
