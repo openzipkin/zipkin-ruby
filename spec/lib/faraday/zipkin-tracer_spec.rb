@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'zipkin-tracer/zipkin_null_tracer'
 
 describe ZipkinTracer::FaradayHandler do
   # allow stubbing of on_complete and response env
@@ -53,34 +54,33 @@ describe ZipkinTracer::FaradayHandler do
     end
 
     def expect_tracing
-      # expect SEND then RECV
-      expect(tracer).to receive(:set_rpc_name).with(anything, 'post')
+      expect(tracer).to receive(:with_new_span).with(anything, 'post').and_call_original
 
-      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
+      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('http.uri')
         expect(ann.value).to eq(url_path)
       end
 
-      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
+      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('sa')
         expect(ann.value).to eq('1')
         expect_host(ann.host, host_ip, service_name)
       end
 
-      expect(tracer).to receive(:record).with(anything, instance_of(Trace::BinaryAnnotation)) do |_, ann|
+      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
         expect(ann.key).to eq('http.status')
         expect(ann.value).to eq('200')
       end
 
-      expect(tracer).to receive(:record).with(anything, instance_of(Trace::Annotation)) do |_, ann|
+      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_SEND)
         expect_host(ann.host, '127.0.0.1', service_name)
-      end.ordered
+      end
 
-      expect(tracer).to receive(:record).with(anything, instance_of(Trace::Annotation)) do |_, ann|
+      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
         expect(ann.value).to eq(::Trace::Annotation::CLIENT_RECV)
         expect_host(ann.host, '127.0.0.1', service_name)
-      end.ordered
+      end
     end
 
     context 'with tracing id' do
