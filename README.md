@@ -60,36 +60,23 @@ the tracing will default to a service name derived from the first section of the
 
 ### Local tracing
 
-`ZipkinTracer::TraceClient` provides API to record local traces in your application.
+`ZipkinTracer::TraceClient` provides an API to record local traces in your application.
+It can be used to measure the performance of process, record value of variables, and so on.
 
-Both examples below have the same result.
+When `local_component_span` method is called, it creates a new span and provides the following methods to create annotations.
+* record(key) - annotation
+* record_tag(key, value) - binary annotation
+* record_local_component(value) - binary annotation for local component
 
-Example 1:
+
+Example:
 ```ruby
-ZipkinTracer::TraceClient.trace do |ztc|
-  ztc.record_local_component 'Local Trace'
+ZipkinTracer::TraceClient.local_component_span do |ztc|
+  ztc.record 'New Annotation'
   ztc.record_tag 'key', 'sample'
+  ztc.record_local_component 'Local Trace'
   # target process
 end
-```
-
-Example 2:
-```ruby
-ztc = ZipkinTracer::TraceClient
-ztc.record 'Start: '
-ztc.record_local_component 'Local Trace'
-ztc.record_tag 'key', 'sample'
-# target process
-ztc.record 'End: '
-```
-
-`.trace` method accepts one optional parameter to show in annotation keys.
-```ruby
-# with parameter
-ZipkinTracer::TraceClient.trace('services') do   # => 'Start: services', 'End: services'
-
-# without parameter
-ZipkinTracer::TraceClient.trace do   # => 'Start: ', 'End: '
 ```
 
 

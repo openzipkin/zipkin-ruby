@@ -3,24 +3,28 @@ module ZipkinTracer
     LOCAL_COMPONENT = 'lc'.freeze
     STRING_TYPE = 'STRING'.freeze
 
-    def self.record(key)
-      Trace.record(Trace::Annotation.new(key, Trace.default_endpoint))
+    def self.local_component_span(&block)
+      self.new(LOCAL_COMPONENT, &block) if block_given?
     end
 
-    def self.record_tag(key, value)
-      Trace.record(Trace::BinaryAnnotation.new(key, value, STRING_TYPE, Trace.default_endpoint))
+    def initialize(name, &block)
+      Trace.tracer.with_new_span(Trace.id, name) do |span|
+        @span = span
+        block.call(self)
+      end
     end
 
-    def self.record_local_component(value)
+    def record(key)
+      @span.record(Trace::Annotation.new(key, Trace.default_endpoint))
+    end
+
+    def record_tag(key, value)
+      @span.record(Trace::BinaryAnnotation.new(key, value, STRING_TYPE, Trace.default_endpoint))
+    end
+
+    def record_local_component(value)
       record_tag(LOCAL_COMPONENT, value)
     end
 
-    def self.trace(key = nil)
-      if block_given?
-        record "Start: #{key}"
-        yield self
-        record "End: #{key}"
-      end
-    end
   end
 end
