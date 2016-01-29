@@ -17,7 +17,10 @@ module Trace
 
     def with_new_span(trace_id, name)
       span = start_span(trace_id, name)
+      time_now = Time.now
+      span.timestamp = (time_now.to_f * 1_000_000).to_i # to microseconds
       result = yield span
+      span.duration = ((Time.now - time_now) * 1_000_000).to_i # to microseconds
       may_flush(span)
       result
     end
