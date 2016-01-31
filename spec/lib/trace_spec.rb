@@ -71,10 +71,18 @@ describe Trace do
   end
 
   describe Trace::Endpoint do
-    describe '.make_endpoint' do
-      let(:service_name) { 'service name' }
-      let(:hostname) { 'z2.example.com' }
+    let(:service_name) { 'service name' }
+    let(:hostname) { 'z2.example.com' }
 
+    describe '.local_endpoint' do
+      it 'auto detects the hostname' do
+        allow(Socket).to receive(:gethostname).and_return('z1.example.com')
+        expect(Trace::Endpoint).to receive(:make_endpoint).with('z1.example.com', 80, service_name, :string)
+        Trace::Endpoint.local_endpoint(80, service_name, :string)
+      end
+    end
+
+    describe '.make_endpoint' do
       context 'host lookup success' do
         before do
           allow(Socket).to receive(:getaddrinfo).with('z1.example.com', nil, :INET).
@@ -97,12 +105,6 @@ describe Trace do
           expect(ep.ip_format).to eq(:string)
         end
 
-        it 'auto detects the hostname' do
-          allow(Socket).to receive(:gethostname).and_return('z1.example.com')
-          ep = ::Trace::Endpoint.make_endpoint(nil, 80, service_name, :string)
-          expect(ep.ipv4).to eq('8.8.4.4')
-          expect(ep.ip_format).to eq(:string)
-        end
       end
 
       context 'host lookup failure' do
