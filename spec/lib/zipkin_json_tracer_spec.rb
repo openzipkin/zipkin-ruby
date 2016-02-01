@@ -28,6 +28,8 @@ describe Trace::ZipkinJsonTracer do
         parentId: nil,
         annotations: [],
         binaryAnnotations: [],
+        timestamp: 1452987900000000,
+        duration: 0,
         debug: false
       } }
       let(:dummy_binary_annotations) {
