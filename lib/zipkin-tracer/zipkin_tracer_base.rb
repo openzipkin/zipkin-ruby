@@ -17,10 +17,10 @@ module Trace
 
     def with_new_span(trace_id, name)
       span = start_span(trace_id, name)
-      time_now = Time.now
-      span.timestamp = (time_now.to_f * 1_000_000).to_i # to microseconds
+      start_time = Time.now
+      span.timestamp = to_microseconds(start_time)
       result = yield span
-      span.duration = ((Time.now - time_now) * 1_000_000).to_i # to microseconds
+      span.duration = to_microseconds(Time.now - start_time)
       may_flush(span)
       result
     end
@@ -56,6 +56,10 @@ module Trace
 
     def reset
       Thread.current[:zipkin_spans] = {}
+    end
+
+    def to_microseconds(time)
+      (time.to_f * 1_000_000).to_i
     end
   end
 end

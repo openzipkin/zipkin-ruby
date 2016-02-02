@@ -108,6 +108,3 @@ describe ZipkinTracer::TraceClient do
     end
   end
 end
-
-
-
