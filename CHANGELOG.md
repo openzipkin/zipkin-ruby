@@ -1,3 +1,6 @@
+# 0.12.0
+Add local tracing, fix flushing, add timestamp and duration to span
+
 # 0.11.0
 Use local spans instead of thread-safe variables to improve performance
 Add new "with_new_span" method to the tracer api to allow creating

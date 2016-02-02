@@ -12,6 +12,7 @@ module Trace
   # This class is defined in finagle-thrift. We are adding extra methods here
   class Span
     attr_reader :size
+    attr_accessor :timestamp, :duration
 
     # We record information into spans, then we send these spans to zipkin
     def record(annotation)
@@ -33,6 +34,8 @@ module Trace
         parentId: @span_id.parent_id.nil? ? nil : @span_id.parent_id.to_s,
         annotations: @annotations.map!(&:to_h),
         binaryAnnotations: @binary_annotations.map!(&:to_h),
+        timestamp: timestamp,
+        duration: duration,
         debug: @debug
       }
     end

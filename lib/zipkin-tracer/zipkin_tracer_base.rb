@@ -17,14 +17,17 @@ module Trace
 
     def with_new_span(trace_id, name)
       span = start_span(trace_id, name)
+      start_time = Time.now
+      span.timestamp = to_microseconds(start_time)
       result = yield span
+      span.duration = to_microseconds(Time.now - start_time)
       may_flush(span)
       result
     end
 
     def may_flush(span)
       size = spans.values.map(&:size).inject(:+) || 0
-      if size >= @traces_buffer || span.annotations.any?{ |ann| ann == Annotation::SERVER_SEND }
+      if size >= @traces_buffer || span.annotations.any?{ |ann| ann.value == Annotation::SERVER_SEND }
         flush!
         reset
       end
@@ -53,6 +56,10 @@ module Trace
 
     def reset
       Thread.current[:zipkin_spans] = {}
+    end
+
+    def to_microseconds(time)
+      (time.to_f * 1_000_000).to_i
     end
   end
 end

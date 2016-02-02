@@ -16,10 +16,15 @@ describe Trace do
     let(:span_with_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, parent_id, span_id, true, Trace::Flags::EMPTY))
     end
+    let(:timestamp) { 1452987900000000 }
+    let(:duration) { 100000 }
 
     before do
       [span_with_parent, span_without_parent].each do |span|
         annotations.each { |a| span.annotations << a }
+
+        span.timestamp = timestamp
+        span.duration = duration
       end
     end
 
@@ -32,7 +37,9 @@ describe Trace do
           parentId: nil,
           annotations: annotations,
           binaryAnnotations: [],
-          debug: false
+          debug: false,
+          timestamp: timestamp,
+          duration: duration
         }
         expect(span_without_parent.to_h).to eq(expected_hash)
         expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))

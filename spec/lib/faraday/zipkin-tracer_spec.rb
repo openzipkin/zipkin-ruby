@@ -27,6 +27,7 @@ describe ZipkinTracer::FaradayHandler do
   let(:url_path) { '/some/path/here' }
   let(:raw_url) { "https://#{hostname}#{url_path}" }
   let(:tracer) { Trace.tracer }
+  let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
 
   def process(body, url, headers = {})
     env = {
@@ -40,6 +41,7 @@ describe ZipkinTracer::FaradayHandler do
 
   before do
     Trace.tracer = Trace::NullTracer.new
+    Trace.push(trace_id)
     ::Trace.sample_rate = 1 # make sure initialized
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
