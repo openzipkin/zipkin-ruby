@@ -1,5 +1,5 @@
-# 0.11.1
-Add local tracing
+# 0.12.0
+Add local tracing, fix flushing, add timestamp and duration to span
 
 # 0.11.0
 Use local spans instead of thread-safe variables to improve performance
