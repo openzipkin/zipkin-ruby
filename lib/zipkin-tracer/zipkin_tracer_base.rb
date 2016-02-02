@@ -27,7 +27,7 @@ module Trace
 
     def may_flush(span)
       size = spans.values.map(&:size).inject(:+) || 0
-      if size >= @traces_buffer || span.annotations.any?{ |ann| ann == Annotation::SERVER_SEND }
+      if size >= @traces_buffer || span.annotations.any?{ |ann| ann.value == Annotation::SERVER_SEND }
         flush!
         reset
       end
