@@ -113,10 +113,9 @@ describe ZipkinTracer::TraceClient do
       subject.local_component_span(lc_value) do |ztc|
         parent_local_trace = Trace.id
         subject.local_component_span(lc_value) do |ztc|
-
           expect(parent_local_trace.trace_id).to eq(Trace.id.trace_id)
           expect(parent_local_trace.span_id).not_to eq(Trace.id.span_id)
-
+          expect(Trace.id.parent_id).to eq(parent_local_trace.span_id)
         end
       end
     end
