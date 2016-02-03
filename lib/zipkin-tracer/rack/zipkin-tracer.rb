@@ -34,7 +34,7 @@ module ZipkinTracer
     def call(env)
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
-      with_trace_id(trace_id) do
+      Trace.with_trace_id(trace_id) do
         if !trace_id.sampled? || !Application.routable_request?(env['PATH_INFO'])
           @app.call(env)
         else
@@ -46,13 +46,6 @@ module ZipkinTracer
     end
 
     private
-
-    def with_trace_id(trace_id, &block)
-      Trace.push(trace_id)
-      yield
-    ensure
-      Trace.pop
-    end
 
     def annotate_plugin(env, status, response_headers, response_body)
       @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
