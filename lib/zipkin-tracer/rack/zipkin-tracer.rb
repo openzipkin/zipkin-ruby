@@ -21,8 +21,8 @@ module ZipkinTracer
   # This middleware reads Zipkin headers from the request and sets/creates a Trace.id usable by the rest of the app
   # It will also send the trace to the Zipkin service using one of the methods configured.
   class RackHandler
-    B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED]
-    B3_OPT_HEADERS = %w[HTTP_X_B3_FLAGS]
+    B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED].freeze
+    B3_OPT_HEADERS = %w[HTTP_X_B3_FLAGS].freeze
 
     def initialize(app, config = nil)
       @app = app
@@ -35,7 +35,7 @@ module ZipkinTracer
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
       Trace.with_trace_id(trace_id) do
-        if !trace_id.sampled? || !routable_request?(env)
+        if !trace_id.sampled? || !Application.routable_request?(env['PATH_INFO'])
           @app.call(env)
         else
           @tracer.with_new_span(trace_id, zipkin_env.env['REQUEST_METHOD'].to_s.downcase) do |span|
@@ -46,15 +46,6 @@ module ZipkinTracer
     end
 
     private
-
-    # If the request is not valid for this service, we do not what to trace it.
-    def routable_request?(env)
-      return true unless defined?(Rails) # If not running on a Rails app, we can't verify if it is invalid
-      Rails.application.routes.recognize_path(env['PATH_INFO'])
-      true
-    rescue ActionController::RoutingError
-      false
-    end
 
     def annotate_plugin(env, status, response_headers, response_body)
       @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin

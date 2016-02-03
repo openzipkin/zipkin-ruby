@@ -1,13 +1,15 @@
 require 'logger'
-module ZipkinTracer
+require 'zipkin-tracer/application'
 
+module ZipkinTracer
+  # Configuration of this gem. It reads the configuration and provides default values
   class Config
     attr_reader :service_name, :service_port, :json_api_host, :traces_buffer,
       :scribe_server, :zookeeper, :sample_rate, :scribe_max_buffer, :annotate_plugin,
       :filter_plugin, :whitelist_plugin, :logger
 
     def initialize(app, config_hash)
-      config = config_hash || app_config(app)
+      config = config_hash || Application.config(app)
       @service_name      = config[:service_name]
       @service_port      = config[:service_port]      || DEFAULTS[:service_port]
       @json_api_host     = config[:json_api_host]
@@ -19,7 +21,7 @@ module ZipkinTracer
       @annotate_plugin   = config[:annotate_plugin]   # call for trace annotation
       @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
       @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
-      @logger            = config[:logger]            || fallback_logger
+      @logger            = config[:logger]            || Application.logger
     end
 
     def adapter
@@ -36,14 +38,6 @@ module ZipkinTracer
 
     private
 
-    def fallback_logger
-      if defined?(Rails) # If we happen to be inside a Rails app, use its logger
-        Rails.logger
-      else
-        Logger.new(STDOUT)
-      end
-    end
-
     DEFAULTS = {
       traces_buffer: 100,
       scribe_max_buffer: 10,
@@ -51,12 +45,5 @@ module ZipkinTracer
       service_port: 80
     }
 
-    def app_config(app)
-      if app.respond_to?(:config) && app.config.respond_to?(:zipkin_tracer)
-        app.config.zipkin_tracer
-      else
-        {}
-      end
-    end
   end
 end

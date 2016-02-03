@@ -22,8 +22,7 @@ module ZipkinTracer
 
       # TODO: move this to the TracerBase and kill scribe tracer
       ip_format = config.adapter == :json ? :string : :i32
-      Trace.default_endpoint = Trace::Endpoint.make_endpoint(
-        nil, # auto detect hostname
+      Trace.default_endpoint = Trace::Endpoint.local_endpoint(
         config.service_port,
         service_name(config.service_name),
         ip_format
