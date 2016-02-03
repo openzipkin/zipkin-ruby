@@ -1,3 +1,6 @@
+# 0.12.1
+Nest local tracing spans
+
 # 0.12.0
 Add local tracing, fix flushing, add timestamp and duration to span
 

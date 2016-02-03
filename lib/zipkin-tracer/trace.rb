@@ -8,6 +8,13 @@ module Trace
     @tracer
   end
 
+  def self.with_trace_id(trace_id, &block)
+    self.push(trace_id)
+    yield
+  ensure
+    self.pop
+  end
+
   class Span
     attr_reader :size
     attr_accessor :timestamp, :duration

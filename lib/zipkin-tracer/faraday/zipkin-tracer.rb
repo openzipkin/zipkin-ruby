@@ -21,7 +21,7 @@ module ZipkinTracer
 
     def call(env)
       trace_id = Trace.id.next_id
-      with_trace_id(trace_id) do
+      Trace.with_trace_id(trace_id) do
         B3_HEADERS.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end
@@ -61,13 +61,6 @@ module ZipkinTracer
         span.record(Trace::Annotation.new(Trace::Annotation::CLIENT_RECV, local_endpoint))
       end
       response
-    end
-
-    def with_trace_id(trace_id, &block)
-      Trace.push(trace_id)
-      yield
-    ensure
-      Trace.pop
     end
 
     def callee_endpoint(url, ip_format)

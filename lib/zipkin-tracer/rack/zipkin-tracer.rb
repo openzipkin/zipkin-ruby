@@ -34,7 +34,7 @@ module ZipkinTracer
     def call(env)
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
-      with_trace_id(trace_id) do
+      Trace.with_trace_id(trace_id) do
         if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
@@ -46,13 +46,6 @@ module ZipkinTracer
     end
 
     private
-
-    def with_trace_id(trace_id, &block)
-      Trace.push(trace_id)
-      yield
-    ensure
-      Trace.pop
-    end
 
     # If the request is not valid for this service, we do not what to trace it.
     def routable_request?(env)

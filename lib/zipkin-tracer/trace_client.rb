@@ -12,9 +12,11 @@ module ZipkinTracer
 
     def initialize(name, &block)
       @trace_id = Trace.id.next_id
-      Trace.tracer.with_new_span(@trace_id, name) do |span|
-        @span = span
-        block.call(self)
+      Trace.with_trace_id(@trace_id) do
+        Trace.tracer.with_new_span(@trace_id, name) do |span|
+          @span = span
+          block.call(self)
+        end
       end
     end
 
