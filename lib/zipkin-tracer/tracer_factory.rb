@@ -6,11 +6,11 @@ module ZipkinTracer
       tracer = case adapter
         when :json
           require 'zipkin-tracer/zipkin_json_tracer'
-          options = { json_api_host: config.json_api_host, traces_buffer: config.traces_buffer, logger: config.logger }
+          options = { json_api_host: config.json_api_host, logger: config.logger }
           Trace::ZipkinJsonTracer.new(options)
         when :scribe
           require 'zipkin-tracer/zipkin_scribe_tracer'
-          Trace::ScribeTracer.new(scribe_server: config.scribe_server, traces_buffer: config.scribe_max_buffer)
+          Trace::ScribeTracer.new(scribe_server: config.scribe_server)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
           Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)

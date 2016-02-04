@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module ZipkinTracer
   RSpec.describe Config do
-    [:service_name, :service_port, :json_api_host, :traces_buffer,
-      :scribe_server, :zookeeper, :sample_rate, :scribe_max_buffer,
+    [:service_name, :service_port, :json_api_host,
+      :scribe_server, :zookeeper, :sample_rate,
       :annotate_plugin, :filter_plugin, :whitelist_plugin, :logger].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
@@ -14,7 +14,7 @@ module ZipkinTracer
 
     it 'sets defaults' do
       config = Config.new(nil, {})
-      [:traces_buffer,:sample_rate, :scribe_max_buffer, :service_port].each do |key|
+      [:sample_rate, :service_port].each do |key|
         expect(config.send(key)).to_not eq(nil)
       end
     end
