@@ -22,10 +22,8 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
 * `:logger` - A logger class following the standard's library Logger interface (Log4r, Rails.logger, etc).
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
-* `:traces_buffer` (default: 100) - the number of annotations stored by the JSON tracer until automatic flush (note that annotations are also flushed when the request is complete)
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
 * `:scribe_server` (default from scribe gem) - the address of the scribe server where traces are delivered
-* `:scribe_max_buffer` (default: 10) - the number of annotations stored by the Scribe tracer until automatic flush (note that annotations are also flushed when the request is complete)
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
@@ -84,8 +82,6 @@ end
 Sends traces as JSON over HTTP. This is the preferred tracer to use as the openzipkin project moves away from Thrift.
 
 You need to specify the `:json_api_host` parameter to wherever your zipkin collector is running. It will POST traces to the `/api/v1/spans` path.
-
-By default it buffers the traces call so as not to hammer your zipkin instance. This can be configured using the `:traces_buffer` parameter.
 
 
 ### Kafka

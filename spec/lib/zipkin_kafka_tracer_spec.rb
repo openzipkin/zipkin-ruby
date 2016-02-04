@@ -36,58 +36,14 @@ if RUBY_PLATFORM == 'java'
 
       context 'with options' do
         let(:topic)  { 'topic' }
-        let(:traces_buffer) { 42 }
 
-        let(:tracer) { described_class.new({traces_buffer: traces_buffer, topic: topic}) }
+        let(:tracer) { described_class.new({ topic: topic }) }
 
         it 'has an optional topic' do
           expect(tracer.instance_variable_get(:@topic)).to eq topic
         end
-        it 'has an optional traces_buffer' do
-          expect(tracer.instance_variable_get(:@traces_buffer)).to eq traces_buffer
-        end
       end
     end
 
-
-    describe '#record' do
-      module MockTrace
-        class BinaryAnnotation < Trace::BinaryAnnotation
-          def initialize;end
-        end
-        class Annotation < Trace::Annotation
-          def initialize;end
-        end
-      end
-
-      let(:binary_annotation) { MockTrace::BinaryAnnotation.new }
-      let(:annotation)        { MockTrace::Annotation.new }
-
-      context 'processing annotation' do
-        before do
-          expect(tracer).to receive(:flush!)
-        end
-
-        it 'records a binary annotation' do
-          tracer.with_new_span(trace_id, name) do |span|
-            span.record(binary_annotation)
-          end
-        end
-        it 'records an annotation' do
-          tracer.with_new_span(trace_id, name) do |span|
-            span.record(binary_annotation)
-          end
-        end
-      end
-    end
-
-    describe '#start_span' do
-      let(:name) { 'name' }
-
-      it 'sets the span name' do
-        expect(span).to receive(:name=).with(name)
-        tracer.start_span(trace_id, name)
-      end
-    end
   end
 end

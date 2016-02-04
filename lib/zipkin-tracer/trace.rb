@@ -18,19 +18,28 @@ module Trace
   # A span may contain many annotations
   # This class is defined in finagle-thrift. We are adding extra methods here
   class Span
-    attr_reader :size
-    attr_accessor :timestamp, :duration
+    def initialize(name, span_id)
+      @name = name
+      @span_id = span_id
+      @annotations = []
+      @binary_annotations = []
+      @debug = span_id.debug?
+      @timestamp = to_microseconds(Time.now)
+      @duration = UNKNOWN_DURATION
+    end
+
+    def close_span
+      @duration = to_microseconds(Time.now) - @timestamp
+    end
 
     # We record information into spans, then we send these spans to zipkin
     def record(annotation)
-      @size ||= 0
       case annotation
       when BinaryAnnotation
         binary_annotations << annotation
       when Annotation
         annotations << annotation
       end
-      @size = @size + 1
     end
 
     def to_h
@@ -41,10 +50,17 @@ module Trace
         parentId: @span_id.parent_id.nil? ? nil : @span_id.parent_id.to_s,
         annotations: @annotations.map!(&:to_h),
         binaryAnnotations: @binary_annotations.map!(&:to_h),
-        timestamp: timestamp,
-        duration: duration,
+        timestamp: @timestamp,
+        duration: @duration,
         debug: @debug
       }
+    end
+
+    private
+    UNKNOWN_DURATION = 0 # mark duration was not set
+
+    def to_microseconds(time)
+      (time.to_f * 1_000_000).to_i
     end
   end
 

@@ -1,3 +1,6 @@
+# 0.13.0
+Do not support buffering. It was broken anyways.
+
 # 0.12.1
 Allow nesting of local tracing spans
 

@@ -17,14 +17,12 @@ describe Trace do
       Trace::Span.new('get', Trace::TraceId.new(span_id, parent_id, span_id, true, Trace::Flags::EMPTY))
     end
     let(:timestamp) { 1452987900000000 }
-    let(:duration) { 100000 }
+    let(:duration) { 0 }
 
     before do
+      Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
       [span_with_parent, span_without_parent].each do |span|
         annotations.each { |a| span.annotations << a }
-
-        span.timestamp = timestamp
-        span.duration = duration
       end
     end
 
