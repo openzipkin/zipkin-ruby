@@ -19,7 +19,13 @@ describe Trace::ZipkinTracerBase do
     duration: 0,
     debug: false
   } }
-  before { Timecop.freeze(Time.utc(2016, 1, 16, 23, 45)) }
+  before { Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 0)) }
+
+  describe '#flush!' do
+    it 'raises if not implemented' do
+      expect{ tracer.flush!}.to raise_error(StandardError, "not implemented")
+    end
+  end
 
   describe '#start_span' do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
@@ -32,10 +38,20 @@ describe Trace::ZipkinTracerBase do
       expect(span.annotations).to eq([])
       expect(span.to_h).to eq(span_hash)
     end
+    it 'stores the span' do
+      expect(tracer).to receive(:store_span).with(trace_id, anything)
+      span
+    end
   end
 
   describe '#end_span' do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
+    it 'closes the span' do
+      span #touch it so it happens before we freeze time again
+      Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 1))
+      tracer.end_span(span)
+      expect(span.to_h).to eq(span_hash.merge(duration: 1_000_000))
+    end
     it 'flush if SS is annotated in this span' do
       span.record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
       expect(tracer).to receive(:flush!)

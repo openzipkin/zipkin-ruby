@@ -22,6 +22,7 @@ module Trace
     end
 
     def end_span(span)
+      span.close
       if span.annotations.any?{ |ann| ann.value == Annotation::SERVER_SEND }
         flush!
         reset
@@ -29,8 +30,8 @@ module Trace
     end
 
     def start_span(trace_id, name)
-      span = get_span_for_id(trace_id)
-      span.name = name
+      span = Span.new(name, trace_id)
+      store_span(trace_id, span)
       span
     end
 
@@ -40,17 +41,18 @@ module Trace
 
     private
 
+    THREAD_KEY = :zipkin_spans
+
     def spans
-      Thread.current[:zipkin_spans] ||= {}
+      Thread.current[THREAD_KEY] ||= {}
     end
 
-    def get_span_for_id(id)
-      key = id.span_id.to_s
-      spans[key] ||= Span.new("", id)
+    def store_span(id, span)
+      spans[id.span_id.to_s] = span
     end
 
     def reset
-      Thread.current[:zipkin_spans] = {}
+      Thread.current[THREAD_KEY] = {}
     end
 
   end

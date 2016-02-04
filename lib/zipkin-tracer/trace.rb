@@ -28,7 +28,7 @@ module Trace
       @duration = UNKNOWN_DURATION
     end
 
-    def close_span
+    def close
       @duration = to_microseconds(Time.now) - @timestamp
     end
 
@@ -57,6 +57,7 @@ module Trace
     end
 
     private
+
     UNKNOWN_DURATION = 0 # mark duration was not set
 
     def to_microseconds(time)
