@@ -4,20 +4,23 @@ module ZipkinTracer
     STRING_TYPE = 'STRING'.freeze
 
     def self.local_component_span(local_component_value, &block)
-      if block_given?
-        client = self.new(LOCAL_COMPONENT, &block)
-        client.record_local_component local_component_value
-      end
+      client = self.new
+      client.trace(local_component_value, &block)
     end
 
-    def initialize(name, &block)
+    def trace(local_component_value, &block)
+      raise ArgumentError, "no block given" unless block
+
       @trace_id = Trace.id.next_id
+      result = nil
       Trace.with_trace_id(@trace_id) do
-        Trace.tracer.with_new_span(@trace_id, name) do |span|
+        Trace.tracer.with_new_span(@trace_id, LOCAL_COMPONENT) do |span|
           @span = span
-          block.call(self)
+          result = block.call(self)
+          record_local_component local_component_value
         end
       end
+      result
     end
 
     def record(key)

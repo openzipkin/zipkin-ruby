@@ -5,6 +5,7 @@ describe ZipkinTracer::TraceClient do
   let(:lc_value) { 'lc_value' }
   let(:key) { 'key' }
   let(:value) { 'value' }
+  let(:result) { 'result' }
   subject { ZipkinTracer::TraceClient }
 
   before do
@@ -82,12 +83,15 @@ describe ZipkinTracer::TraceClient do
 
         subject.local_component_span(lc_value) {}
       end
+
+      it 'returns the result of block' do
+        expect(subject.local_component_span(lc_value) { result } ).to eq('result')
+      end
     end
 
     context 'called without block' do
-      it 'creates no span' do
-        expect(Trace.tracer).not_to receive(:with_new_span)
-        subject.local_component_span(lc_value)
+      it 'raises argument error' do
+        expect{ subject.local_component_span(lc_value) }.to raise_error(ArgumentError, 'no block given')
       end
     end
   end
