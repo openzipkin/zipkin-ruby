@@ -69,10 +69,11 @@ When `local_component_span` method is called, it creates a new span and a local 
 
 Example:
 ```ruby
-ZipkinTracer::TraceClient.local_component_span('Local Trace') do |ztc|
-  ztc.record 'New Annotation'
-  ztc.record_tag 'key', 'sample'
-  # target process
+ZipkinTracer::TraceClient.local_component_span('DB process') do |ztc|
+  ztc.record 'Create users'
+  ztc.record_tag 'number', '1000'
+
+  # create 1000 users
 end
 ```
 

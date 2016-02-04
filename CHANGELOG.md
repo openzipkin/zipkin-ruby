@@ -1,3 +1,6 @@
+# 0.12.2
+Make local tracing method (ZipkinTracer::TraceClient.local_component_span) returns the result of block
+
 # 0.12.1
 Allow nesting of local tracing spans
 
