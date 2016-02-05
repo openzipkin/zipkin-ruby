@@ -1,5 +1,11 @@
+# encoding: utf-8
+# the magic comment above is needed for JRuby 1.x as we have multi byte chars in this file
+
 require 'rack/mock'
 require 'spec_helper'
+require 'zipkin-tracer/zipkin_json_tracer'
+require 'zipkin-tracer/zipkin_scribe_tracer'
+require 'zipkin-tracer/zipkin_null_tracer'
 
 describe ZipkinTracer::TracerFactory do
   def middleware(app, config={})
@@ -20,13 +26,15 @@ describe ZipkinTracer::TracerFactory do
     # see spec/lib/zipkin_kafka_tracer_spec.rb
     if RUBY_PLATFORM == 'java'
       context 'configured to use kafka', platform: :java do
+        require 'zipkin-tracer/zipkin_kafka_tracer'
+
         let(:zookeeper) { 'localhost:2181' }
         let(:zipkinKafkaTracer) { double('ZipkinKafkaTracer') }
-        let(:config) { configuration({zookeeper: zookeeper}) }
+        let(:config) { configuration(zookeeper: zookeeper) }
 
         it 'creates a zipkin kafka tracer' do
-          allow(::Trace::ZipkinKafkaTracer).to receive(:new) { tracer }
-          expect(::Trace).to receive(:tracer=).with(tracer)
+          allow(Trace::ZipkinKafkaTracer).to receive(:new) { tracer }
+          expect(Trace).to receive(:tracer=).with(tracer)
           expect(described_class.new.tracer(config)).to eq(tracer)
         end
       end
@@ -35,30 +43,38 @@ describe ZipkinTracer::TracerFactory do
     context 'configured to use json' do
       let(:config) { configuration(json_api_host: 'fake_json_api_host') }
 
-      it 'creates a zipkin kafka tracer' do
-        allow(::Trace::ZipkinJsonTracer).to receive(:new) { tracer }
-        expect(::Trace).to receive(:tracer=).with(tracer)
+      it 'creates a zipkin json tracer' do
+        allow(Trace::ZipkinJsonTracer).to receive(:new) { tracer }
+        expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
       end
     end
 
     context 'configured to use scribe' do
-      require 'zipkin-tracer/zipkin_scribe_tracer'
       let(:config) { configuration(scribe_server: 'fake_scribe_server') }
 
-      it 'creates a zipkin kafka tracer' do
-        allow(::Trace::ScribeTracer).to receive(:new) { tracer }
-        expect(::Trace).to receive(:tracer=).with(tracer)
+      it 'creates a scribe tracer' do
+        allow(Trace::ScribeTracer).to receive(:new) { tracer }
+        expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
       end
     end
 
     context 'no transport configured' do
-      let(:config) { configuration({}) }
-      it 'creates a zipkin kafka tracer' do
-        allow(Trace::NullTracer).to receive(:new) { tracer }
-        expect(::Trace).to receive(:tracer=).with(tracer)
-        expect(described_class.new.tracer(config)).to eq(tracer)
+      it 'creates a null tracer' do
+        [
+          {},
+          { json_api_host: nil },
+          { json_api_host: "" },
+          { json_api_host: "\n\t 　\r" },
+          { scribe_server: "" },
+          { zookeeper: "" }
+        ].each do |options|
+          config = configuration(options)
+          allow(Trace::NullTracer).to receive(:new) { tracer }
+          expect(Trace).to receive(:tracer=).with(tracer)
+          expect(described_class.new.tracer(config)).to eq(tracer)
+        end
       end
     end
 
@@ -90,7 +106,7 @@ describe ZipkinTracer::TracerFactory do
       end
 
       it 'sets the trace endpoint service name to the environment variable value' do
-        expect(::Trace::Endpoint).to receive(:local_endpoint).with(anything, 'zipkin-env-var-tester', :i32) { 'endpoint' }
+        expect(Trace::Endpoint).to receive(:local_endpoint).with(anything, 'zipkin-env-var-tester', :i32) { 'endpoint' }
         expect(Trace).to receive(:default_endpoint=).with('endpoint')
         described_class.new.tracer(config)
       end

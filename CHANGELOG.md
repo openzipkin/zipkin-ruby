@@ -1,3 +1,6 @@
+# 0.13.1
+* Check the config entry is not blank when infering adapters
+
 # 0.13.0
 * Remove support for buffering. It was broken anyways.
 
