@@ -23,11 +23,11 @@ module ZipkinTracer
     end
 
     def adapter
-      if !!@json_api_host
+      if present?(@json_api_host)
         :json
-      elsif !!@scribe_server
+      elsif present?(@scribe_server)
         :scribe
-      elsif !!@zookeeper && RUBY_PLATFORM == 'java'
+      elsif present?(@zookeeper) && RUBY_PLATFORM == 'java'
         :kafka
       else
         nil
@@ -40,6 +40,11 @@ module ZipkinTracer
       sample_rate: 0.1,
       service_port: 80
     }
+
+    def present?(str)
+      return false if str.nil?
+      !!(/\A[[:space:]]*\z/ !~ str)
+    end
 
   end
 end

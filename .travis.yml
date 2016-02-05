@@ -4,8 +4,8 @@ rvm:
   - 2.2
   - 2.1
   - 2.0
-  - jruby-1.7.23
-  - jruby-9.0.4.0
+  - jruby-1.7.24
+  - jruby-9.0.5.0
 deploy:
   provider: rubygems
   api_key:
