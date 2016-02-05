@@ -12,7 +12,7 @@ module Trace
 
     def flush!
       @scribe.batch do
-        messages = spans.values.map do |span|
+        messages = spans.map do |span|
           buf = ''
           trans = Thrift::MemoryBufferTransport.new(buf)
           oprot = Thrift::BinaryProtocol.new(trans)

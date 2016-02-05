@@ -16,7 +16,7 @@ module Trace
     end
 
     def flush!
-      messages = spans.values.map do |span|
+      spans.each do |span|
         buf = ''
         trans = Thrift::MemoryBufferTransport.new(buf)
         oprot = Thrift::BinaryProtocol.new(trans)

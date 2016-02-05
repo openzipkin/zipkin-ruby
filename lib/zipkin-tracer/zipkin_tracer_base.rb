@@ -44,15 +44,15 @@ module Trace
     THREAD_KEY = :zipkin_spans
 
     def spans
-      Thread.current[THREAD_KEY] ||= {}
+      Thread.current[THREAD_KEY] ||= []
     end
 
     def store_span(id, span)
-      spans[id.span_id.to_s] = span
+      spans.push(span)
     end
 
     def reset
-      Thread.current[THREAD_KEY] = {}
+      Thread.current[THREAD_KEY] = []
     end
 
   end
