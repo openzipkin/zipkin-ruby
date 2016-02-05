@@ -46,6 +46,7 @@ describe Trace::ZipkinTracerBase do
 
   describe '#end_span' do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
+    before { allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name')) }
     it 'closes the span' do
       span #touch it so it happens before we freeze time again
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 1))
@@ -53,13 +54,13 @@ describe Trace::ZipkinTracerBase do
       expect(span.to_h).to eq(span_hash.merge(duration: 1_000_000))
     end
     it 'flush if SS is annotated in this span' do
-      span.record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
+      span.record(Trace::Annotation::SERVER_SEND)
       expect(tracer).to receive(:flush!)
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
     it "does not flush if SS has not been annotated" do
-      span.record(Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
+      span.record(Trace::Annotation::SERVER_RECV)
       expect(tracer).not_to receive(:flush!)
       expect(tracer).not_to receive(:reset)
       tracer.end_span(span)

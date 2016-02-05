@@ -55,19 +55,19 @@ module ZipkinTracer
       synchronize do
         #if called by a service, the caller already added the information
         trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
-        span.record(Trace::Annotation.new(Trace::Annotation::SERVER_RECV, Trace.default_endpoint))
-        span.record(Trace::Annotation.new('whitelisted', Trace.default_endpoint)) if zipkin_env.force_sample?
+        span.record(Trace::Annotation::SERVER_RECV)
+        span.record('whitelisted') if zipkin_env.force_sample?
       end
       status, headers, body = yield
     ensure
       synchronize do
         annotate_plugin(zipkin_env.env, status, headers, body)
-        span.record(Trace::Annotation.new(Trace::Annotation::SERVER_SEND, Trace.default_endpoint))
+        span.record(Trace::Annotation::SERVER_SEND)
       end
     end
 
     def trace_request_information(span, env)
-      span.record(Trace::BinaryAnnotation.new('http.uri', env['PATH_INFO'], 'STRING', Trace.default_endpoint))
+      span.record_tag(Trace::BinaryAnnotation::URI, env['PATH_INFO'])
     end
 
     def synchronize(&block)

@@ -1,3 +1,7 @@
+# 0.13.2
+* Move record methods in TraceClient to Span
+* Relocate definition of constant variables
+
 # 0.13.1
 * Check the config entry is not blank when infering adapters
 

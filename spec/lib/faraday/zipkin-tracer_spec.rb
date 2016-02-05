@@ -58,30 +58,33 @@ describe ZipkinTracer::FaradayHandler do
     def expect_tracing
       expect(tracer).to receive(:with_new_span).with(anything, 'post').and_call_original
 
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
-        expect(ann.key).to eq('http.uri')
-        expect(ann.value).to eq(url_path)
+      expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
+        expect(key).to eq('http.uri')
+        expect(value).to eq(url_path)
+        expect_host(host, '127.0.0.1', service_name)
       end
 
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
-        expect(ann.key).to eq('sa')
-        expect(ann.value).to eq('1')
-        expect_host(ann.host, host_ip, service_name)
+      expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
+        expect(key).to eq('sa')
+        expect(value).to eq('1')
+        expect(type).to eq('BOOL')
+        expect_host(host, host_ip, service_name)
       end
 
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
-        expect(ann.key).to eq('http.status')
-        expect(ann.value).to eq('200')
+      expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
+        expect(key).to eq('http.status')
+        expect(value).to eq('200')
+        expect_host(host, '127.0.0.1', service_name)
       end
 
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
-        expect(ann.value).to eq(::Trace::Annotation::CLIENT_SEND)
-        expect_host(ann.host, '127.0.0.1', service_name)
+      expect_any_instance_of(Trace::Span).to receive(:record) do |_, value, host|
+        expect(value).to eq(Trace::Annotation::CLIENT_SEND)
+        expect_host(host, '127.0.0.1', service_name)
       end
 
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
-        expect(ann.value).to eq(::Trace::Annotation::CLIENT_RECV)
-        expect_host(ann.host, '127.0.0.1', service_name)
+      expect_any_instance_of(Trace::Span).to receive(:record) do |_, value, host|
+        expect(value).to eq(Trace::Annotation::CLIENT_RECV)
+        expect_host(host, '127.0.0.1', service_name)
       end
     end
 

@@ -41,18 +41,9 @@ describe ZipkinTracer::RackHandler do
     it 'traces the request' do
       expect(::Trace).to receive(:push).and_call_original.ordered
       expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(::Trace::BinaryAnnotation)) do |_, ann|
-        expect(ann.key).to eq('http.uri')
-        expect_host(ann.host)
-      end
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(::Trace::Annotation)) do |_, ann|
-        expect(ann.value).to eq(::Trace::Annotation::SERVER_RECV)
-        expect_host(ann.host)
-      end
-      expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(::Trace::Annotation)) do |_, ann|
-        expect(ann.value).to eq(::Trace::Annotation::SERVER_SEND)
-        expect_host(ann.host)
-      end
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.uri', '/')
+      expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
+      expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
       expect(::Trace).to receive(:pop).and_call_original.ordered
 
       status, headers, body = subject.call(mock_env)
@@ -175,7 +166,8 @@ describe ZipkinTracer::RackHandler do
       expect(tracer).to receive(:with_new_span).and_call_original.ordered
       expect(::Trace).to receive(:pop).and_call_original.ordered
 
-      expect_any_instance_of(Trace::Span).to receive(:record).exactly(3).times
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(1).times
+      expect_any_instance_of(Trace::Span).to receive(:record).exactly(2).times
       expect(::Trace).to receive(:record).exactly(2).times
       status, headers, body = subject.call(mock_env)
 
@@ -207,18 +199,10 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, whitelist_plugin: lambda { |env| true }, sample_rate: 0) }
 
       it 'samples the request' do
-        expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::BinaryAnnotation)) do |_, ann|
-          expect(ann.key).to eq('http.uri')
-        end
-        expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
-          expect(ann.value).to eq(::Trace::Annotation::SERVER_RECV)
-        end
-        expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
-          expect(ann.value).to eq('whitelisted')
-        end
-        expect_any_instance_of(Trace::Span).to receive(:record).with(instance_of(Trace::Annotation)) do |_, ann|
-          expect(ann.value).to eq(::Trace::Annotation::SERVER_SEND)
-        end
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.uri', '/')
+        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
+        expect_any_instance_of(Trace::Span).to receive(:record).with('whitelisted')
+        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end

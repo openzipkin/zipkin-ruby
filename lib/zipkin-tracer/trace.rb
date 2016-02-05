@@ -32,16 +32,6 @@ module Trace
       @duration = to_microseconds(Time.now) - @timestamp
     end
 
-    # We record information into spans, then we send these spans to zipkin
-    def record(annotation)
-      case annotation
-      when BinaryAnnotation
-        binary_annotations << annotation
-      when Annotation
-        annotations << annotation
-      end
-    end
-
     def to_h
       {
         name: @name,
@@ -54,6 +44,19 @@ module Trace
         duration: @duration,
         debug: @debug
       }
+    end
+
+    # We record information into spans, then we send these spans to zipkin
+    def record(value, endpoint = Trace.default_endpoint)
+      annotations << Trace::Annotation.new(value, endpoint)
+    end
+
+    def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
+      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
+    end
+
+    def record_local_component(value)
+      record_tag(BinaryAnnotation::LOCAL_COMPONENT, value)
     end
 
     private
@@ -78,6 +81,11 @@ module Trace
 
   # This class is defined in finagle-thrift. We are adding extra methods here
   class BinaryAnnotation
+    SERVER_ADDRESS = 'sa'.freeze
+    URI = 'http.uri'.freeze
+    STATUS = 'http.status'.freeze
+    LOCAL_COMPONENT = 'lc'.freeze
+
     def to_h
       {
         key: @key,

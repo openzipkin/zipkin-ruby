@@ -35,12 +35,7 @@ module ZipkinTracer
     end
 
     private
-    SERVER_ADDRESS = 'sa'.freeze
     SERVER_ADDRESS_SPECIAL_VALUE = '1'.freeze
-    STRING_TYPE = 'STRING'.freeze
-    BOOLEAN_TYPE = 'BOOL'.freeze
-    URI_KEY = 'http.uri'.freeze
-    STATUS_KEY = 'http.status'.freeze
 
     def trace!(env, trace_id)
       response = nil
@@ -50,14 +45,14 @@ module ZipkinTracer
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
       @tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
-        span.record(Trace::BinaryAnnotation.new(URI_KEY, url.path, STRING_TYPE, local_endpoint))
-        span.record(Trace::BinaryAnnotation.new(SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, BOOLEAN_TYPE, remote_endpoint))
-        span.record(Trace::Annotation.new(Trace::Annotation::CLIENT_SEND, local_endpoint))
+        span.record_tag(Trace::BinaryAnnotation::URI, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
+        span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
         response = @app.call(env).on_complete do |renv|
           # record HTTP status code on response
-          span.record(Trace::BinaryAnnotation.new(STATUS_KEY, renv[:status].to_s, STRING_TYPE, local_endpoint))
+          span.record_tag(Trace::BinaryAnnotation::STATUS, renv[:status].to_s, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         end
-        span.record(Trace::Annotation.new(Trace::Annotation::CLIENT_RECV, local_endpoint))
+        span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end
       response
     end
