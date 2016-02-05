@@ -7,4 +7,5 @@ platform :ruby do
   gem 'benchmark-ips'
   gem 'rbtrace'
   gem 'byebug'
+  gem 'simplecov', require: false
 end

@@ -1,3 +1,8 @@
+if ENV['COV']
+  require 'simplecov'
+  SimpleCov.start
+end
+
 require 'zipkin-tracer'
 require 'timecop'
 require 'webmock/rspec'
