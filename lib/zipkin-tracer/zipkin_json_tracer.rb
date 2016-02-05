@@ -29,7 +29,7 @@ module Trace
     end
 
     def flush!
-      AsyncJsonApiClient.new.async.perform(@json_api_host, spans.values.dup)
+      AsyncJsonApiClient.new.async.perform(@json_api_host, spans.dup)
     end
   end
 end
