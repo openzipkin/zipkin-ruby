@@ -20,6 +20,7 @@ module ZipkinTracer
       @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
       @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
       @logger            = config[:logger]            || Application.logger
+      @logger_setup      = config[:logger]            # Was the logger in fact setup by the client?
     end
 
     def adapter
@@ -29,6 +30,8 @@ module ZipkinTracer
         :scribe
       elsif present?(@zookeeper) && RUBY_PLATFORM == 'java'
         :kafka
+      elsif @logger_setup
+        :logger
       else
         nil
       end

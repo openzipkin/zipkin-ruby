@@ -55,6 +55,13 @@ module ZipkinTracer
         end
       end
 
+      context 'logger' do
+        it 'returns :logger if the logger has been set' do
+          config = Config.new(nil, logger: Logger.new(nil))
+          expect(config.adapter).to eq(:logger)
+        end
+      end
+
       context 'kafka' do
         before { stub_const('RUBY_PLATFORM', 'java') }
 

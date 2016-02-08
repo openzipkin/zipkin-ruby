@@ -1,3 +1,6 @@
+# 0.14.0
+* Adds a logger kind of tracer.
+
 # 0.13.2
 * Move record methods in TraceClient to Span
 * Relocate definition of constant variables

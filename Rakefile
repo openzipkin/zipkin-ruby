@@ -114,8 +114,9 @@ task :benchmark do
   empty_app = EmptyMiddleware.new(nil)
 
   null_configuration = { sample_rate: 1 }
-  json_configuration = null_configuration.merge({ json_api_host: fake_url })
-  scribe_configuration = null_configuration.merge({ scribe_server: fake_url })
+  json_configuration = null_configuration.merge(json_api_host: fake_url)
+  scribe_configuration = null_configuration.merge(scribe_server: fake_url)
+  logger_configuration = null_configuration.merge(logger: logger)
 
   # We create a different faraday middleware per rack middleware below because
   # both middlewares share the same tracer. So they need to be created in pairs.
@@ -129,6 +130,9 @@ task :benchmark do
   scribe_tracer_rack = ZipkinTracer::RackHandler.new(empty_app, scribe_configuration)
   scribe_faraday_app = FaradayMiddleware.new
   scribe_tracer_faraday_rack = ZipkinTracer::RackHandler.new(scribe_faraday_app, scribe_configuration)
+  logger_tracer_rack = ZipkinTracer::RackHandler.new(empty_app, logger_configuration)
+  log_faraday_app = FaradayMiddleware.new
+  logger_tracer_faraday_rack = ZipkinTracer::RackHandler.new(log_faraday_app, logger_configuration)
 
   env = Rack::MockRequest.env_for('/path', {})
 
@@ -140,6 +144,8 @@ task :benchmark do
     bm.report("JSONTracer + Faraday") { json_tracer_faraday_rack.call(env) }
     bm.report("ScribeTracer") { scribe_tracer_rack.call(env) }
     bm.report("ScribeTracer + Faraday") { scribe_tracer_faraday_rack.call(env) }
+    bm.report("Logging Tracer") { logger_tracer_rack.call(env) }
+    bm.report("Logging Tracer + Faraday") { logger_tracer_faraday_rack.call(env) }
     bm.compare!
   end
 

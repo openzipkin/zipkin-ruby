@@ -105,6 +105,12 @@ The original tracer, it uses scribe and thrift to send traces.
 
 You need to explicitly install the gem (`gem 'scribe', '~> 0.2.4'`) and set `:scribe_server` in the config.
 
+### Logger
+
+The simplest tracer that does something. It will log all your spans using the logger you pass in the configuration.
+This tracer can be used for debugging purpose (to see what is going to be sent) or to deliver zipkin information into the logs for later retrieval and analysis.
+
+You need to set `:logger` in the configuration.
 
 ### Null
 
