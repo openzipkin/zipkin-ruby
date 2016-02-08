@@ -18,12 +18,15 @@ describe Trace do
     end
     let(:timestamp) { 1452987900000000 }
     let(:duration) { 0 }
+    let(:key) { 'key' }
+    let(:value) { 'value' }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
       [span_with_parent, span_without_parent].each do |span|
         annotations.each { |a| span.annotations << a }
       end
+      allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name'))
     end
 
     describe '#to_h' do
@@ -43,6 +46,36 @@ describe Trace do
         expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
       end
     end
+
+    describe '#record' do
+      it 'records an annotation' do
+        span_with_parent.record(value)
+
+        ann = span_with_parent.annotations[-1]
+        expect(ann.value).to eq('value')
+      end
+    end
+
+    describe '#record_tag' do
+      it 'records a binary annotation' do
+        span_with_parent.record_tag(key, value)
+
+        ann = span_with_parent.binary_annotations[-1]
+        expect(ann.key).to eq('key')
+        expect(ann.value).to eq('value')
+      end
+    end
+
+    describe '#record_local_component' do
+      it 'records a binary annotation ' do
+        span_with_parent.record_local_component(value)
+
+        ann = span_with_parent.binary_annotations[-1]
+        expect(ann.key).to eq('lc')
+        expect(ann.value).to eq('value')
+      end
+    end
+
   end
 
   describe Trace::Annotation do
