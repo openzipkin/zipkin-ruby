@@ -14,6 +14,9 @@ module ZipkinTracer
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
           Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
+        when :logger
+          require 'zipkin-tracer/zipkin_logger_tracer'
+          Trace::ZipkinLoggerTracer.new(logger: config.logger)
         else
           require 'zipkin-tracer/zipkin_null_tracer'
           Trace::NullTracer.new

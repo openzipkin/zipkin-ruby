@@ -60,6 +60,17 @@ describe ZipkinTracer::TracerFactory do
       end
     end
 
+    context 'configured to use logger' do
+      let(:config) { configuration(logger: Logger.new(nil)) }
+
+      it 'creates a logger tracer' do
+        allow(Trace::ZipkinLoggerTracer).to receive(:new) { tracer }
+        expect(Trace).to receive(:tracer=).with(tracer)
+        expect(described_class.new.tracer(config)).to eq(tracer)
+      end
+    end
+
+
     context 'no transport configured' do
       it 'creates a null tracer' do
         [
