@@ -1,3 +1,6 @@
+# 0.14.1
+* Access to the tracer when we need it and not before.
+
 # 0.14.0
 * Adds a logger kind of tracer.
 
