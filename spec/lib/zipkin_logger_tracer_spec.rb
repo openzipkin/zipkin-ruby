@@ -16,7 +16,6 @@ describe Trace::ZipkinLoggerTracer do
         the_span = span
         span.record_tag('test', 'prueba')
       end
-
       log_text = "ZIPKIN SPANS: #{[the_span.to_h]}"
       expect(logger).to receive(:info).with(log_text)
       tracer.flush!

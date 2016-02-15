@@ -1,3 +1,6 @@
+# 0.15.0
+* Hostname resolution done asyncronously for the JSON tracer
+
 # 0.14.1
 * Access to the tracer when we need it and not before.
 

@@ -38,8 +38,8 @@ module Trace
         traceId: @span_id.trace_id.to_s,
         id: @span_id.span_id.to_s,
         parentId: @span_id.parent_id.nil? ? nil : @span_id.parent_id.to_s,
-        annotations: @annotations.map!(&:to_h),
-        binaryAnnotations: @binary_annotations.map!(&:to_h),
+        annotations: @annotations.map(&:to_h),
+        binaryAnnotations: @binary_annotations.map(&:to_h),
         timestamp: @timestamp,
         duration: @duration,
         debug: @debug
@@ -97,8 +97,6 @@ module Trace
 
   # This class is defined in finagle-thrift. We are adding extra methods here
   class Endpoint
-    LOCALHOST = '127.0.0.1'.freeze
-    LOCALHOST_I32 = 0x7f000001.freeze
     UNKNOWN_URL = 'unknown'.freeze
 
     # we cannot override the initializer to add an extra parameter so use a factory
@@ -124,13 +122,7 @@ module Trace
 
     private
     def self.make_endpoint(hostname, service_port, service_name, ip_format)
-      ipv4 = begin
-        ip_format == :string ? Socket.getaddrinfo(hostname, nil, :INET)[0][3] : host_to_i32(hostname)
-      rescue
-        ip_format == :string ? LOCALHOST : LOCALHOST_I32
-      end
-
-      ep = Endpoint.new(ipv4, service_port, service_name)
+      ep = Endpoint.new(hostname, service_port, service_name)
       ep.ip_format = ip_format
       ep
     end

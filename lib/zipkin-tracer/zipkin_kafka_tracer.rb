@@ -1,6 +1,7 @@
 require 'hermann/producer'
 require 'hermann/discovery/zookeeper'
 require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/hostname_resolver'
 
 module Trace
   # This class sends information to Zipkin through Kafka.
@@ -16,7 +17,8 @@ module Trace
     end
 
     def flush!
-      spans.each do |span|
+      resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
+      resolved_spans.each do |span|
         buf = ''
         trans = Thrift::MemoryBufferTransport.new(buf)
         oprot = Thrift::BinaryProtocol.new(trans)

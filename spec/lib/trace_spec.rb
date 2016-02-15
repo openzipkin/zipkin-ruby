@@ -131,32 +131,9 @@ describe Trace do
             and_return([['', '', '', '8.8.8.8']])
         end
 
-        it 'translates a given hostname to an ipv4 as an i32' do
-          ep = ::Trace::Endpoint.make_endpoint(hostname, 80, service_name, :i32)
-          expect(ep.ipv4).to eq(0x8080808)
-          expect(ep.ip_format).to eq(:i32)
-        end
-
-        it 'translates a given hostname to an ipv4 as a string' do
+        it 'does not translate the hostname' do
           ep = ::Trace::Endpoint.make_endpoint(hostname, 80, service_name, :string)
-          expect(ep.ipv4).to eq('8.8.8.8')
-          expect(ep.ip_format).to eq(:string)
-        end
-
-      end
-
-      context 'host lookup failure' do
-        before { allow(Socket).to receive(:gethostname).and_raise }
-
-        it 'falls back to localhost as an i32' do
-          ep = ::Trace::Endpoint.make_endpoint(hostname, 80, service_name, :i32)
-          expect(ep.ipv4).to eq(0x7f000001)
-          expect(ep.ip_format).to eq(:i32)
-        end
-
-        it 'falls back to 127.0.0.1' do
-          ep = ::Trace::Endpoint.make_endpoint(hostname, 80, service_name, :string)
-          expect(ep.ipv4).to eq('127.0.0.1')
+          expect(ep.ipv4).to eq(hostname)
           expect(ep.ip_format).to eq(:string)
         end
       end
