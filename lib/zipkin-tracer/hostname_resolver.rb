@@ -8,7 +8,7 @@ module ZipkinTracer
 
       each_annotation(spans) do |annotation|
         hostname = annotation.host.ipv4
-        if hostname.to_s =~ /\A[a-z]/ # hostnames start with letters, else we already have an IP
+        if hostname.to_s =~ /\A[a-zA-Z]/ # hostnames start with letters, else we already have an IP
           annotation.host.ipv4 = host_to_ip[hostname]
         end
       end
@@ -53,7 +53,7 @@ module ZipkinTracer
 
     def host_to_ip(hostname, ip_format)
       ipv4 = begin
-        ip_format == :string ? Socket.getaddrinfo(hostname, nil, :INET).first[IP_FIELD] : host_to_i32(hostname)
+        ip_format == :string ? Socket.getaddrinfo(hostname, nil, :INET).first[IP_FIELD] : Trace::Endpoint.host_to_i32(hostname)
       rescue
         ip_format == :string ? LOCALHOST : LOCALHOST_I32
       end
