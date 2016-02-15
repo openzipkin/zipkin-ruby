@@ -16,8 +16,8 @@ describe Trace::ZipkinLoggerTracer do
         the_span = span
         span.record_tag('test', 'prueba')
       end
-
-      log_text = "ZIPKIN SPANS: #{[the_span.to_h]}"
+      spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips([the_span]).map(&:to_h)
+      log_text = "ZIPKIN SPANS: #{spans}"
       expect(logger).to receive(:info).with(log_text)
       tracer.flush!
     end

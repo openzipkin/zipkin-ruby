@@ -142,10 +142,10 @@ task :benchmark do
     bm.report("NullTracer + Faraday") { null_tracer_faraday_rack.call(env) }
     bm.report("JSONTracer") { json_tracer_rack.call(env) }
     bm.report("JSONTracer + Faraday") { json_tracer_faraday_rack.call(env) }
-    bm.report("ScribeTracer") { scribe_tracer_rack.call(env) }
-    bm.report("ScribeTracer + Faraday") { scribe_tracer_faraday_rack.call(env) }
     bm.report("Logging Tracer") { logger_tracer_rack.call(env) }
     bm.report("Logging Tracer + Faraday") { logger_tracer_faraday_rack.call(env) }
+    bm.report("ScribeTracer") { scribe_tracer_rack.call(env) }
+    bm.report("ScribeTracer + Faraday") { scribe_tracer_faraday_rack.call(env) }
     bm.compare!
   end
 

@@ -68,7 +68,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(key).to eq('sa')
         expect(value).to eq('1')
         expect(type).to eq('BOOL')
-        expect_host(host, host_ip, service_name)
+        expect_host(host, hostname, service_name)
       end
 
       expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|

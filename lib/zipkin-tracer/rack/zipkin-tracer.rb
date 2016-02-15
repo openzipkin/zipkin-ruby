@@ -26,7 +26,6 @@ module ZipkinTracer
 
     def initialize(app, config = nil)
       @app = app
-      @lock = Mutex.new
       @config = Config.new(app, config).freeze
       @tracer = TracerFactory.new.tracer(@config)
     end
@@ -52,30 +51,18 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
-      synchronize do
-        #if called by a service, the caller already added the information
-        trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
-        span.record(Trace::Annotation::SERVER_RECV)
-        span.record('whitelisted') if zipkin_env.force_sample?
-      end
+      #if called by a service, the caller already added the information
+      trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
+      span.record(Trace::Annotation::SERVER_RECV)
+      span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
     ensure
-      synchronize do
-        annotate_plugin(zipkin_env.env, status, headers, body)
-        span.record(Trace::Annotation::SERVER_SEND)
-      end
+      annotate_plugin(zipkin_env.env, status, headers, body)
+      span.record(Trace::Annotation::SERVER_SEND)
     end
 
     def trace_request_information(span, env)
       span.record_tag(Trace::BinaryAnnotation::URI, env['PATH_INFO'])
-    end
-
-    def synchronize(&block)
-      @lock.synchronize do
-        yield
-      end
-    rescue => e
-      @config.logger.error("Exception #{e.message} while sending Zipkin traces. #{e.backtrace}")
     end
 
     # Environment with Zipkin information in it

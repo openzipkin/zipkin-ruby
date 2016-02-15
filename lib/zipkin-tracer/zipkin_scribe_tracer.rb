@@ -1,5 +1,7 @@
 require 'zipkin-tracer/zipkin_tracer_base'
 require 'zipkin-tracer/careless_scribe'
+require 'zipkin-tracer/hostname_resolver'
+
 
 module Trace
   class ScribeTracer < ZipkinTracerBase
@@ -11,8 +13,9 @@ module Trace
     end
 
     def flush!
+      resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
       @scribe.batch do
-        messages = spans.map do |span|
+        messages = resolved_spans.map do |span|
           buf = ''
           trans = Thrift::MemoryBufferTransport.new(buf)
           oprot = Thrift::BinaryProtocol.new(trans)

@@ -120,12 +120,6 @@ describe ZipkinTracer::RackHandler do
         expect(status).to eq(200)
         expect { |b| body.each &b }.to yield_with_args(app_body)
       end
-
-      it 'errors are logged' do
-        allow_any_instance_of(Trace::Span).to receive(:record).and_raise(StandardError)
-        expect(logger).to receive(:error).with(/Exception StandardError while sending Zipkin traces.*/).twice
-        subject.call(mock_env)
-      end
     end
 
 
