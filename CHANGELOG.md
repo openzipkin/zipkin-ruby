@@ -1,3 +1,6 @@
+# 0.15.1
+* Less strict dependency on Rack. Allows to use Rails 5.
+
 # 0.15.0
 * Hostname resolution done asyncronously for the JSON tracer
 
