@@ -4,7 +4,6 @@
 require 'rack/mock'
 require 'spec_helper'
 require 'zipkin-tracer/zipkin_json_tracer'
-require 'zipkin-tracer/zipkin_scribe_tracer'
 require 'zipkin-tracer/zipkin_null_tracer'
 
 describe ZipkinTracer::TracerFactory do
@@ -50,16 +49,6 @@ describe ZipkinTracer::TracerFactory do
       end
     end
 
-    context 'configured to use scribe' do
-      let(:config) { configuration(scribe_server: 'fake_scribe_server') }
-
-      it 'creates a scribe tracer' do
-        allow(Trace::ScribeTracer).to receive(:new) { tracer }
-        expect(Trace).to receive(:tracer=).with(tracer)
-        expect(described_class.new.tracer(config)).to eq(tracer)
-      end
-    end
-
     context 'configured to use logger' do
       let(:config) { configuration(logger: Logger.new(nil)) }
 
@@ -78,7 +67,6 @@ describe ZipkinTracer::TracerFactory do
           { json_api_host: nil },
           { json_api_host: "" },
           { json_api_host: "\n\t 　\r" },
-          { scribe_server: "" },
           { zookeeper: "" }
         ].each do |options|
           config = configuration(options)
@@ -96,11 +84,12 @@ describe ZipkinTracer::TracerFactory do
       end
 
       it 'sets the trace endpoint service name to the default configuration file value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with(80, 'zipkin-tester', :i32) { 'endpoint' }
+        expect(Trace::Endpoint).to receive(:local_endpoint).with(80, 'zipkin-tester', :string) { 'endpoint' }
         expect(Trace).to receive(:default_endpoint=).with('endpoint')
         described_class.new.tracer(config)
       end
-      context 'json adaptor' do
+
+      context 'json adapter' do
         let(:config) { configuration(service_name: 'zipkin-tester', json_api_host: 'host') }
         it 'calls with string ip format' do
           expect(Trace::Endpoint).to receive(:local_endpoint).with(80, 'zipkin-tester', :string) { 'endpoint' }
@@ -117,7 +106,7 @@ describe ZipkinTracer::TracerFactory do
       end
 
       it 'sets the trace endpoint service name to the environment variable value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with(anything, 'zipkin-env-var-tester', :i32) { 'endpoint' }
+        expect(Trace::Endpoint).to receive(:local_endpoint).with(anything, 'zipkin-env-var-tester', :string) { 'endpoint' }
         expect(Trace).to receive(:default_endpoint=).with('endpoint')
         described_class.new.tracer(config)
       end

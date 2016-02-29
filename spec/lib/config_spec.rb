@@ -3,8 +3,8 @@ require 'spec_helper'
 module ZipkinTracer
   RSpec.describe Config do
     [:service_name, :service_port, :json_api_host,
-      :scribe_server, :zookeeper, :sample_rate,
-      :annotate_plugin, :filter_plugin, :whitelist_plugin, :logger].each do |method|
+      :zookeeper, :sample_rate, :logger,
+      :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
         config = Config.new(nil, { method => value })
@@ -44,14 +44,6 @@ module ZipkinTracer
         it 'returns :json if the json api endpoint has been set' do
           config = Config.new(nil, json_api_host: 'http://server.yes.net')
           expect(config.adapter).to eq(:json)
-        end
-      end
-
-      context 'scribe' do
-        it 'returns :scribe if the scribe server has been set' do
-          require 'scribe'
-          config = Config.new(nil, scribe_server: 'http://server.yes.net')
-          expect(config.adapter).to eq(:scribe)
         end
       end
 

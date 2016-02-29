@@ -1,8 +1,9 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_kafka_tracer'
 
 # needed the if statement because rspec tags are broken
 if RUBY_PLATFORM == 'java'
+  require 'zipkin-tracer/zipkin_kafka_tracer'
+
   describe Trace::ZipkinKafkaTracer, :platform => :java do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }
