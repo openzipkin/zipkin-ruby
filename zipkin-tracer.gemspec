@@ -34,16 +34,11 @@ Gem::Specification.new do |s|
   s.add_dependency 'faraday', '~> 0.8'
   s.add_dependency 'finagle-thrift', '~> 1.4.1'
   s.add_dependency 'rack', '>= 1.0'
-  s.add_dependency 'sucker_punch', '~> 1.6'
+  s.add_dependency 'sucker_punch', '~> 2.0'
 
   s.add_development_dependency 'rspec', '~> 3.3'
   s.add_development_dependency 'rack-test', '~> 0.6'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 1.22'
-
-  # manually install the gem depending on the adapter you want to use
-  s.add_development_dependency 'hermann', '~> 0.25'
-  s.add_development_dependency 'scribe', '~> 0.2.4'
-
 end

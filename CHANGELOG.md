@@ -1,3 +1,7 @@
+# 0.16.0
+* Remove the scribe tracer.
+* Use sucker_punch 2.x. The main feature is the dependency on concurrent-ruby instead of celluloid.
+
 # 0.15.1
 * Less strict dependency on Rack. Allows to use Rails 5.
 

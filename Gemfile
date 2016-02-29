@@ -9,3 +9,7 @@ platform :ruby do
   gem 'byebug'
   gem 'simplecov', require: false
 end
+
+platform :jruby do
+  gem 'hermann', github: 'reiseburo/hermann', ref: '436ec9b'
+end

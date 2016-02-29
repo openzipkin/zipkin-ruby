@@ -8,9 +8,6 @@ module ZipkinTracer
           require 'zipkin-tracer/zipkin_json_tracer'
           options = { json_api_host: config.json_api_host, logger: config.logger }
           Trace::ZipkinJsonTracer.new(options)
-        when :scribe
-          require 'zipkin-tracer/zipkin_scribe_tracer'
-          Trace::ScribeTracer.new(scribe_server: config.scribe_server)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
           Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
@@ -24,7 +21,7 @@ module ZipkinTracer
       Trace.tracer = tracer
 
       # TODO: move this to the TracerBase and kill scribe tracer
-      ip_format = config.adapter == :json ? :string : :i32
+      ip_format = config.adapter == :kafka ? :i32 : :string
       Trace.default_endpoint = Trace::Endpoint.local_endpoint(
         config.service_port,
         service_name(config.service_name),

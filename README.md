@@ -23,7 +23,6 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:logger` - A logger class following the standard's library Logger interface (Log4r, Rails.logger, etc).
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
-* `:scribe_server` (default from scribe gem) - the address of the scribe server where traces are delivered
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
@@ -87,7 +86,7 @@ You need to specify the `:json_api_host` parameter to wherever your zipkin colle
 
 ### Kafka
 
-Uses Kafka as the transport instead of scribe.
+Uses Kafka as the transport.
 
 If in the config `:zookeeper` is set, then the gem will use Kafka.
 Hermann is the kafka client library that you will need to explicitly install if you want to use this tracer.
@@ -95,15 +94,9 @@ Hermann is the kafka client library that you will need to explicitly install if 
 Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper based broker discovery being JVM based.
 
 ```ruby
-# zipkin-kafka-tracer requires Hermann 0.25.0 or later
-gem 'hermann', '~> 0.25'
+# zipkin-kafka-tracer requires Hermann > 0.26.1.0
+gem 'hermann', '> 0.26.1.0'
 ```
-
-### Scribe
-
-The original tracer, it uses scribe and thrift to send traces.
-
-You need to explicitly install the gem (`gem 'scribe', '~> 0.2.4'`) and set `:scribe_server` in the config.
 
 ### Logger
 
