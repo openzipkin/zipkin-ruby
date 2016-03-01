@@ -11,5 +11,5 @@ platform :ruby do
 end
 
 platform :jruby do
-  gem 'hermann', github: 'reiseburo/hermann', ref: '436ec9b'
+  gem 'hermann', '~> 0.27.0'
 end
