@@ -94,8 +94,8 @@ Hermann is the kafka client library that you will need to explicitly install if 
 Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper based broker discovery being JVM based.
 
 ```ruby
-# zipkin-kafka-tracer requires Hermann > 0.26.1.0
-gem 'hermann', '> 0.26.1.0'
+# zipkin-kafka-tracer requires Hermann 0.27.0 or later
+gem 'hermann', '~> 0.27.0'
 ```
 
 ### Logger
