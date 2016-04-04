@@ -88,15 +88,15 @@ You need to specify the `:json_api_host` parameter to wherever your zipkin colle
 
 Uses Kafka as the transport.
 
-If in the config `:zookeeper` is set, then the gem will use Kafka.
-Hermann is the kafka client library that you will need to explicitly install if you want to use this tracer.
+If in the config `:zookeeper` is set, then the gem will use Kafka via
+[Hermann](https://github.com/reiseburo/hermann); you will need the `hermann`
+gem  (~> 0.27.0) installed, as it is not part of zipkin-tracer's gemspec.
+
+Alternatively, you may provide a :producer option in the config; this producer
+should accept #push() with a message and optional :topic.  If the value returned
+responds to #value!, it will be called (to block until completed).
 
 Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper based broker discovery being JVM based.
-
-```ruby
-# zipkin-kafka-tracer requires Hermann 0.27.0 or later
-gem 'hermann', '~> 0.27.0'
-```
 
 ### Logger
 
