@@ -55,14 +55,14 @@ if RUBY_PLATFORM == 'java'
 
         let(:mock_producer) { double('Kafka producer', :push => true) }
 
-        it 'should use that producer' do
+        it 'uses that producer' do
           expect(subject.instance_variable_get(:@producer)).to be mock_producer
         end
 
         context 'that does not respond_to? #push' do
           let(:mock_producer) { double('Kafka producer',) }
 
-          it 'should raise ArgumentError' do
+          it 'raises ArgumentError' do
             expect { subject }.to raise_error ArgumentError
           end
         end
@@ -71,7 +71,7 @@ if RUBY_PLATFORM == 'java'
       context 'with options including neither a :producer or a :zookeepers' do
         subject { described_class.new }
 
-        it 'should raise ArgumentError' do
+        it 'raises ArgumentError' do
           expect { subject }.to raise_error ArgumentError
         end
       end

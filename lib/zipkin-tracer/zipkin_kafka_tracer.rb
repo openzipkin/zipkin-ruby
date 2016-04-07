@@ -26,13 +26,6 @@ module Trace
       end
       super(options)
     end
-
-    def initialize_hermann_producer(zookeepers)
-      broker_ids = Hermann::Discovery::Zookeeper.new(zookeepers).get_brokers
-      @producer  = Hermann::Producer.new(nil, broker_ids)
-    end
-    private :initialize_hermann_producer
-
     def flush!
       resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
       resolved_spans.each do |span|
@@ -51,6 +44,12 @@ module Trace
       end
     rescue Exception
       # Ignore socket errors, etc
+    end
+
+    private
+    def initialize_hermann_producer(zookeepers)
+      broker_ids = Hermann::Discovery::Zookeeper.new(zookeepers).get_brokers
+      @producer  = Hermann::Producer.new(nil, broker_ids)
     end
   end
 end
