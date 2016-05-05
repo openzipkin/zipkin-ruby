@@ -1,3 +1,11 @@
+# 0.18.0
+* Adds the :log_tracing option to explicitly use the logger tracer.
+* Logger classes can not be passed via the configuration file (never worked correctly).
+* Logger tracer logs in JSON format for easy analysis by other tools.
+
+# 0.17.0
+Adds a :producer configuration key as an alternative to Hermann as Kafka client.
+
 # 0.16.0
 * Remove the scribe tracer.
 * Use sucker_punch 2.x. The main feature is the dependency on concurrent-ruby instead of celluloid.

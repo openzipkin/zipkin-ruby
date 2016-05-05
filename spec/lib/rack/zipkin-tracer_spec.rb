@@ -3,7 +3,7 @@ require 'spec_helper'
 
 describe ZipkinTracer::RackHandler do
   def middleware(app, config={})
-    configuration = { logger: logger, sample_rate: 1 }.merge(config)
+    configuration = { sample_rate: 1 }.merge(config)
     described_class.new(app, configuration)
   end
 
@@ -20,7 +20,6 @@ describe ZipkinTracer::RackHandler do
   let(:app_headers) { { 'Content-Type' => 'text/plain' } }
   let(:app_body) { path }
   let(:path) { '/'}
-  let(:logger) { Logger.new(nil) }
   let(:tracer) { Trace.tracer }
 
   let(:app) {
@@ -69,6 +68,7 @@ describe ZipkinTracer::RackHandler do
     context 'accessing a valid URL of our service' do
       before do
         rails = double('Rails')
+        allow(rails).to receive(:logger)
         allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_return(controller: 'trusmis', action: 'new')
         stub_const('Rails', rails)
       end
@@ -78,6 +78,7 @@ describe ZipkinTracer::RackHandler do
     context 'accessing an invalid URL our our service' do
       before do
         rails = double('Rails')
+        allow(rails).to receive(:logger)
         stub_const('ActionController::RoutingError', StandardError)
         allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_raise(ActionController::RoutingError)
         stub_const('Rails', rails)

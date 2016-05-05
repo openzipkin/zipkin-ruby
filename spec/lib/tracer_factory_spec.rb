@@ -50,7 +50,7 @@ describe ZipkinTracer::TracerFactory do
     end
 
     context 'configured to use logger' do
-      let(:config) { configuration(logger: Logger.new(nil)) }
+      let(:config) { configuration(log_tracing: true) }
 
       it 'creates a logger tracer' do
         allow(Trace::ZipkinLoggerTracer).to receive(:new) { tracer }
