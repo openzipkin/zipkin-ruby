@@ -5,7 +5,7 @@ module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
   class Config
     attr_reader :service_name, :service_port, :json_api_host,
-      :zookeeper, :sample_rate, :logger,
+      :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin
 
     def initialize(app, config_hash)
@@ -18,8 +18,8 @@ module ZipkinTracer
       @annotate_plugin   = config[:annotate_plugin]   # call for trace annotation
       @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
       @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
-      @logger            = config[:logger]            || Application.logger
-      @logger_setup      = config[:logger]            # Was the logger in fact setup by the client?
+      @logger            = Application.logger
+      @log_tracing       = config[:log_tracing]       # Was the logger in fact setup by the client?
     end
 
     def adapter
@@ -27,7 +27,7 @@ module ZipkinTracer
         :json
       elsif present?(@zookeeper) && RUBY_PLATFORM == 'java'
         :kafka
-      elsif @logger_setup
+      elsif !!@log_tracing
         :logger
       else
         nil

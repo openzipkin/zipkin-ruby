@@ -20,9 +20,9 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
 * `:service_port` **REQUIRED** - the port of the service being traced (e.g. 80 or 443)
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
-* `:logger` - A logger class following the standard's library Logger interface (Log4r, Rails.logger, etc).
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
+* `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
@@ -77,6 +77,8 @@ end
 
 ## Tracers
 
+Only one of the following tracers can be used at a given time.
+
 ### JSON
 
 Sends traces as JSON over HTTP. This is the preferred tracer to use as the openzipkin project moves away from Thrift.
@@ -100,10 +102,10 @@ Caveat: Hermann is only usable from within Jruby, due to its implementation of z
 
 ### Logger
 
-The simplest tracer that does something. It will log all your spans using the logger you pass in the configuration.
+The simplest tracer that does something. It will log all your spans.
 This tracer can be used for debugging purpose (to see what is going to be sent) or to deliver zipkin information into the logs for later retrieval and analysis.
 
-You need to set `:logger` in the configuration.
+You need to set `:log_tracing` to true in the configuration.
 
 ### Null
 

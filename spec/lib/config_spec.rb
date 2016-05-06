@@ -3,7 +3,7 @@ require 'spec_helper'
 module ZipkinTracer
   RSpec.describe Config do
     [:service_name, :service_port, :json_api_host,
-      :zookeeper, :sample_rate, :logger,
+      :zookeeper, :sample_rate, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
@@ -47,9 +47,9 @@ module ZipkinTracer
         end
       end
 
-      context 'logger' do
-        it 'returns :logger if the logger has been set' do
-          config = Config.new(nil, logger: Logger.new(nil))
+      context 'log_tracing' do
+        it 'returns :logger if log_tracing has been set to true' do
+          config = Config.new(nil, log_tracing: true)
           expect(config.adapter).to eq(:logger)
         end
       end
