@@ -1,3 +1,6 @@
+# 0.19.0
+* Remove the X-B3-Flags header.
+
 # 0.18.0
 * Adds the :log_tracing option to explicitly use the logger tracer.
 * Logger classes can not be passed via the configuration file (never worked correctly).
