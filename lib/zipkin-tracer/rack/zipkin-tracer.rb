@@ -22,7 +22,6 @@ module ZipkinTracer
   # It will also send the trace to the Zipkin service using one of the methods configured.
   class RackHandler
     B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED].freeze
-    B3_OPT_HEADERS = %w[HTTP_X_B3_FLAGS].freeze
 
     def initialize(app, config = nil)
       @app = app
@@ -74,7 +73,7 @@ module ZipkinTracer
         @config = config
       end
 
-      def trace_id(default_flags = Trace::Flags::EMPTY)
+      def trace_id
         trace_parameters = if called_with_zipkin_headers?
                              @env.values_at(*B3_REQUIRED_HEADERS)
                            else
@@ -82,9 +81,7 @@ module ZipkinTracer
                              [new_id, nil, new_id]
                            end
         trace_parameters[3] = should_trace?(trace_parameters[3])
-        trace_parameters += @env.values_at(*B3_OPT_HEADERS) # always check flags
-        trace_parameters[4] = (trace_parameters[4] || default_flags).to_i
-
+        trace_parameters << Trace::Flags::EMPTY # not used but needed because the initializer expects 5 args
         Trace::TraceId.new(*trace_parameters)
       end
 

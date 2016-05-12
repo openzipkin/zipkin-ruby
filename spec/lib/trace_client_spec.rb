@@ -37,7 +37,7 @@ describe ZipkinTracer::TraceClient do
 
   describe 'Trace has not been sampled' do
     before do
-      allow(Trace.id).to receive(:next_id).and_return(Trace::TraceId.new(1, 2, 3, false, 0))
+      allow(Trace.id).to receive(:next_id).and_return(Trace::TraceId.new(1, 2, 3, false, ::Trace::Flags::EMPTY))
     end
 
     it 'does not create new span' do

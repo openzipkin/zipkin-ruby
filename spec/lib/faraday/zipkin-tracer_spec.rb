@@ -27,7 +27,7 @@ describe ZipkinTracer::FaradayHandler do
   let(:url_path) { '/some/path/here' }
   let(:raw_url) { "https://#{hostname}#{url_path}" }
   let(:tracer) { Trace.tracer }
-  let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
+  let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::EMPTY) }
 
   def process(body, url, headers = {})
     env = {
@@ -89,7 +89,7 @@ describe ZipkinTracer::FaradayHandler do
     end
 
     context 'with tracing id' do
-      let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
+      let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::EMPTY) }
 
       it 'sets the X-B3 request headers with a new spanID' do
         expect_tracing
@@ -103,7 +103,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-SpanId']).not_to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-Sampled']).to eq('true')
-        expect(result[:request_headers]['X-B3-Flags']).to eq('1')
+        expect(result[:request_headers].key?('X-B3-Flags')).to be false
       end
 
       it 'the original spanID is restored after the calling the middleware' do
@@ -125,7 +125,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-ParentSpanId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-Sampled']).to match(/(true|false)/)
-        expect(result[:request_headers]['X-B3-Flags']).to match(/(1|0)/)
+        expect(result[:request_headers].key?('X-B3-Flags')).to be false
       end
     end
 
@@ -143,7 +143,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-SpanId']).not_to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-Sampled']).to eq('false')
-        expect(result[:request_headers]['X-B3-Flags']).to eq('0')
+        expect(result[:request_headers].key?('X-B3-Flags')).to be false
       end
 
       it 'the original spanID is restored after the calling the middleware' do
