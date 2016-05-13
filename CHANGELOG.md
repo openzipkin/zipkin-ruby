@@ -1,3 +1,6 @@
+# 0.18.1
+* Turn the ZipkinTracer::FaradayHandler::B3_HEADERS constant into a private method
+
 # 0.18.0
 * Adds the :log_tracing option to explicitly use the logger tracer.
 * Logger classes can not be passed via the configuration file (never worked correctly).
