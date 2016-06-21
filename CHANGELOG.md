@@ -1,3 +1,6 @@
+# 0.18.2
+* Remove nil parentId from zipkin span payload.
+
 # 0.18.1
 * Turn the ZipkinTracer::FaradayHandler::B3_HEADERS constant into a private method
 
