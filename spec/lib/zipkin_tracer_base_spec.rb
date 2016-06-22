@@ -6,13 +6,13 @@ describe Trace::ZipkinTracerBase do
   let(:parent_id) { 'f0e71086411b1445' }
   let(:sampled) { true }
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, sampled, Trace::Flags::EMPTY) }
+  let(:trace_id_with_parent) { Trace::TraceId.new(span_id, parent_id, span_id, sampled, Trace::Flags::EMPTY) }
   let(:rpc_name) { 'this_is_an_rpc' }
   let(:tracer) { described_class.new }
   let(:span_hash) { {
     name: rpc_name,
     traceId: span_id,
     id: span_id,
-    parentId: nil,
     annotations: [],
     binaryAnnotations: [],
     timestamp: 1452987900000000,
@@ -33,10 +33,20 @@ describe Trace::ZipkinTracerBase do
     it 'sets the span name' do
       expect(span.name).to eq(rpc_name)
     end
-    it 'returns an empty span' do
-      expect(span.binary_annotations).to eq([])
-      expect(span.annotations).to eq([])
-      expect(span.to_h).to eq(span_hash)
+    context "no parentId" do
+      it 'returns an empty span' do
+        expect(span.binary_annotations).to eq([])
+        expect(span.annotations).to eq([])
+        expect(span.to_h).to eq(span_hash)
+      end
+    end
+    context "with parentId" do
+      let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
+      it 'returns an empty span' do
+        expect(span.binary_annotations).to eq([])
+        expect(span.annotations).to eq([])
+        expect(span.to_h).to eq(span_hash.merge({parentId: parent_id}))
+      end
     end
     it 'stores the span' do
       expect(tracer).to receive(:store_span).with(trace_id, anything)

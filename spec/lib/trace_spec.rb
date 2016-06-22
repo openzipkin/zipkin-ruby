@@ -35,7 +35,6 @@ describe Trace do
           name: 'get',
           traceId: span_id,
           id: span_id,
-          parentId: nil,
           annotations: annotations,
           binaryAnnotations: [],
           debug: false,
