@@ -102,7 +102,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-ParentSpanId']).to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).not_to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
-        expect(result[:request_headers]['X-B3-Sampled']).to eq('true')
+        expect(result[:request_headers]['X-B3-Sampled']).to eq('1')
         expect(result[:request_headers]['X-B3-Flags']).to eq('1')
       end
 
@@ -124,7 +124,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-TraceId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-ParentSpanId']).to match(HEX_REGEX)
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
-        expect(result[:request_headers]['X-B3-Sampled']).to match(/(true|false)/)
+        expect(result[:request_headers]['X-B3-Sampled']).to match(/(1|0)/)
         expect(result[:request_headers]['X-B3-Flags']).to match(/(1|0)/)
       end
     end
@@ -142,7 +142,7 @@ describe ZipkinTracer::FaradayHandler do
         expect(result[:request_headers]['X-B3-ParentSpanId']).to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).not_to eq('0000000000000003')
         expect(result[:request_headers]['X-B3-SpanId']).to match(HEX_REGEX)
-        expect(result[:request_headers]['X-B3-Sampled']).to eq('false')
+        expect(result[:request_headers]['X-B3-Sampled']).to eq('0')
         expect(result[:request_headers]['X-B3-Flags']).to eq('0')
       end
 

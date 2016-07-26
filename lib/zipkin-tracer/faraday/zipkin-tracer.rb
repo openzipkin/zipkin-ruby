@@ -14,9 +14,7 @@ module ZipkinTracer
     def call(env)
       trace_id = Trace.id.next_id
       Trace.with_trace_id(trace_id) do
-        b3_headers.each do |method, header|
-          env[:request_headers][header] = trace_id.send(method).to_s
-        end
+        env[:request_headers] = to_http_headers(trace_id)
         if trace_id.sampled?
           trace!(env, trace_id)
         else
@@ -37,6 +35,15 @@ module ZipkinTracer
         sampled: 'X-B3-Sampled',
         flags: 'X-B3-Flags'
       }
+    end
+
+    def to_http_headers(trace_id)
+      headers = {}
+      b3_headers.each do |method, header|
+        headers[header] = trace_id.send(method).to_s
+      end
+      headers['X-B3-Sampled'] = headers['X-B3-Sampled'] == 'true' ? '1' : '0'
+      headers
     end
 
     def trace!(env, trace_id)

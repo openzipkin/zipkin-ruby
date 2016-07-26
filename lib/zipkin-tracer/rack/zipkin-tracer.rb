@@ -104,7 +104,7 @@ module ZipkinTracer
 
       def should_trace?(parent_trace_sampled)
         if parent_trace_sampled  # A service upstream decided this goes in all the way
-          parent_trace_sampled == 'true'
+          ['1', 'true'].include? parent_trace_sampled
         else
           force_sample? || current_trace_sampled? && !filtered?
         end

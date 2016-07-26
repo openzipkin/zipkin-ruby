@@ -1,3 +1,8 @@
+# 0.19.0
+* Modified X_B3_SAMPLED header to expect & set '1'/'0' as boolean
+representation.  Will also respect a X_B3_SAMPLED header value of 'true'
+on inbound request for backward compaibility.  See http://zipkin.io/pages/instrumenting.html#communicating-trace-information.
+
 # 0.18.2
 * Remove nil parentId from zipkin span payload.
 
