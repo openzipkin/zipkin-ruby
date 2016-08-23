@@ -8,9 +8,7 @@ module ZipkinTracer
 
       each_annotation(spans) do |annotation|
         hostname = annotation.host.ipv4
-        if hostname.to_s =~ /\A[a-zA-Z]/ # hostnames start with letters, else we already have an IP
-          annotation.host.ipv4 = host_to_ip[hostname]
-        end
+        annotation.host.ipv4 = host_to_ip[hostname]
       end
     end
 
