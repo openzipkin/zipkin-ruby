@@ -1,3 +1,6 @@
+# 0.18.4
+* Uses http.path to annotate paths instead of http.uri.
+
 # 0.18.3
 * Ensures ip addresses for all hostnames are resolved, solves issue with docker hostnames
 

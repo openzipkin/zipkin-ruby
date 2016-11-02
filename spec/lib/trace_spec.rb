@@ -94,12 +94,12 @@ describe Trace do
   end
 
   describe Trace::BinaryAnnotation do
-    let(:annotation) { Trace::BinaryAnnotation.new('http.uri', '/', 'STRING', dummy_endpoint) }
+    let(:annotation) { Trace::BinaryAnnotation.new('http.path', '/', 'STRING', dummy_endpoint) }
 
     describe '#to_h' do
       it 'returns a hash representation of a binary annotation' do
         expect(annotation.to_h).to eq(
-          key: 'http.uri',
+          key: 'http.path',
           value: '/',
           endpoint: dummy_endpoint.to_h
         )

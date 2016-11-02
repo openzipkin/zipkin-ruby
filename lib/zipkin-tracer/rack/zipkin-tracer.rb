@@ -62,7 +62,7 @@ module ZipkinTracer
     end
 
     def trace_request_information(span, env)
-      span.record_tag(Trace::BinaryAnnotation::URI, env['PATH_INFO'])
+      span.record_tag(Trace::BinaryAnnotation::PATH, env['PATH_INFO'])
     end
 
     # Environment with Zipkin information in it
