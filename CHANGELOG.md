@@ -1,3 +1,6 @@
+# 0.18.3
+* Ensures ip addresses for all hostnames are resolved, solves issue with docker hostnames
+
 # 0.18.2
 * Remove nil parentId from zipkin span payload.
 
