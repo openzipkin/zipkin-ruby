@@ -1,3 +1,5 @@
+require 'resolv'
+
 module ZipkinTracer
   # Resolves hostnames in the endpoints of the annotations.
   # Resolving hostnames is a very expensive operation. We want to store them raw in the main thread
@@ -8,7 +10,7 @@ module ZipkinTracer
 
       each_annotation(spans) do |annotation|
         hostname = annotation.host.ipv4
-        if hostname.to_s =~ /\A[a-zA-Z]/ # hostnames start with letters, else we already have an IP
+        unless resolved_ip_address?(hostname.to_s)
           annotation.host.ipv4 = host_to_ip[hostname]
         end
       end
@@ -18,6 +20,13 @@ module ZipkinTracer
     LOCALHOST = '127.0.0.1'.freeze
     LOCALHOST_I32 = 0x7f000001.freeze
     IP_FIELD = 3
+
+    def resolved_ip_address?(ip_string)
+      # When the ip_format is string, we will match with one of these two regexp
+      # When the ip_format is :i32 (used by kafka), we just check the string is a number
+      !!((ip_string =~ Resolv::IPv4::Regex) || (ip_string =~ Resolv::IPv6::Regex)) ||
+        ip_string.to_i.to_s == ip_string
+    end
 
     def each_annotation(spans, &block)
       spans.each do |span|

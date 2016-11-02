@@ -8,7 +8,7 @@ describe ZipkinTracer::HostnameResolver do
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, sampled, Trace::Flags::EMPTY) }
   let(:name) { 'raist' }
   let(:ipv4) { '100.100.100.100' }
-  let(:hostname) { 'www.trusmis.com' }
+  let(:hostname) { '4be067f0e54e' } # docker hostnames look like this
   let(:endpoint) { Trace::Endpoint.new(hostname, 80, name) }
   let(:local_hostname) { 'MRBADGUY' }
   let(:local_endpoint) { Trace::Endpoint.new(local_hostname, 80, name) }
@@ -20,7 +20,6 @@ describe ZipkinTracer::HostnameResolver do
       expect(described_class.new.spans_with_ips([])).to eq([])
     end
   end
-
 
   shared_examples_for 'resolves hostnames' do
     it 'returns an array of spans' do
@@ -40,25 +39,6 @@ describe ZipkinTracer::HostnameResolver do
       ip = resolved_spans.first.binary_annotations.first.host.ipv4
       expect(ip).to eq(expected_ip)
     end
-
-    context 'host lookup failure' do
-      before { allow(Socket).to receive(:getaddrinfo).and_raise }
-      context 'i32' do
-       before { current_endpoint.ip_format = :i32 }
-        it 'falls back to localhost as an i32' do
-          ip = resolved_spans.first.annotations.first.host.ipv4
-          expect(ip).to eq(0x7f000001)
-        end
-      end
-
-      context 'string' do
-        before { current_endpoint.ip_format = :string }
-        it 'falls back to localhost as an string' do
-          ip = resolved_spans.first.annotations.first.host.ipv4
-          expect(ip).to eq('127.0.0.1')
-        end
-      end
-    end
   end
 
   context 'resolving to i32 addresses' do
@@ -70,8 +50,14 @@ describe ZipkinTracer::HostnameResolver do
       allow(Socket).to receive(:getaddrinfo).with(hostname, nil).and_return([[nil, nil, nil, ipv4]])
     end
     let(:expected_ip) { 1684300900 }  # 1684300900 == 100.100.100.100 into i32 notation
-    let(:current_endpoint) { endpoint }
 
+    context 'host lookup failure' do
+      before { allow(Socket).to receive(:getaddrinfo).and_raise }
+      it 'falls back to localhost as an i32' do
+        ip = resolved_spans.first.annotations.first.host.ipv4
+        expect(ip).to eq(0x7f000001)
+      end
+    end
     it_should_behave_like 'resolves hostnames'
   end
 
@@ -85,7 +71,6 @@ describe ZipkinTracer::HostnameResolver do
       allow(Socket).to receive(:getaddrinfo).with(local_hostname, nil, :INET).and_return([[nil, nil, nil, ipv4]])
     end
     let(:expected_ip) { ipv4 }
-    let(:current_endpoint) { local_endpoint }
     it_should_behave_like 'resolves hostnames'
   end
 
@@ -99,7 +84,14 @@ describe ZipkinTracer::HostnameResolver do
       allow(Socket).to receive(:getaddrinfo).with(hostname, nil, :INET).and_return([[nil, nil, nil, ipv4]])
     end
     let(:expected_ip) { ipv4 }
-    let(:current_endpoint) { endpoint }
+
+    context 'host lookup failure' do
+      before { allow(Socket).to receive(:getaddrinfo).and_raise }
+      it 'falls back to localhost as an string' do
+        ip = resolved_spans.first.annotations.first.host.ipv4
+        expect(ip).to eq('127.0.0.1')
+      end
+    end
     it_should_behave_like 'resolves hostnames'
   end
 
