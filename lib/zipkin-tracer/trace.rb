@@ -83,7 +83,7 @@ module Trace
   # This class is defined in finagle-thrift. We are adding extra methods here
   class BinaryAnnotation
     SERVER_ADDRESS = 'sa'.freeze
-    URI = 'http.uri'.freeze
+    URI = 'http.url'.freeze
     STATUS = 'http.status'.freeze
     LOCAL_COMPONENT = 'lc'.freeze
 

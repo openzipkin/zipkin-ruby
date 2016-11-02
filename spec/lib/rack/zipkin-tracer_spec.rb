@@ -40,7 +40,7 @@ describe ZipkinTracer::RackHandler do
     it 'traces the request' do
       expect(::Trace).to receive(:push).and_call_original.ordered
       expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.uri', '/')
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.url', '/')
       expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
       expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
       expect(::Trace).to receive(:pop).and_call_original.ordered
@@ -194,7 +194,7 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, whitelist_plugin: lambda { |env| true }, sample_rate: 0) }
 
       it 'samples the request' do
-        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.uri', '/')
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.url', '/')
         expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
         expect_any_instance_of(Trace::Span).to receive(:record).with('whitelisted')
         expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
