@@ -12,7 +12,7 @@ deploy:
   gem: zipkin-tracer
   on:
     tags: true
-    repo: openzipkin/zipkin-tracer
+    repo: openzipkin/zipkin-ruby
 notifications:
   webhooks:
     urls:
