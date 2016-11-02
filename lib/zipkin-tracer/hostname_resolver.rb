@@ -24,7 +24,7 @@ module ZipkinTracer
     def resolved_ip_address?(ip_string)
       # When the ip_format is string, we will match with one of these two regexp
       # When the ip_format is :i32 (used by kafka), we just check the string is a number
-      !!((ip_string =~ Resolv::IPv4::Regex) || (ip_string =~ Resolv::IPv6::Regex)) ||
+      !!(ip_string =~ Regexp.union(Resolv::IPv4::Regex, Resolv::IPv6::Regex)) ||
         ip_string.to_i.to_s == ip_string
     end
 
