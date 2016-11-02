@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.description               = 'Adds tracing instrumentation for ruby applications'
 
   s.required_rubygems_version = '>= 1.3.5'
+  s.required_ruby_version = '>= 2.0.0'
 
   s.files                     = Dir.glob('{bin,lib}/**/*')
   s.require_path              = 'lib'
