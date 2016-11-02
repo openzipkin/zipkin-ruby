@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 module ZipkinTracer
-  VERSION = '0.18.3'.freeze
+  VERSION = '0.18.4'.freeze
 end

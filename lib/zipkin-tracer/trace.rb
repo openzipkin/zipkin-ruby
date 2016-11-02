@@ -84,6 +84,7 @@ module Trace
   class BinaryAnnotation
     SERVER_ADDRESS = 'sa'.freeze
     URI = 'http.uri'.freeze
+    PATH = 'http.path'.freeze
     STATUS = 'http.status'.freeze
     LOCAL_COMPONENT = 'lc'.freeze
 

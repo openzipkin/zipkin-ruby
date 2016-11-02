@@ -59,7 +59,7 @@ describe ZipkinTracer::FaradayHandler do
       expect(tracer).to receive(:with_new_span).with(anything, 'post').and_call_original
 
       expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
-        expect(key).to eq('http.uri')
+        expect(key).to eq('http.path')
         expect(value).to eq(url_path)
         expect_host(host, '127.0.0.1', service_name)
       end

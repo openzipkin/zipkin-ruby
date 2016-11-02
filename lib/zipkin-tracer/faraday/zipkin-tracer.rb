@@ -47,7 +47,7 @@ module ZipkinTracer
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
       Trace.tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
-        span.record_tag(Trace::BinaryAnnotation::URI, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+        span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
         response = @app.call(env).on_complete do |renv|
