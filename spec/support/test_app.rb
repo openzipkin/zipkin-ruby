@@ -31,7 +31,7 @@ class TestApp
       'trace_id'        => ::Trace.id.trace_id.to_s,
       'parent_span_id'  => ::Trace.id.parent_id.to_s,
       'span_id'         => ::Trace.id.span_id.to_s,
-      'sampled'         => ::Trace.id.sampled
+      'sampled'         => ::Trace.id.sampled.to_s
     }
     self.class.add_trace(current_trace_info.to_json)
   end

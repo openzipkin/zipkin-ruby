@@ -15,6 +15,37 @@ module Trace
     self.pop
   end
 
+  # A TraceId contains all the information of a given trace id
+  # This class is defined in finagle-thrift. We are overwriting it here
+  class TraceId
+    attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags
+
+    def initialize(trace_id, parent_id, span_id, sampled, flags)
+      @trace_id = SpanId.from_value(trace_id)
+      @parent_id = parent_id.nil? ? nil : SpanId.from_value(parent_id)
+      @span_id = SpanId.from_value(span_id)
+      @sampled = sampled
+      @flags = flags
+    end
+
+    def next_id
+      TraceId.new(@trace_id, @span_id, Trace.generate_id, @sampled, @flags)
+    end
+
+    # the debug flag is used to ensure the trace passes ALL samplers
+    def debug?
+      @flags & Flags::DEBUG == Flags::DEBUG
+    end
+
+    def sampled?
+      debug? || ['1', 'true'].include?(@sampled)
+    end
+
+    def to_s
+      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}, sampled = #{@sampled.to_s}, flags = #{@flags.to_s})"
+    end
+  end
+
   # A span may contain many annotations
   # This class is defined in finagle-thrift. We are adding extra methods here
   class Span

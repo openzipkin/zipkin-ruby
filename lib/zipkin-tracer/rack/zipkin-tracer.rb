@@ -79,9 +79,9 @@ module ZipkinTracer
                              @env.values_at(*B3_REQUIRED_HEADERS)
                            else
                              new_id = Trace.generate_id
-                             [new_id, nil, new_id]
+                             [new_id, nil, new_id, nil]
                            end
-        trace_parameters[3] = should_trace?(trace_parameters[3])
+        trace_parameters[3] = sampled_header_value(trace_parameters[3])
         trace_parameters += @env.values_at(*B3_OPT_HEADERS) # always check flags
         trace_parameters[4] = (trace_parameters[4] || default_flags).to_i
 
@@ -98,15 +98,28 @@ module ZipkinTracer
 
       private
 
+      def new_sampled_header_value(sampled)
+         case [@config.sampled_as_boolean, sampled]
+         when [true, true]
+           'true'
+         when [true, false]
+           'false'
+         when [false, true]
+           '1'
+         when [false, false]
+           '0'
+         end
+      end
+
       def current_trace_sampled?
         rand < @config.sample_rate
       end
 
-      def should_trace?(parent_trace_sampled)
+      def sampled_header_value(parent_trace_sampled)
         if parent_trace_sampled  # A service upstream decided this goes in all the way
-          parent_trace_sampled == 'true'
+          parent_trace_sampled
         else
-          force_sample? || current_trace_sampled? && !filtered?
+          new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered?)
         end
       end
 
