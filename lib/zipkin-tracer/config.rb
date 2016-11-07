@@ -35,6 +35,10 @@ module ZipkinTracer
       @log_tracing       = config[:log_tracing]
       # When set to false, it uses 1/0 in the 'X-B3-Sampled' header, else uses true/false
       @sampled_as_boolean = config[:sampled_as_boolean] || DEFAULTS[:sampled_as_boolean]
+      # The current default is true for compatibility but services are encouraged to move on.
+      if @sampled_as_boolean
+        @logger && @logger.warn("Using a boolean in the Sampled header is deprecated. Consider setting sampled_as_boolean to false")
+      end
     end
 
     def adapter

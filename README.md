@@ -26,7 +26,7 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
-
+* `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
 
 ### Sending traces on outgoing requests with Faraday
 

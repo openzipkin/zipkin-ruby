@@ -1,3 +1,7 @@
+# 0.19.0
+* Propagates the X-B3-Sampled in the same form it receives it (boolean or an a number)
+* Adds a configuration option to allow a service to emit boolean or numbers for the X-B3-Sampled header
+
 # 0.18.4
 * Uses http.path to annotate paths instead of http.uri.
 

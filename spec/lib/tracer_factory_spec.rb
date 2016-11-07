@@ -20,6 +20,9 @@ describe ZipkinTracer::TracerFactory do
   let(:subject) { described_class.new(config) }
   let(:tracer) { double('Trace::NullTracer') }
 
+  before do
+    allow(ZipkinTracer::Application).to receive(:logger).and_return(logger)
+  end
 
   describe 'initializer' do
     # see spec/lib/zipkin_kafka_tracer_spec.rb
