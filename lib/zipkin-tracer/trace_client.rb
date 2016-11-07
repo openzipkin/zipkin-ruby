@@ -17,7 +17,7 @@ module ZipkinTracer
       result = nil
       if @trace_id.sampled?
         Trace.with_trace_id(@trace_id) do
-          Trace.tracer.with_new_span(@trace_id, Trace::BinaryAnnotation::LOCAL_COMPONENT) do |span|
+          Trace.tracer.with_new_span(@trace_id, local_component_value) do |span|
             result = block.call(span)
             span.record_local_component local_component_value
           end
