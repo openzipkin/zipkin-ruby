@@ -7,5 +7,9 @@ module Trace
       span = Span.new(name, trace_id)
       yield span
     end
+
+    def flush!
+      # NOOP
+    end
   end
 end
