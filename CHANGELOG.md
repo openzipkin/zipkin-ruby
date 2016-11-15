@@ -1,3 +1,7 @@
+# 0.18.5
+* `NullTracer` has a noop `flush!` method.
+* Spans from `local_component_span` will be named according to `local_component_value` over `lc`.
+
 # 0.18.4
 * Uses http.path to annotate paths instead of http.uri.
 
