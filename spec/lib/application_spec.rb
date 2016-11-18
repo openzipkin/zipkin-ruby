@@ -44,7 +44,7 @@ module ZipkinTracer
       context 'Rails defined' do
         before { stub_const("Rails", Class.new) }
 
-        it 'returns rails logger if available' do
+        it 'returns rails logger' do
           expect(Rails).to receive(:logger)
 
           subject
@@ -52,7 +52,7 @@ module ZipkinTracer
       end
 
       context 'Rails not defined' do
-        it 'returns standard logger if there is no Rails logger' do
+        it 'returns standard logger' do
           expect(Logger).to receive(:new).with(STDOUT)
 
           subject
