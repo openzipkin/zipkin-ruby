@@ -67,21 +67,15 @@ describe ZipkinTracer::RackHandler do
 
     context 'accessing a valid URL of our service' do
       before do
-        rails = double('Rails')
-        allow(rails).to receive(:logger)
-        allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_return(controller: 'trusmis', action: 'new')
-        stub_const('Rails', rails)
+        allow(middleware(app)).to receive(:routable_request?).and_return(true)
       end
+
       it_should_behave_like 'traces the request'
     end
 
     context 'accessing an invalid URL our our service' do
       before do
-        rails = double('Rails')
-        allow(rails).to receive(:logger)
-        stub_const('ActionController::RoutingError', StandardError)
-        allow(rails).to receive_message_chain(:application, :routes, :recognize_path).and_raise(ActionController::RoutingError)
-        stub_const('Rails', rails)
+        allow(middleware(app)).to receive(:routable_request?).and_return(false)
       end
 
       it 'calls the app' do
