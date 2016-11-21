@@ -1,3 +1,6 @@
+# 0.18.6
+* Passes HTTP Method to recognize_path
+
 # 0.18.5
 * `NullTracer` has a noop `flush!` method.
 * Spans from `local_component_span` will be named according to `local_component_value` over `lc`.
