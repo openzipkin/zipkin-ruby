@@ -1,10 +1,12 @@
 language: ruby
+jdk:
+  - oraclejdk8
 rvm:
   - 2.3.0
   - 2.2.4
   - 2.1.8
   - 2.0
-  - jruby-9.1.5.0
+  - jruby-9.1.6.0
 deploy:
   provider: rubygems
   api_key:
