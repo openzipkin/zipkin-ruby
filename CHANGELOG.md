@@ -1,6 +1,14 @@
 # 0.19.0
-* Propagates the X-B3-Sampled in the same form it receives it (boolean or an a number)
+* Propagates the X-B3-Sampled in the same form it receives it (boolean or 1/0)
 * Adds a configuration option to allow a service to emit boolean or numbers for the X-B3-Sampled header
+
+# 0.18.6
+* Passes HTTP Method to recognize_path
+
+# 0.18.5
+* `NullTracer` has a noop `flush!` method.
+* Spans from `local_component_span` will be named according to `local_component_value` over `lc`.
+>>>>>>> master
 
 # 0.18.4
 * Uses http.path to annotate paths instead of http.uri.

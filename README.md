@@ -1,6 +1,6 @@
-# ZipkinTracer
+# ZipkinTracer: Zipkin client for Ruby
 
-[![Build Status](https://api.travis-ci.org/openzipkin/zipkin-tracer.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-tracer)
+[![Build Status](https://api.travis-ci.org/openzipkin/zipkin-ruby.svg?branch=master)](https://travis-ci.org/openzipkin/zipkin-ruby)
 
 Rack and Faraday integration middlewares for Zipkin tracing.
 

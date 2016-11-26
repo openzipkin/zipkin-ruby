@@ -3,9 +3,9 @@ module ZipkinTracer
   # Useful methods on the Application we are instrumenting
   class Application
     # If the request is not valid for this service, we do not what to trace it.
-    def self.routable_request?(path_info)
+    def self.routable_request?(path_info, http_method)
       return true unless defined?(Rails) # If not running on a Rails app, we can't verify if it is invalid
-      Rails.application.routes.recognize_path(path_info)
+      Rails.application.routes.recognize_path(path_info, method: http_method)
       true
     rescue ActionController::RoutingError
       false

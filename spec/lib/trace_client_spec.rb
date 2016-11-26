@@ -15,8 +15,8 @@ describe ZipkinTracer::TraceClient do
   describe '.local_component_span' do
     context 'called with block' do
       it 'creates new span' do
-        expect(Trace.tracer).to receive(:with_new_span).ordered.with(anything, 'lc').and_call_original
-        expect_any_instance_of(Trace::Span).to receive(:record_local_component).with('lc_value')
+        expect(Trace.tracer).to receive(:with_new_span).ordered.with(anything, 'lc_value').and_call_original
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('lc', 'lc_value')
 
         subject.local_component_span(lc_value) do |ztc|
           ztc.record('value')
