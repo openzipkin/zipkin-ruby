@@ -57,7 +57,7 @@ describe 'integrations' do
     expect(traces[0]['trace_id']).not_to be_empty
     expect(traces[0]['parent_span_id']).to be_empty
     expect(traces[0]['span_id']).not_to be_empty
-    expect([true, false].include?(traces[0]['sampled'])).to be_truthy
+    expect(['true', 'false'].include?(traces[0]['sampled'])).to be_truthy
   end
 
   # Assert that the second level of trace data is correct (or not!).
@@ -68,6 +68,6 @@ describe 'integrations' do
     expect(traces[1]['parent_span_id']).to eq(traces[0]['span_id'])
     expect(traces[1]['span_id']).not_to be_empty
     expect([traces[1]['trace_id'], traces[1]['parent_span_id']].include?(traces[1]['span_id'])).to be_falsey
-    expect([true, false].include?(traces[1]['sampled'])).to be_truthy
+    expect(['true', 'false'].include?(traces[1]['sampled'])).to be_truthy
   end
 end

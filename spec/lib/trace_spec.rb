@@ -3,6 +3,55 @@ require 'spec_helper'
 describe Trace do
   let(:dummy_endpoint) { Trace::Endpoint.new('127.0.0.1', 9411, 'DummyService') }
 
+  describe Trace::TraceId do
+    let(:traceid) { '234555b04cf7e099' }
+    let(:span_id) { 'c3a555b04cf7e099' }
+    let(:parent_id) { 'f0e71086411b1445' }
+    let(:sampled) { true }
+    let(:flags) { Trace::Flags::EMPTY }
+    let(:trace_id) { Trace::TraceId.new(traceid, parent_id, span_id, sampled, flags) }
+
+    it 'is not a debug trace' do
+      expect(trace_id.debug?).to eq(false)
+    end
+
+    context 'sampled value is 0' do
+      let(:sampled) { '0' }
+      it 'is not sampled' do
+        expect(trace_id.sampled?).to eq(false)
+      end
+    end
+    context 'sampled value is false' do
+      let(:sampled) { 'false' }
+      it 'is sampled' do
+        expect(trace_id.sampled?).to eq(false)
+      end
+    end
+    context 'sampled value is 1' do
+      let(:sampled) { '1' }
+      it 'is sampled' do
+        expect(trace_id.sampled?).to eq(true)
+      end
+    end
+    context 'sampled value is true' do
+      let(:sampled) { 'true' }
+      it 'is sampled' do
+        expect(trace_id.sampled?).to eq(true)
+      end
+    end
+
+    context 'using the debug flag' do
+      let(:flags) { Trace::Flags::DEBUG }
+      it 'is a debug trace' do
+        expect(trace_id.debug?).to eq(true)
+      end
+      it 'get sampled' do
+        expect(trace_id.sampled?).to eq(true)
+      end
+    end
+
+  end
+
   describe Trace::Span do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }

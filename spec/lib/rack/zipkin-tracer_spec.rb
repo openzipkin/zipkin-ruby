@@ -32,6 +32,7 @@ describe ZipkinTracer::RackHandler do
   let(:host_ip) { 0x11223344 }
   before do
     allow(::Trace::Endpoint).to receive(:host_to_i32).and_return(host_ip)
+    allow(ZipkinTracer::Application).to receive(:logger).and_return(Logger.new(nil))
   end
 
   let(:tracer) {subject.instance_variable_get(:@tracer)}

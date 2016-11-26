@@ -2,6 +2,9 @@ require 'spec_helper'
 
 module ZipkinTracer
   RSpec.describe Config do
+    before do
+      allow(Application).to receive(:logger).and_return(Logger.new(nil))
+    end
     [:service_name, :service_port, :json_api_host,
       :zookeeper, :sample_rate, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
@@ -14,23 +17,15 @@ module ZipkinTracer
 
     it 'sets defaults' do
       config = Config.new(nil, {})
-      [:sample_rate, :service_port].each do |key|
+      [:sample_rate, :service_port, :sampled_as_boolean].each do |key|
         expect(config.send(key)).to_not eq(nil)
       end
     end
 
     describe 'logger' do
-      it 'uses Rails logger if available' do
-        logger = 'TrusmisLogger'
-        object_double("Rails", logger: logger).as_stubbed_const
-
+      it 'uses the application logger' do
         config = Config.new(nil, {})
-        expect(config.logger).to eq(logger)
-      end
-
-      it 'uses STDOUT if nothing was provided and not using rails' do
-        config = Config.new(nil, {})
-        expect(config.logger).to be_kind_of(Logger)
+        expect(config.logger).to eq(Application.logger)
       end
     end
 
