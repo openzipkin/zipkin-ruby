@@ -1,3 +1,6 @@
+# 0.19.1
+* Limits the required headers to x_b3_trace_id and x_b3_span_id as per spec.
+
 # 0.19.0
 * Propagates the X-B3-Sampled in the same form it receives it (boolean or 1/0)
 * Adds a configuration option to allow a service to emit boolean or numbers for the X-B3-Sampled header

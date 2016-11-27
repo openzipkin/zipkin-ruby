@@ -55,7 +55,7 @@ describe ZipkinTracer::RackHandler do
 
   context 'Zipkin headers are passed to the middleware' do
     subject { middleware(app) }
-    let(:env) {mock_env(',', ZipkinTracer::RackHandler::B3_REQUIRED_HEADERS.map {|a| Hash[a, 1] }.inject(:merge))}
+    let(:env) { mock_env(',', ZipkinTracer::ZipkinEnv::B3_REQUIRED_HEADERS.map {|a| Hash[a, 1] }.inject(:merge)) }
 
     it 'does not set the RPC method' do
       expect(::Trace).not_to receive(:set_rpc_name)
@@ -80,7 +80,7 @@ describe ZipkinTracer::RackHandler do
       end
 
       it 'calls the app' do
-        status, headers, body = subject.call(mock_env)
+        status, _, body = subject.call(mock_env)
         # return expected status
         expect(status).to eq(200)
         expect { |b| body.each &b }.to yield_with_args(app_body)
@@ -101,7 +101,7 @@ describe ZipkinTracer::RackHandler do
     context 'record raises socket related errors' do
       it 'calls the app normally' do
         allow(::Trace).to receive(:record).and_raise(Errno::EBADF)
-        status, headers, body = subject.call(mock_env)
+        status, _, body = subject.call(mock_env)
         # return expected status
         expect(status).to eq(200)
         expect { |b| body.each &b }.to yield_with_args(app_body)
@@ -111,7 +111,7 @@ describe ZipkinTracer::RackHandler do
     context 'Zipkin methods raise exceptions' do
       it 'calls the app normally' do
         allow(Trace).to receive(:set_rpc_name).and_raise(StandardError)
-        status, headers, body = subject.call(mock_env)
+        status, _, body = subject.call(mock_env)
         # return expected status
         expect(status).to eq(200)
         expect { |b| body.each &b }.to yield_with_args(app_body)
@@ -131,7 +131,7 @@ describe ZipkinTracer::RackHandler do
 
       it 'always samples if debug flag is passed in header' do
         expect(::Trace).to receive(:push).and_call_original
-        status, headers, body = subject.call(
+        status, _, _ = subject.call(
           mock_env('/', 'HTTP_X_B3_FLAGS' => ::Trace::Flags::DEBUG.to_s))
 
         # return expected status
@@ -159,7 +159,7 @@ describe ZipkinTracer::RackHandler do
       expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(1).times
       expect_any_instance_of(Trace::Span).to receive(:record).exactly(2).times
       expect(::Trace).to receive(:record).exactly(2).times
-      status, headers, body = subject.call(mock_env)
+      status, _, _ = subject.call(mock_env)
 
       # return expected status
       expect(status).to eq(200)

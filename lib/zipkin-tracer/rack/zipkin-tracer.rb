@@ -15,15 +15,12 @@ require 'finagle-thrift/trace'
 require 'finagle-thrift/tracer'
 require 'zipkin-tracer/config'
 require 'zipkin-tracer/tracer_factory'
+require 'zipkin-tracer/rack/zipkin_env'
 
 module ZipkinTracer
-
   # This middleware reads Zipkin headers from the request and sets/creates a Trace.id usable by the rest of the app
   # It will also send the trace to the Zipkin service using one of the methods configured.
   class RackHandler
-    B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_PARENTSPANID HTTP_X_B3_SPANID HTTP_X_B3_SAMPLED].freeze
-    B3_OPT_HEADERS = %w[HTTP_X_B3_FLAGS].freeze
-
     def initialize(app, config = nil)
       @app = app
       @config = Config.new(app, config).freeze
@@ -37,7 +34,7 @@ module ZipkinTracer
         if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
-          @tracer.with_new_span(trace_id, zipkin_env.env['REQUEST_METHOD'].to_s.downcase) do |span|
+          @tracer.with_new_span(trace_id, env['REQUEST_METHOD'].to_s.downcase) do |span|
             trace!(span, zipkin_env) { @app.call(env) }
           end
         end
@@ -55,7 +52,7 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
-      #if called by a service, the caller already added the information
+      # if called by a service, the caller already added the information
       trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
       span.record(Trace::Annotation::SERVER_RECV)
       span.record('whitelisted') if zipkin_env.force_sample?
@@ -68,69 +65,5 @@ module ZipkinTracer
     def trace_request_information(span, env)
       span.record_tag(Trace::BinaryAnnotation::PATH, env['PATH_INFO'])
     end
-
-    # Environment with Zipkin information in it
-    class ZipkinEnv
-      attr_reader :env
-
-      def initialize(env, config)
-        @env    = env
-        @config = config
-      end
-
-      def trace_id(default_flags = Trace::Flags::EMPTY)
-        trace_parameters = if called_with_zipkin_headers?
-                             @env.values_at(*B3_REQUIRED_HEADERS)
-                           else
-                             new_id = Trace.generate_id
-                             [new_id, nil, new_id, nil]
-                           end
-        trace_parameters[3] = sampled_header_value(trace_parameters[3])
-        trace_parameters += @env.values_at(*B3_OPT_HEADERS) # always check flags
-        trace_parameters[4] = (trace_parameters[4] || default_flags).to_i
-
-        Trace::TraceId.new(*trace_parameters)
-      end
-
-      def called_with_zipkin_headers?
-        @called_with_zipkin_headers ||= B3_REQUIRED_HEADERS.all? { |key| @env.has_key?(key) }
-      end
-
-      def force_sample?
-        @force_sample ||= @config.whitelist_plugin && @config.whitelist_plugin.call(@env)
-      end
-
-      private
-
-      def new_sampled_header_value(sampled)
-         case [@config.sampled_as_boolean, sampled]
-         when [true, true]
-           'true'
-         when [true, false]
-           'false'
-         when [false, true]
-           '1'
-         when [false, false]
-           '0'
-         end
-      end
-
-      def current_trace_sampled?
-        rand < @config.sample_rate
-      end
-
-      def sampled_header_value(parent_trace_sampled)
-        if parent_trace_sampled  # A service upstream decided this goes in all the way
-          parent_trace_sampled
-        else
-          new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered?)
-        end
-      end
-
-      def filtered?
-        @config.filter_plugin && !@config.filter_plugin.call(@env)
-      end
-    end
-
   end
 end
