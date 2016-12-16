@@ -1,3 +1,7 @@
+# 0.20.0
+* Bugfix: The Faraday middleware does not leave in the container any generated Id
+* Added TraceContainer and TraceGenerator to provide easier abstractions to interact with this library
+
 # 0.19.1
 * Limits the required headers to x_b3_trace_id and x_b3_span_id as per spec.
 
@@ -11,7 +15,6 @@
 # 0.18.5
 * `NullTracer` has a noop `flush!` method.
 * Spans from `local_component_span` will be named according to `local_component_value` over `lc`.
->>>>>>> master
 
 # 0.18.4
 * Uses http.path to annotate paths instead of http.uri.

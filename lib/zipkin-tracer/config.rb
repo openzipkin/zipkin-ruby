@@ -39,6 +39,7 @@ module ZipkinTracer
       if @sampled_as_boolean
         @logger && @logger.warn("Using a boolean in the Sampled header is deprecated. Consider setting sampled_as_boolean to false")
       end
+      Trace.sample_rate = @sample_rate
     end
 
     def adapter

@@ -6,12 +6,16 @@ module ZipkinTracer
       allow(Application).to receive(:logger).and_return(Logger.new(nil))
     end
     [:service_name, :service_port, :json_api_host,
-      :zookeeper, :sample_rate, :log_tracing,
+      :zookeeper, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
         config = Config.new(nil, { method => value })
         expect(config.send(method)).to eq(value)
+      end
+      it 'can set a sample rate between 0 and 1' do
+        config = Config.new(nil, sample_rate: 0.3)
+        expect(config.sample_rate).to eq(0.3)
       end
     end
 
