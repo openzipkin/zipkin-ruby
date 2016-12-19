@@ -12,8 +12,8 @@ module ZipkinTracer
     end
 
     def call(env)
-      trace_id = Trace.id.next_id
-      Trace.with_trace_id(trace_id) do
+      trace_id = TraceGenerator.new.next_trace_id
+      TraceContainer.with_trace_id(trace_id) do
         b3_headers.each do |method, header|
           env[:request_headers][header] = trace_id.send(method).to_s
         end

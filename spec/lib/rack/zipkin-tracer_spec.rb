@@ -39,12 +39,11 @@ describe ZipkinTracer::RackHandler do
 
   shared_examples_for 'traces the request' do
     it 'traces the request' do
-      expect(::Trace).to receive(:push).and_call_original.ordered
+      expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
       expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
       expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
       expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
-      expect(::Trace).to receive(:pop).and_call_original.ordered
 
       status, headers, body = subject.call(mock_env)
       expect(status).to eq(app_status)
@@ -123,14 +122,14 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, { sample_rate: 0 }) }
 
       it 'Trace is created but it is not sent to zipkin' do
-        expect(::Trace).to receive(:push).and_call_original
+        expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
         expect(::Trace).not_to receive(:record)
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end
 
       it 'always samples if debug flag is passed in header' do
-        expect(::Trace).to receive(:push).and_call_original
+        expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
         status, _, _ = subject.call(
           mock_env('/', 'HTTP_X_B3_FLAGS' => ::Trace::Flags::DEBUG.to_s))
 
@@ -152,9 +151,8 @@ describe ZipkinTracer::RackHandler do
     subject { middleware(app, annotate_plugin: annotate) }
 
     it 'traces a request with additional annotations' do
-      expect(::Trace).to receive(:push).and_call_original.ordered
+      expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).and_call_original.ordered
-      expect(::Trace).to receive(:pop).and_call_original.ordered
 
       expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(1).times
       expect_any_instance_of(Trace::Span).to receive(:record).exactly(2).times
@@ -176,7 +174,7 @@ describe ZipkinTracer::RackHandler do
     subject { middleware(app, filter_plugin: lambda { |env| false }) }
 
     it 'does not send the trace to zipkin' do
-      expect(::Trace).to receive(:push).and_call_original
+      expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(::Trace).not_to receive(:record)
       status, _, _ = subject.call(mock_env)
       expect(status).to eq(200)

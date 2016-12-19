@@ -1,6 +1,7 @@
 require 'finagle-thrift/trace'
 require 'zipkin-tracer/zipkin_tracer_base'
-
+# Module with a mix of functions and overwrites from the finagle implementation:
+# https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb
 module Trace
 
   # We need this to access the tracer from the Faraday middleware.
@@ -8,11 +9,8 @@ module Trace
     @tracer
   end
 
-  def self.with_trace_id(trace_id, &block)
-    self.push(trace_id)
-    yield
-  ensure
-    self.pop
+  def sample_rate
+    @sample_rate
   end
 
   # A TraceId contains all the information of a given trace id

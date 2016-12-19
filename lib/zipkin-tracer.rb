@@ -2,6 +2,8 @@ require 'base64' #Bug in finagle. They should be requiring this: finagle-thrift-
 require 'zipkin-tracer/trace'
 require 'zipkin-tracer/rack/zipkin-tracer'
 require 'zipkin-tracer/trace_client'
+require 'zipkin-tracer/trace_container'
+require 'zipkin-tracer/trace_generator'
 
 begin
   require 'faraday'

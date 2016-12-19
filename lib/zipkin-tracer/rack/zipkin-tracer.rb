@@ -17,7 +17,7 @@ module ZipkinTracer
     def call(env)
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
-      Trace.with_trace_id(trace_id) do
+      TraceContainer.with_trace_id(trace_id) do
         if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
