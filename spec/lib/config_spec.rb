@@ -33,6 +33,23 @@ module ZipkinTracer
       end
     end
 
+    describe 'sampled_as_boolean' do
+      it 'does not warn when sampled_as_boolean is false' do
+        expect(Application.logger).to_not receive(:warn)
+        Config.new(nil, {sampled_as_boolean: false})
+      end
+
+      it 'warns when sampled_as_boolean is not set' do
+        expect(Application.logger).to receive(:warn)
+        Config.new(nil, {})
+      end
+
+      it 'warns when sampled_as_boolean is true' do
+        expect(Application.logger).to receive(:warn)
+        Config.new(nil, {sampled_as_boolean: true})
+      end
+    end
+
     describe '#adapter' do
       it 'returns nil if no adapter has been set' do
         config = Config.new(nil, {})
