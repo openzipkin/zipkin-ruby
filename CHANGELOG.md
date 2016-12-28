@@ -1,3 +1,6 @@
+# 0.20.1
+* Bugfix: Properly handle the `sampled_as_boolean` configuration option
+
 # 0.20.0
 * Bugfix: The Faraday middleware does not leave in the container any generated Id
 * Added TraceContainer and TraceGenerator to provide easier abstractions to interact with this library
