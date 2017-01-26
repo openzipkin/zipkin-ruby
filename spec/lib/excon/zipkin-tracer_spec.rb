@@ -15,10 +15,8 @@ describe ZipkinTracer::ExconHandler do
   before do
     Excon.defaults[:middlewares].unshift(ZipkinTracer::ExconHandler)
     Excon.defaults[:mock] = true
-    Excon.stub({ path: '/' }, body: 'index')
-    Excon.stub({ path: '/hello' }, body: 'world')
-    Excon.stub({ path: '/hello', query: 'message=world' }, body: 'hi!')
-    Excon.stub({ path: '/world' }, body: 'universe')
+
+    Excon.stub({ path: url_path }, body: 'world')
 
     Trace.tracer = Trace::NullTracer.new
     Trace.push(trace_id)
@@ -32,6 +30,6 @@ describe ZipkinTracer::ExconHandler do
     connection = Excon.new(raw_url)
     response = connection.get
 
-    assert_equal 'world', response.body
+    expect(response.body).to eq('world')
   end
 end
