@@ -19,8 +19,7 @@ module ZipkinTracer
 
       def request_call(datum)
         puts "request call"
-        require 'pry'
-        binding.pry
+        byebug
         trace_id = TraceGenerator.new.next_trace_id
         TraceContainer.with_trace_id(trace_id) do
           b3_headers.each do |method, header|

@@ -31,5 +31,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 1.22'
-  s.add_development_dependency 'byebug'
 end
