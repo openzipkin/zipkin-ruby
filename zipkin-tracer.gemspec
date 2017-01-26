@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'faraday', '~> 0.8'
   s.add_dependency 'finagle-thrift', '~> 1.4.2'
+  s.add_dependency 'excon', '~> 0.54'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
@@ -30,4 +31,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 1.22'
+  s.add_development_dependency 'byebug'
 end
