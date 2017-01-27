@@ -6,29 +6,30 @@ require 'excon'
 module ZipkinTracer
   class ExconHandler < Excon::Middleware::Base
     def initialize(stack)
-      @stack = stack
       # Excon does not currently provide a way to parameterize middlewares.
       @service_name = ENV.fetch('ZIPKIN_SERVICE_NAME', 'unknown-service')
+      super
     end
 
     def error_call(datum)
       # do stuff
       puts "error call"
-      @stack.error_call(datum)
+      super(datum)
     end
 
     def request_call(datum)
       puts "request call"
       trace_id = TraceGenerator.new.next_trace_id
+
       TraceContainer.with_trace_id(trace_id) do
         b3_headers.each do |method, header|
           datum[:headers][header] = trace_id.send(method).to_s
         end
 
-        trace!(datum, trace_id) if trace_id.sampled?
+        trace!(datum, trace_id)
       end
 
-      @stack.request_call(datum)
+      super(datum)
     end
 
     def response_call(datum)
@@ -41,7 +42,7 @@ module ZipkinTracer
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end
 
-      @stack.response_call(datum)
+      super(datum)
     end
 
     SERVER_ADDRESS_SPECIAL_VALUE = '1'.freeze
