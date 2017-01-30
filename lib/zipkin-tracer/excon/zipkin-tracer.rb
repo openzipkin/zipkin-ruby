@@ -31,7 +31,6 @@ module ZipkinTracer
 
     def response_call(datum)
       response = datum[:response]
-      local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
 
       if span = datum[:span]
         span.record_tag(Trace::BinaryAnnotation::STATUS, response[:status].to_s, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
@@ -40,6 +39,8 @@ module ZipkinTracer
 
       super(datum)
     end
+
+    private
 
     SERVER_ADDRESS_SPECIAL_VALUE = '1'.freeze
 
@@ -53,17 +54,24 @@ module ZipkinTracer
       }
     end
 
+    def local_endpoint
+      Trace.default_endpoint # The rack middleware set this up for us.
+    end
+
+    def remote_endpoint(url, service_name)
+      Trace::Endpoint.remote_endpoint(url, service_name, local_endpoint.ip_format) # The endpoint we are calling.
+    end
+
     def trace!(datum, trace_id)
       url = URI::Generic.build(datum)
-      local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
-      remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
 
       Trace.tracer.with_new_span(trace_id, datum[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
         span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
+        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, @service_name))
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
 
+        # store the span in the datum hash so it can be used in the response_call
         datum[:span] = span
       end
     end
