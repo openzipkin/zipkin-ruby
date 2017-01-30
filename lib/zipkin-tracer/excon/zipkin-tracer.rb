@@ -12,13 +12,10 @@ module ZipkinTracer
     end
 
     def error_call(datum)
-      # do stuff
-      puts "error call"
       super(datum)
     end
 
     def request_call(datum)
-      puts "request call"
       trace_id = TraceGenerator.new.next_trace_id
 
       TraceContainer.with_trace_id(trace_id) do
@@ -26,14 +23,13 @@ module ZipkinTracer
           datum[:headers][header] = trace_id.send(method).to_s
         end
 
-        trace!(datum, trace_id)
+        trace!(datum, trace_id) if trace_id.sampled?
       end
 
       super(datum)
     end
 
     def response_call(datum)
-      puts "response call"
       response = datum[:response]
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
 
@@ -58,7 +54,7 @@ module ZipkinTracer
     end
 
     def trace!(datum, trace_id)
-      url = datum[:url].respond_to?(:host) ? datum[:url] : URI.parse(datum[:url].to_s)
+      url = URI::Generic.build(datum)
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
 
