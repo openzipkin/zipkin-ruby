@@ -11,8 +11,8 @@ describe ZipkinTracer::ExconHandler do
 
 
   before do
-    # Excon.defaults[:mock] = true
-    # Excon.stub({ path: url_path }, body: 'world')
+    stub_request(:get, "https://www.google.com/").
+      to_return(:status => 200, :body => "", :headers => {})
 
     Trace.tracer = Trace::NullTracer.new
     Trace.push(trace_id)
@@ -23,21 +23,25 @@ describe ZipkinTracer::ExconHandler do
   end
 
   context 'with tracing id' do
-    let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
 
     it 'sets the X-B3 request headers with a new spanID' do
       connection = Excon.new("https://www.google.com/",
                       method: :get,
-                      middlewares: Excon.defaults[:middlewares] + [ZipkinTracer::ExconHandler]
+                      middlewares: [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
                    )
-      response = connection.request
+      connection.request
 
-      expect(request.data[:headers]['X-B3-TraceId']).to eq('0000000000000001')
-      expect(request.data[:headers]['X-B3-ParentSpanId']).to eq('0000000000000003')
-      expect(request.data[:headers]['X-B3-SpanId']).not_to eq('0000000000000003')
-      expect(request.data[:headers]['X-B3-SpanId']).to match(HEX_REGEX)
-      expect(request.data[:headers]['X-B3-Sampled']).to eq('true')
-      expect(request.data[:headers]['X-B3-Flags']).to eq('1')
+      headers = {
+        'X-B3-TraceId' => '0000000000000001',
+        'X-B3-ParentSpanId' => '0000000000000003',
+        # 'X-B3-SpanId']).not_to eq('0000000000000003')
+        # 'X-B3-SpanId']).to match(HEX_REGEX)
+        'X-B3-Sampled' => 'true',
+        'X-B3-Flags' => '1',
+      }
+
+      expect(a_request(:get, "https://www.google.com/").
+             with(headers: headers)).to have_been_made
     end
   end
 end
