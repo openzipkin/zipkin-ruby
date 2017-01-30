@@ -29,7 +29,11 @@ module ZipkinTracer
         trace!(datum, trace_id)
       end
 
-      super(datum)
+      byebug
+
+      result = super(datum)
+      byebug
+      result
     end
 
     def response_call(datum)
