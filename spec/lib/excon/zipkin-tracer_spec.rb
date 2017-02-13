@@ -17,7 +17,7 @@ describe ZipkinTracer::ExconHandler do
     connection.request
 
     request_headers = nil
-    expect(a_request(:post, url).with { |req| 
+    expect(a_request(:post, url).with { |req|
       # Webmock 'normalizes' the headers. E.g: X-B3-TraceId becomes X-B3-Traceid.
       # See here:
       # https://github.com/bblimke/webmock/blob/a4aad22adc622699a8ea14c70d04acef8f67a512/lib/webmock/util/headers.rb#L9
@@ -57,6 +57,78 @@ describe ZipkinTracer::ExconHandler do
       let(:url) { URI.parse(raw_url) }
 
       include_examples 'can make requests'
+    end
+
+    context 'request with path and query params' do
+      before do
+        Trace.tracer = Trace::NullTracer.new
+        Trace.push(trace_id)
+        ::Trace.sample_rate = 1 # make sure initialized
+        allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
+        allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
+      end
+
+
+      let(:hostname) { 'service.example.com' }
+      let(:host_ip) { 0x11223344 }
+      let(:raw_url) { "https://#{hostname}#{url_path}" }
+      let(:tracer) { Trace.tracer }
+      let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
+      let(:url) { URI.parse(raw_url) }
+
+      context 'query params are in path' do
+        let(:url_path) { '/some/path/here?query=params' }
+
+        it 'queries the path without query' do
+          stub_request(:post, url)
+            .to_return(status: 200, body: '', headers: {})
+          ENV['ZIPKIN_SERVICE_NAME'] = service_name
+
+          connection = Excon.new(url.to_s,
+                                body: '',
+                                method: :post,
+                                headers: {},
+                                middlewares: [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
+                                )
+
+          span = spy('Trace::Span')
+          allow(Trace::Span).to receive(:new).and_return(span)
+
+          ::Trace.push(trace_id) do
+            connection.request
+          end
+
+          expect(span).to have_received(:record_tag)
+            .with("http.path", "/some/path/here", "STRING", anything)
+        end
+      end
+
+      context 'query params are in hash' do
+        let(:url_path) { '/some/path/here' }
+
+        it 'queries without the query even when query is a hash' do
+          stub_request(:post, url.to_s + "?query=params")
+            .to_return(status: 200, body: '', headers: {})
+          ENV['ZIPKIN_SERVICE_NAME'] = service_name
+
+          connection = Excon.new(url.to_s,
+                                body: '',
+                                method: :post,
+                                headers: {},
+                                middlewares: [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
+                                )
+
+          span = spy('Trace::Span')
+          allow(Trace::Span).to receive(:new).and_return(span)
+
+          ::Trace.push(trace_id) do
+            connection.request(path: url_path, query: { query: "params" })
+          end
+
+          expect(span).to have_received(:record_tag)
+            .with("http.path", "/some/path/here", "STRING", anything)
+        end
+      end
     end
   end
 end
