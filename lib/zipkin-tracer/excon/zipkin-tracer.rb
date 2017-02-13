@@ -69,7 +69,7 @@ module ZipkinTracer
       Trace.tracer.with_new_span(trace_id, datum[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
         span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, @service_name))
+        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, url.host))
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
 
         # store the span in the datum hash so it can be used in the response_call

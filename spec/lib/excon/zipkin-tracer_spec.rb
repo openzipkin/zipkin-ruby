@@ -6,7 +6,6 @@ describe ZipkinTracer::ExconHandler do
   # returns the request headers
   def process(body, url, headers = {})
     stub_request(:post, url).to_return(status: 200, body: body, headers: headers)
-    ENV['ZIPKIN_SERVICE_NAME'] = service_name
 
     connection = Excon.new(url.to_s,
                            body: body,
@@ -35,7 +34,7 @@ describe ZipkinTracer::ExconHandler do
   end
 
   context 'middleware configured (without service_name)' do
-    let(:service_name) { 'service' }
+    let(:service_name) { URI(url).host }
 
     context 'request with string URL' do
       let(:url) { raw_url }
@@ -51,7 +50,7 @@ describe ZipkinTracer::ExconHandler do
   end
 
   context 'configured with service_name "foo"' do
-    let(:service_name) { 'foo' }
+    let(:service_name) { url.host }
 
     context 'request with pre-parsed URL' do
       let(:url) { URI.parse(raw_url) }
