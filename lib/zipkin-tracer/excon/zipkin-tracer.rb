@@ -63,7 +63,8 @@ module ZipkinTracer
     end
 
     def trace!(datum, trace_id)
-      url = URI::Generic.build(datum)
+      url_string = Excon::Utils::request_uri(datum)
+      url = URI(url_string)
 
       Trace.tracer.with_new_span(trace_id, datum[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
