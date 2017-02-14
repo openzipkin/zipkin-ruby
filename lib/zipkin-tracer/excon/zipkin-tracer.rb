@@ -6,8 +6,6 @@ require 'excon'
 module ZipkinTracer
   class ExconHandler < Excon::Middleware::Base
     def initialize(stack)
-      # Excon does not currently provide a way to parameterize middlewares.
-      @service_name = ENV.fetch('ZIPKIN_SERVICE_NAME', 'unknown-service')
       super
     end
 
