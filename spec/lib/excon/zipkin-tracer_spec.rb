@@ -129,5 +129,54 @@ describe ZipkinTracer::ExconHandler do
         end
       end
     end
+
+    context 'request with custom zipkin service name' do
+      before do
+        Trace.tracer = Trace::NullTracer.new
+        Trace.push(trace_id)
+        ::Trace.sample_rate = 1 # make sure initialized
+        allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
+        allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
+      end
+
+
+      let(:hostname) { 'service.example.com' }
+      let(:host_ip) { 0x11223344 }
+      let(:raw_url) { "https://#{hostname}#{url_path}" }
+      let(:tracer) { Trace.tracer }
+      let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
+      let(:url) { URI.parse(raw_url) }
+
+      let(:url_path) { '/some/path/here' }
+
+      it 'uses the service name' do
+        stub_request(:post, url)
+          .to_return(status: 200, body: '', headers: {})
+
+        connection = Excon.new(url.to_s,
+                              body: '',
+                              zipkin_service_name: "fake-service-name",
+                              method: :post,
+                              headers: {},
+                              middlewares: [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
+                              )
+
+        span = spy('Trace::Span')
+        allow(Trace::Span).to receive(:new).and_return(span)
+
+        expect(span).to receive(:record_tag) do |name, _, _, host|
+          if name == Trace::BinaryAnnotation::SERVER_ADDRESS
+            expect(host.service_name).to eql("fake-service-name")
+          else
+            true
+          end
+        end.at_least(:once)
+
+        ::Trace.push(trace_id) do
+          connection.request
+        end
+
+      end
+    end
   end
 end

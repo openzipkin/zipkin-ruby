@@ -60,14 +60,19 @@ module ZipkinTracer
       Trace::Endpoint.remote_endpoint(url, service_name, local_endpoint.ip_format) # The endpoint we are calling.
     end
 
+    def service_name(datum, default)
+      datum.fetch(:zipkin_service_name, default)
+    end
+
     def trace!(datum, trace_id)
       url_string = Excon::Utils::request_uri(datum)
       url = URI(url_string)
+      service_name = service_name(datum, url.host)
 
       Trace.tracer.with_new_span(trace_id, datum[:method].to_s.downcase) do |span|
         # annotate with method (GET/POST/etc.) and uri path
         span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, url.host))
+        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, service_name))
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
 
         # store the span in the datum hash so it can be used in the response_call
