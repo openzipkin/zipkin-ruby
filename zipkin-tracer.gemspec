@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'faraday', '~> 0.8'
   s.add_dependency 'finagle-thrift', '~> 1.4.2'
-  s.add_dependency 'excon', '~> 0.54'
+  s.add_dependency 'excon', '~> 0.53'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
