@@ -1,3 +1,6 @@
+# 0.20.2
+* Added an Excon middleware
+
 # 0.20.1
 * Bugfix: Properly handle the `sampled_as_boolean` configuration option
 
