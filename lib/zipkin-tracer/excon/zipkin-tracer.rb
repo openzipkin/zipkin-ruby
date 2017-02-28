@@ -5,7 +5,7 @@ require 'excon'
 
 module ZipkinTracer
   class ExconHandler < Excon::Middleware::Base
-    def initialize(stack)
+    def initialize(_)
       super
     end
 
@@ -78,6 +78,8 @@ module ZipkinTracer
         # store the span in the datum hash so it can be used in the response_call
         datum[:span] = span
       end
+    rescue ArgumentError, URI::Error => e
+      # Ignore URI errors, don't trace if there is no URI
     end
   end
 end
