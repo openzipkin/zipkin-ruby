@@ -1,4 +1,4 @@
-# 0.20.2
+# 0.21.0
 * Added an Excon middleware
 
 # 0.20.1
