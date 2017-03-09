@@ -10,3 +10,9 @@ begin
   require 'zipkin-tracer/faraday/zipkin-tracer'
 rescue LoadError #Faraday is not available, we do not load our code.
 end
+
+begin
+  require 'excon'
+  require 'zipkin-tracer/excon/zipkin-tracer'
+rescue LoadError
+end
