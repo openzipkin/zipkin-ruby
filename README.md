@@ -157,7 +157,7 @@ For example:
 
 ```ruby
 # don't trace /static/ URIs
-lambda { |env| env['PATH_INFO'] ~! /^\/static\// }
+lambda { |env| env['PATH_INFO'] !~ /^\/static\// }
 ```
 
 ### whitelist_plugin
