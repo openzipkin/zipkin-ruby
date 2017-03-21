@@ -70,8 +70,7 @@ module ZipkinTracer
     end
 
     def response_status(datum)
-      return nil unless datum[:response] && datum[:response][:status]
-      return datum[:response][:status].to_s
+      datum[:response] && datum[:response][:status] && datum[:response][:status].to_s
     end
 
     def trace!(datum, trace_id)
