@@ -1,3 +1,6 @@
+# 0.21.1
+* Bugfix: better guard against nil response in the Excon middleware
+
 # 0.21.0
 * Added an Excon middleware
 

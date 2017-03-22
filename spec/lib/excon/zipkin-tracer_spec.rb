@@ -175,7 +175,27 @@ describe ZipkinTracer::ExconHandler do
         ::Trace.push(trace_id) do
           connection.request
         end
+      end
 
+      it 'traces the response status' do
+        stub_request(:get, url)
+          .to_return(status: 200, body: '', headers: {})
+
+        span = spy('Trace::Span')
+        allow(Trace::Span).to receive(:new).and_return(span)
+
+        expect(span).to receive(:record_tag) do |name, value, _, _|
+          if name == Trace::BinaryAnnotation::STATUS
+            expect(value).to eql("200")
+          else
+            true
+          end
+        end.at_least(:once)
+
+        ::Trace.push(trace_id) do
+          middlewares = [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
+          Excon.get(url.to_s, middlewares: middlewares)
+        end
       end
     end
   end

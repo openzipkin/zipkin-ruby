@@ -28,10 +28,15 @@ module ZipkinTracer
     end
 
     def response_call(datum)
-      response = datum[:response]
-
       if span = datum[:span]
-        span.record_tag(Trace::BinaryAnnotation::STATUS, response[:status].to_s, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+        if status = response_status(datum)
+          span.record_tag(
+            Trace::BinaryAnnotation::STATUS,
+            status,
+            Trace::BinaryAnnotation::Type::STRING,
+            local_endpoint
+          )
+        end
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end
 
@@ -62,6 +67,10 @@ module ZipkinTracer
 
     def service_name(datum, default)
       datum.fetch(:zipkin_service_name, default)
+    end
+
+    def response_status(datum)
+      datum[:response] && datum[:response][:status] && datum[:response][:status].to_s
     end
 
     def trace!(datum, trace_id)
