@@ -1,3 +1,6 @@
+# 0.21.2
+* Bugfix: Guard against tracer not set in Faraday and Excon middlewares
+
 # 0.21.1
 * Bugfix: better guard against nil response in the Excon middleware
 
