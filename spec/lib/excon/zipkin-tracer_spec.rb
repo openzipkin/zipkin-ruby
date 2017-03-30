@@ -39,13 +39,15 @@ describe ZipkinTracer::ExconHandler do
     context 'request with string URL' do
       let(:url) { raw_url }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
 
     context 'request with pre-parsed URL' do
       let(:url) { URI.parse(raw_url) }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
   end
 
@@ -55,7 +57,8 @@ describe ZipkinTracer::ExconHandler do
     context 'request with pre-parsed URL' do
       let(:url) { URI.parse(raw_url) }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
 
     context 'request with path and query params' do

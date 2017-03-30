@@ -21,7 +21,7 @@ module ZipkinTracer
           datum[:headers][header] = trace_id.send(method).to_s
         end
 
-        trace!(datum, trace_id) if trace_id.sampled?
+        trace!(datum, trace_id) if Trace.tracer && trace_id.sampled?
       end
 
       super(datum)

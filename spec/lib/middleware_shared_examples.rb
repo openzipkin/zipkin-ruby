@@ -1,6 +1,25 @@
 HEX_REGEX = /\A\h{16}\z/
 
-shared_examples 'can make requests' do
+shared_examples 'makes requests without tracing' do
+  context 'Tracer is not set' do
+    before do
+      Trace.tracer = nil
+      ::Trace.sample_rate = 1 # make sure initialized
+    end
+    include_examples 'make requests', false
+  end
+  context 'We are not sampling this request' do
+    before do
+      Trace.tracer = Trace::NullTracer.new
+      ::Trace.sample_rate = 0 # make sure initialized
+    end
+    include_examples 'make requests', false
+  end
+end
+
+
+
+shared_examples 'makes requests with tracing' do
   before do
     Trace.tracer = Trace::NullTracer.new
     Trace.push(trace_id)
@@ -8,6 +27,11 @@ shared_examples 'can make requests' do
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
   end
+   include_examples 'make requests', true
+end
+
+
+shared_examples 'make requests' do |expect_to_trace_request|
 
   let(:hostname) { 'service.example.com' }
   let(:host_ip) { 0x11223344 }
@@ -59,8 +83,14 @@ shared_examples 'can make requests' do
   context 'with tracing id' do
     let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
 
+    it 'expects tracing' do
+      if expect_to_trace_request
+        expect_tracing
+        process('', url)
+      end
+    end
+
     it 'sets the X-B3 request headers with a new spanID' do
-      expect_tracing
       request_headers  = nil
       ::Trace.push(trace_id) do
         request_headers = process('', url)
@@ -86,8 +116,14 @@ shared_examples 'can make requests' do
   context 'without tracing id' do
     after(:each) { ::Trace.pop }
 
+    it 'expects tracing' do
+      if expect_to_trace_request
+        expect_tracing
+        process('', url)
+      end
+    end
+
     it 'generates a new ID, and sets the X-B3 request headers' do
-      expect_tracing
       request_headers = process('', url)
 
       expect(request_headers['X-B3-TraceId']).to match(HEX_REGEX)
@@ -147,9 +183,12 @@ shared_examples 'can make requests' do
       allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_raise(SocketError)
     end
 
-    it 'traces with stubbed endpoint address' do
-      expect_tracing
-      process('', url)
+    it 'expects tracing' do
+      if expect_to_trace_request
+        expect_tracing
+        process('', url)
+      end
     end
+
   end
 end

@@ -39,14 +39,16 @@ describe ZipkinTracer::FaradayHandler do
     context 'request with string URL' do
       let(:url) { raw_url }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
 
     # in testing, Faraday v0.8.x passes a URI object rather than a string
     context 'request with pre-parsed URL' do
       let(:url) { URI.parse(raw_url) }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
   end
 
@@ -58,7 +60,8 @@ describe ZipkinTracer::FaradayHandler do
     context 'request with pre-parsed URL' do
       let(:url) { URI.parse(raw_url) }
 
-      include_examples 'can make requests'
+      include_examples 'makes requests with tracing'
+      include_examples 'makes requests without tracing'
     end
   end
 end
