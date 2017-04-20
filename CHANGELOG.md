@@ -1,3 +1,6 @@
+# 0.22.0
+* Add the `:record_on_server_receive` configuration option.
+
 # 0.21.2
 * Bugfix: Guard against tracer not set in Faraday and Excon middlewares
 

@@ -27,6 +27,7 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
 * `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
 * `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
+* `:record_on_server_receive` - a CSV style list of tags to record on server receive, even if the zipkin headers were present in the incoming request. Currently only supports the value `http.path`, others being discarded.
 
 ### Sending traces on outgoing requests with Faraday
 
@@ -179,7 +180,7 @@ lambda { |env| KNOWN_DEVICES.include?(env['HTTP_X_DEVICE_ID']) }
 ## Development
 
 This project uses Rspec. Make sure your PRs contain proper tests.
-We have two rake task to help finding performance issues:
+We have two rake tasks to help finding performance issues:
 ```
 rake benchmark
 ```
