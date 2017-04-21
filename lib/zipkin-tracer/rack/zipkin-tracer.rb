@@ -40,7 +40,7 @@ module ZipkinTracer
 
     def trace!(span, zipkin_env, &block)
       # if called by a service, the caller already added the information
-      trace_request_information(span, zipkin_env.env) unless zipkin_env.called_with_zipkin_headers?
+      trace_request_information(span, zipkin_env.env)
       span.record(Trace::Annotation::SERVER_RECV)
       span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
