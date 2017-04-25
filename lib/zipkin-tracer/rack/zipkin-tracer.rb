@@ -50,8 +50,8 @@ module ZipkinTracer
     def trace!(span, zipkin_env, &block)
       # if the request comes from a non zipkin-enabled source record the default tags
       tags = DEFAULT_SERVER_RECV_TAGS unless zipkin_env.called_with_zipkin_headers?
-      # if the user specified tags to record on server recv, use these no matter what
-      tags = @config.record_on_server_receive if @config.record_on_server_receive
+      # if the user specified tags to record on server receive, use these no matter what
+      tags = @config.record_on_server_receive unless @config.record_on_server_receive.empty?
       trace_request_information(span, zipkin_env.env, tags)
 
       span.record(Trace::Annotation::SERVER_RECV)
@@ -63,6 +63,8 @@ module ZipkinTracer
     end
 
     def trace_request_information(span, env, tags)
+      # tags is nil if we've been called by a zipkin-enabled service and the user hasn't
+      # specified tags to record on server receive.
       return if tags.nil?
       tags.each { |annotation_key, env_key| span.record_tag(annotation_key, env[env_key]) }
     end
