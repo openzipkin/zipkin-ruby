@@ -1,5 +1,6 @@
 require 'logger'
 require 'zipkin-tracer/application'
+require 'zipkin-tracer/rack/zipkin-tracer'
 
 module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
@@ -7,7 +8,7 @@ module ZipkinTracer
     attr_reader :service_name, :service_port, :json_api_host,
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
-      :sampled_as_boolean
+      :sampled_as_boolean, :record_on_server_receive
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -30,7 +31,6 @@ module ZipkinTracer
       # A block of code which can be called to force sampling. Forces sampling if returns true
       @whitelist_plugin  = config[:whitelist_plugin]
       @logger            = Application.logger
-      @log_tracing       = config[:log_tracing]       # Was the logger in fact setup by the client?
       # Was the logger in fact setup by the client?
       @log_tracing       = config[:log_tracing]
       # When set to false, it uses 1/0 in the 'X-B3-Sampled' header, else uses true/false
@@ -39,6 +39,9 @@ module ZipkinTracer
       if @sampled_as_boolean
         @logger && @logger.warn("Using a boolean in the Sampled header is deprecated. Consider setting sampled_as_boolean to false")
       end
+      # Record the given tags on server receive, even if the zipkin headers were present in the incoming request?
+      @record_on_server_receive = parse_tags(config[:record_on_server_receive])
+
       Trace.sample_rate = @sample_rate
     end
 
@@ -62,10 +65,17 @@ module ZipkinTracer
       sampled_as_boolean: true
     }
 
+    def parse_tags(tag_names)
+      return {} unless present?(tag_names)
+      names = tag_names.split(",").map(&:strip)
+      (ZipkinTracer::RackHandler::DEFAULT_SERVER_RECV_TAGS.keys & names).each_with_object({}) do |name, tags|
+        tags[name] = ZipkinTracer::RackHandler::DEFAULT_SERVER_RECV_TAGS[name]
+      end
+    end
+
     def present?(str)
       return false if str.nil?
       !!(/\A[[:space:]]*\z/ !~ str)
     end
-
   end
 end

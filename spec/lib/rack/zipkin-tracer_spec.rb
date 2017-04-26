@@ -60,6 +60,16 @@ describe ZipkinTracer::RackHandler do
       expect(::Trace).not_to receive(:set_rpc_name)
       subject.call(env)
     end
+
+    it 'does not set the path info' do
+      expect_any_instance_of(Trace::Span).not_to receive(:record_tag)
+      subject.call(env)
+    end
+
+    it 'force-sets the path info, excluding unknown keys' do
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/,')
+      middleware(app, record_on_server_receive: 'whatever, http.path , unknown,keys ').call(env)
+    end
   end
 
   context 'Using Rails' do
@@ -109,7 +119,7 @@ describe ZipkinTracer::RackHandler do
 
     context 'Zipkin methods raise exceptions' do
       it 'calls the app normally' do
-        allow(Trace).to receive(:set_rpc_name).and_raise(StandardError)
+        allow(::Trace).to receive(:set_rpc_name).and_raise(StandardError)
         status, _, body = subject.call(mock_env)
         # return expected status
         expect(status).to eq(200)

@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.license                   = 'Apache'
 
   s.required_rubygems_version = '>= 1.3.5'
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version     = '>= 2.0.0'
 
   s.files                     = Dir.glob('{bin,lib}/**/*')
   s.require_path              = 'lib'
@@ -30,5 +30,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rack-test', '~> 0.6'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'
-  s.add_development_dependency 'webmock', '~> 1.22'
+  s.add_development_dependency 'webmock', '~> 3.0'
 end
