@@ -48,12 +48,7 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
-      # if the request comes from a non zipkin-enabled source record the default tags
-      tags = DEFAULT_SERVER_RECV_TAGS unless zipkin_env.called_with_zipkin_headers?
-      # if the user specified tags to record on server receive, use these no matter what
-      tags = @config.record_on_server_receive unless @config.record_on_server_receive.empty?
-      trace_request_information(span, zipkin_env.env, tags)
-
+      trace_request_information(span, zipkin_env)
       span.record(Trace::Annotation::SERVER_RECV)
       span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
@@ -62,11 +57,16 @@ module ZipkinTracer
       span.record(Trace::Annotation::SERVER_SEND)
     end
 
-    def trace_request_information(span, env, tags)
-      # tags is nil if we've been called by a zipkin-enabled service and the user hasn't
-      # specified tags to record on server receive.
+    def trace_request_information(span, zipkin_env)
+      tags = if !@config.record_on_server_receive.empty?
+        # if the user specified tags to record on server receive, use these no matter what
+        @config.record_on_server_receive
+      elsif !zipkin_env.called_with_zipkin_headers?
+        # if the request comes from a non zipkin-enabled source record the default tags
+        DEFAULT_SERVER_RECV_TAGS
+      end
       return if tags.nil?
-      tags.each { |annotation_key, env_key| span.record_tag(annotation_key, env[env_key]) }
+      tags.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
     end
   end
 end
