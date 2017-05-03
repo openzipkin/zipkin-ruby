@@ -1,3 +1,6 @@
+# 0.22.1
+* Add sidekiq worker tracing.
+
 # 0.22.0
 * Add the `:record_on_server_receive` configuration option.
 
