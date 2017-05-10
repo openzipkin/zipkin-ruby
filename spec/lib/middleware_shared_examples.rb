@@ -48,7 +48,8 @@ shared_examples 'make requests' do |expect_to_trace_request|
   end
 
   def expect_tracing
-    expect(tracer).to receive(:with_new_span).with(anything, 'post').and_call_original
+    expect(tracer).to receive(:start_span).with(anything, 'post').and_call_original
+    expect(tracer).to receive(:end_span).with(anything).and_call_original
 
     expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
       expect(key).to eq('http.path')
