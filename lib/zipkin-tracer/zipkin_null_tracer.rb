@@ -4,8 +4,19 @@ module Trace
   # the NullTracer also.
   class NullTracer
     def with_new_span(trace_id, name)
-      span = Span.new(name, trace_id)
-      yield span
+      span = start_span(trace_id, name)
+      result = yield span
+      end_span(span)
+      result
+    end
+
+    def start_span(trace_id, name)
+      # NOOP
+      Span.new(name, trace_id)
+    end
+
+    def end_span(span)
+      # NOOP
     end
 
     def flush!
