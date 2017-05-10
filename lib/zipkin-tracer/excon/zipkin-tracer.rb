@@ -38,6 +38,7 @@ module ZipkinTracer
           )
         end
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
+        Trace.tracer.end_span(span)
       end
 
       super(datum)
@@ -78,15 +79,14 @@ module ZipkinTracer
       url = URI(url_string)
       service_name = service_name(datum, url.host)
 
-      Trace.tracer.with_new_span(trace_id, datum[:method].to_s.downcase) do |span|
-        # annotate with method (GET/POST/etc.) and uri path
-        span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, service_name))
-        span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
+      span = Trace.tracer.start_span(trace_id, datum[:method].to_s.downcase)
+      # annotate with method (GET/POST/etc.) and uri path
+      span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+      span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, service_name))
+      span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
 
-        # store the span in the datum hash so it can be used in the response_call
-        datum[:span] = span
-      end
+      # store the span in the datum hash so it can be used in the response_call
+      datum[:span] = span
     rescue ArgumentError, URI::Error => e
       # Ignore URI errors, don't trace if there is no URI
     end
