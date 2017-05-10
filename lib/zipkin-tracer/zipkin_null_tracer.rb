@@ -11,12 +11,11 @@ module Trace
     end
 
     def start_span(trace_id, name)
-      # NOOP
       Span.new(name, trace_id)
     end
 
     def end_span(span)
-      # NOOP
+      span.close if span.respond_to?(:close)
     end
 
     def flush!
