@@ -1,4 +1,4 @@
-# 0.22.1
+# 0.23.0
 * Add sidekiq worker tracing.
 
 # 0.22.0
