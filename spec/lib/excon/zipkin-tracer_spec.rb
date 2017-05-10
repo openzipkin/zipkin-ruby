@@ -52,6 +52,7 @@ describe ZipkinTracer::ExconHandler do
   end
 
   it 'has a trace with correct duration' do
+    Timecop.freeze
     Trace.tracer = Trace::NullTracer.new
     ::Trace.sample_rate = 1
     trace_id = ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG)
@@ -59,7 +60,7 @@ describe ZipkinTracer::ExconHandler do
     allow(::Trace).to receive(:default_endpoint)
       .and_return(::Trace::Endpoint.new('127.0.0.1', '80', 'example.com'))
     stub_request(:post, url)
-      .to_return(body: lambda { |request| sleep 1; '' })
+      .to_return(body: lambda { |request| Timecop.travel(Time.now + 1); '' })
     connection = Excon.new(url.to_s,
                           body: '',
                           method: :post,
@@ -77,6 +78,7 @@ describe ZipkinTracer::ExconHandler do
 
     expect(span).to have_received(:close)
     expect(span.to_h[:duration]).to be > 1_000_000
+    Timecop.return
   end
 
   context 'configured with service_name "foo"' do
