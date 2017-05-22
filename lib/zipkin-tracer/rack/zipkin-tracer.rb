@@ -43,8 +43,8 @@ module ZipkinTracer
       Application.routable_request?(env[PATH_INFO],  env[REQUEST_METHOD])
     end
 
-    def annotate_plugin(env, status, response_headers, response_body)
-      @config.annotate_plugin.call(env, status, response_headers, response_body) if @config.annotate_plugin
+    def annotate_plugin(span, env, status, response_headers, response_body)
+      @config.annotate_plugin.call(span, env, status, response_headers, response_body) if @config.annotate_plugin
     end
 
     def trace!(span, zipkin_env, &block)
@@ -53,7 +53,7 @@ module ZipkinTracer
       span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
     ensure
-      annotate_plugin(zipkin_env.env, status, headers, body)
+      annotate_plugin(span, zipkin_env.env, status, headers, body)
       span.record(Trace::Annotation::SERVER_SEND)
     end
 

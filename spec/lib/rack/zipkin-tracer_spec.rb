@@ -151,11 +151,11 @@ describe ZipkinTracer::RackHandler do
 
   context 'configured with annotation plugin' do
     let(:annotate) do
-      lambda do |env, status, response_headers, response_body|
+      lambda do |span, env, status, response_headers, response_body|
         # string annotation
-        ::Trace.record(::Trace::BinaryAnnotation.new('foo', env['foo'] || 'FOO', 'STRING', ::Trace.default_endpoint))
+        span.record_tag('foo', env['foo'] || 'FOO')
         # integer annotation
-        ::Trace.record(::Trace::BinaryAnnotation.new('http.status', [status.to_i].pack('n'), 'I16', ::Trace.default_endpoint))
+        span.record_tag('http.status', [status.to_i].pack('n'), Trace::BinaryAnnotation::Type::I16, ::Trace.default_endpoint)
       end
     end
     subject { middleware(app, annotate_plugin: annotate) }
@@ -164,9 +164,8 @@ describe ZipkinTracer::RackHandler do
       expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).and_call_original.ordered
 
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(1).times
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(3).times
       expect_any_instance_of(Trace::Span).to receive(:record).exactly(2).times
-      expect(::Trace).to receive(:record).exactly(2).times
       status, _, _ = subject.call(mock_env)
 
       # return expected status
