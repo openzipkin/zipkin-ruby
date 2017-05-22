@@ -1,3 +1,7 @@
+# 0.23.0
+* Fix Excon middleware span duration
+* Add `start_span` and `end_span` to the Null tracer
+
 # 0.22.0
 * Add the `:record_on_server_receive` configuration option.
 
