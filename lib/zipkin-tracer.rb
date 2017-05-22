@@ -1,3 +1,4 @@
+require 'finagle-thrift'
 require 'base64' #Bug in finagle. They should be requiring this: finagle-thrift-1.4.1/lib/finagle-thrift/tracer.rb:115
 require 'zipkin-tracer/trace'
 require 'zipkin-tracer/rack/zipkin-tracer'

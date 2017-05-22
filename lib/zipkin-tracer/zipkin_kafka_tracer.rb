@@ -12,7 +12,7 @@ module Trace
   # This class sends information to Zipkin through Kafka.
   # Spans are encoded using Thrift
   class ZipkinKafkaTracer < ZipkinTracerBase
-    DEFAULT_KAFKA_TOPIC = "zipkin_kafka".freeze
+    DEFAULT_KAFKA_TOPIC = "zipkin".freeze
 
     def initialize(options = {})
       @topic  = options[:topic] || DEFAULT_KAFKA_TOPIC
@@ -26,6 +26,7 @@ module Trace
       end
       super(options)
     end
+    
     def flush!
       resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
       resolved_spans.each do |span|
@@ -33,7 +34,6 @@ module Trace
         trans = Thrift::MemoryBufferTransport.new(buf)
         oprot = Thrift::BinaryProtocol.new(trans)
         span.to_thrift.write(oprot)
-
         retval = @producer.push(buf, topic: @topic)
 
         # If @producer#push returns a promise/promise-like object, block until it
