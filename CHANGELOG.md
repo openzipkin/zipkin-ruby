@@ -1,3 +1,6 @@
+# 0.24.0
+* Fix Pass and use the span in annotate_plugin
+
 # 0.23.0
 * Fix Excon middleware span duration
 * Add `start_span` and `end_span` to the Null tracer

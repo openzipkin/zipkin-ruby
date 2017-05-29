@@ -122,7 +122,7 @@ Thus, if you only want to generate IDs for instance for logging and do not inten
 The annotate plugin expects a function of the form:
 
 ```ruby
-lambda { |env, status, response_headers, response_body| ... }
+lambda { |span, env, status, response_headers, response_body| ... }
 ```
 
 The annotate plugin is expected to perform annotation based on content of the Rack environment and the response components.
@@ -135,13 +135,13 @@ The return value is ignored.
 For example:
 
 ```ruby
-lambda do |env, status, response_headers, response_body|
+lambda do |span, env, status, response_headers, response_body|
   ep = ::Trace.default_endpoint
   # string annotation
-  ::Trace.record(::Trace::BinaryAnnotation.new('http.referrer', env['HTTP_REFERRER'], 'STRING', ep))
+  span.record_tag('http.referrer', env['HTTP_REFERRER'])
   # integer annotation
-  ::Trace.record(::Trace::BinaryAnnotation.new('http.content_size', [env['CONTENT_SIZE']].pack('N'), 'I32', ep))
-  ::Trace.record(::Trace::BinaryAnnotation.new('http.status', [status.to_i].pack('n'), 'I16', ep))
+  span.record_tag('http.content_size', [env['CONTENT_SIZE']].pack('N'), Trace::BinaryAnnotation::Type::I32, ep)
+  span.record_tag('http.status', [status.to_i].pack('n'), Trace::BinaryAnnotation::Type::I16, ep)
 end
 ```
 
