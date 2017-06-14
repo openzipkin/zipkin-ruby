@@ -10,7 +10,7 @@ module ZipkinTracer
           Trace::ZipkinJsonTracer.new(options)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
-          Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
+          Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper, topic: config.kafka_topic)
         when :logger
           require 'zipkin-tracer/zipkin_logger_tracer'
           Trace::ZipkinLoggerTracer.new(logger: config.logger)

@@ -8,7 +8,7 @@ module ZipkinTracer
     attr_reader :service_name, :service_port, :json_api_host,
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
-      :sampled_as_boolean, :record_on_server_receive
+      :sampled_as_boolean, :record_on_server_receive, :kafka_topic
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -20,6 +20,8 @@ module ZipkinTracer
       @json_api_host     = config[:json_api_host]
       # Zookeeper information
       @zookeeper         = config[:zookeeper]
+      # Kafka topic
+      @kafka_topic = config[:kafka_topic]
       # Percentage of traces which by default this service traces (as float, 1.0 means 100%)
       @sample_rate       = config[:sample_rate]       || DEFAULTS[:sample_rate]
       # A block of code which can be called to do extra annotations of traces
@@ -48,7 +50,7 @@ module ZipkinTracer
     def adapter
       if present?(@json_api_host)
         :json
-      elsif present?(@zookeeper) && RUBY_PLATFORM == 'java'
+      elsif present?(@zookeeper)
         :kafka
       elsif !!@log_tracing
         :logger
