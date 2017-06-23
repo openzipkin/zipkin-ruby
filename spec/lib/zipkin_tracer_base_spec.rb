@@ -8,6 +8,7 @@ describe Trace::ZipkinTracerBase do
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, sampled, Trace::Flags::EMPTY) }
   let(:trace_id_with_parent) { Trace::TraceId.new(span_id, parent_id, span_id, sampled, Trace::Flags::EMPTY) }
   let(:rpc_name) { 'this_is_an_rpc' }
+  let(:previous_rpc_name) { 'this_is_previous_rpc' }
   let(:tracer) { described_class.new }
   let(:span_hash) { {
     name: rpc_name,
@@ -69,8 +70,27 @@ describe Trace::ZipkinTracerBase do
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
+    it 'flush if CR is annotated in this span and SR not in all spans' do
+      span.record(Trace::Annotation::CLIENT_RECV)
+      expect(tracer).to receive(:flush!)
+      expect(tracer).to receive(:reset)
+      tracer.end_span(span)
+    end
     it "does not flush if SS has not been annotated" do
       span.record(Trace::Annotation::SERVER_RECV)
+      expect(tracer).not_to receive(:flush!)
+      expect(tracer).not_to receive(:reset)
+      tracer.end_span(span)
+    end
+  end
+
+  describe '#end_span with previous SR record' do
+    let(:previous_span) { tracer.start_span(trace_id, previous_rpc_name) }
+    let(:span) { tracer.start_span(trace_id, rpc_name) }
+    before { allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name')) }
+    it 'does not flush if CR is annotated in this span but SR exists in previous spans' do
+      previous_span.record(Trace::Annotation::SERVER_RECV)
+      span.record(Trace::Annotation::CLIENT_RECV)
       expect(tracer).not_to receive(:flush!)
       expect(tracer).not_to receive(:reset)
       tracer.end_span(span)
