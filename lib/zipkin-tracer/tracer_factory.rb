@@ -11,6 +11,11 @@ module ZipkinTracer
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'
           Trace::ZipkinKafkaTracer.new(zookeepers: config.zookeeper)
+        when :kafka_producer
+          require 'zipkin-tracer/zipkin_kafka_tracer'
+          options = { producer: config.kafka_producer }
+          options[:topic] = config.kafka_topic unless config.kafka_topic.nil?
+          Trace::ZipkinKafkaTracer.new(options)
         when :logger
           require 'zipkin-tracer/zipkin_logger_tracer'
           Trace::ZipkinLoggerTracer.new(logger: config.logger)
@@ -21,7 +26,7 @@ module ZipkinTracer
       Trace.tracer = tracer
 
       # TODO: move this to the TracerBase and kill scribe tracer
-      ip_format = config.adapter == :kafka ? :i32 : :string
+      ip_format = [:kafka, :kafka_producer].include?(config.adapter) ? :i32 : :string
       Trace.default_endpoint = Trace::Endpoint.local_endpoint(
         config.service_port,
         service_name(config.service_name),
