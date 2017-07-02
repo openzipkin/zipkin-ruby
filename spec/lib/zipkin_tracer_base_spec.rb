@@ -61,6 +61,7 @@ describe Trace::ZipkinTracerBase do
     it 'closes the span' do
       span #touch it so it happens before we freeze time again
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 1))
+      expect(tracer).to receive(:flush!)
       tracer.end_span(span)
       expect(span.to_h).to eq(span_hash.merge(duration: 1_000_000))
     end
@@ -70,26 +71,24 @@ describe Trace::ZipkinTracerBase do
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
-    it 'flush if CR is annotated in this span and SR not in all spans' do
+    it 'flush if CR is annotated in this span and the span does not have parent span' do
       span.record(Trace::Annotation::CLIENT_RECV)
       expect(tracer).to receive(:flush!)
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
-    it "does not flush if SS has not been annotated" do
+    it "flush if SS has not been annotated but span has no parent span " do
       span.record(Trace::Annotation::SERVER_RECV)
-      expect(tracer).not_to receive(:flush!)
-      expect(tracer).not_to receive(:reset)
+      expect(tracer).to receive(:flush!)
+      expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
   end
 
-  describe '#end_span with previous SR record' do
-    let(:previous_span) { tracer.start_span(trace_id, previous_rpc_name) }
-    let(:span) { tracer.start_span(trace_id, rpc_name) }
+  describe '#end_span with parent span' do
+    let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
     before { allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name')) }
-    it 'does not flush if CR is annotated in this span but SR exists in previous spans' do
-      previous_span.record(Trace::Annotation::SERVER_RECV)
+    it 'does not flush if the current span has a parent span' do
       span.record(Trace::Annotation::CLIENT_RECV)
       expect(tracer).not_to receive(:flush!)
       expect(tracer).not_to receive(:reset)
@@ -100,10 +99,12 @@ describe Trace::ZipkinTracerBase do
   describe '#with_new_span' do
     let(:result) { 'result' }
     it 'returns the value of the block' do
+      expect(tracer).to receive(:flush!)
       expect(tracer.with_new_span(trace_id, rpc_name) { result }).to eq(result)
     end
 
     it "yields the span to the block" do
+      expect(tracer).to receive(:flush!)
       tracer.with_new_span(trace_id, rpc_name) do |span|
         expect(span.to_h[:traceId]).to eq(trace_id.trace_id.to_s)
       end
