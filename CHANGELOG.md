@@ -1,5 +1,11 @@
-# 0.24.0
+# 0.26.0
 * Add sidekiq worker tracing.
+
+# 0.25.0
+* Fix pass kafka producer to rack middleware
+
+# 0.24.0
+* Fix Pass and use the span in annotate_plugin
 
 # 0.23.0
 * Fix Excon middleware span duration

@@ -89,6 +89,10 @@ module Trace
       record_tag(BinaryAnnotation::LOCAL_COMPONENT, value)
     end
 
+    def has_parent_span?
+      !@span_id.parent_id.nil?
+    end
+
     private
 
     UNKNOWN_DURATION = 0 # mark duration was not set

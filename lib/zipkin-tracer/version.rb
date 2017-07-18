@@ -1,3 +1,3 @@
 module ZipkinTracer
-  VERSION = '0.23.0'.freeze
+  VERSION = '0.25.0'.freeze
 end
