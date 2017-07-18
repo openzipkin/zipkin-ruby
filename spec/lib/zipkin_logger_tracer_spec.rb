@@ -11,15 +11,17 @@ describe Trace::ZipkinLoggerTracer do
   describe '#flush!' do
     it 'flushes the list of spans into the log' do
       tracer = described_class.new(logger: logger)
-      the_span = nil
-      tracer.with_new_span(trace_id, name) do |span|
+      span = tracer.start_span(trace_id, name)
+
+      tracer.end_span(span)do |span|
         the_span = span
         span.record_tag('test', 'prueba')
+        span.close
+
+        spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips([the_span]).map(&:to_h)
+        log_text = { described_class::TRACING_KEY => spans }.to_json
+        expect(logger).to receive(:info).with(log_text)
       end
-      spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips([the_span]).map(&:to_h)
-      log_text = { described_class::TRACING_KEY => spans }.to_json
-      expect(logger).to receive(:info).with(log_text)
-      tracer.flush!
     end
   end
 end
