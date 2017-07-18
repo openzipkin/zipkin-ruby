@@ -1,3 +1,6 @@
+# 0.26.0
+* Add sidekiq worker tracing.
+
 # 0.25.0
 * Fix pass kafka producer to rack middleware
 

@@ -56,6 +56,28 @@ Note that supplying the service name for the destination service is optional;
 the tracing will default to a service name derived from the first section of the destination URL (e.g. 'service.example.com' => 'service').
 
 
+### Tracing Sidekiq workers
+
+Sidekiq tracing can be turned on by adding ZipkinTracer::Sidekiq::Middleware to your sidekiq middleware chain:
+
+```ruby
+zipkin_tracer_config = {
+  service_name: 'service',
+  service_port: 3000,
+  json_api_host: 'http://zipkin.io',
+  traceable_workers: [:MyWorker, :MyWorker2],
+  sample_rate: 0.5
+}
+
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add ZipkinTracer::Sidekiq::Middleware, zipkin_tracer_config
+  end
+end
+```
+
+By default workers aren't traced. You can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
+
 ### Local tracing
 
 `ZipkinTracer::TraceClient` provides an API to record local traces in your application.
