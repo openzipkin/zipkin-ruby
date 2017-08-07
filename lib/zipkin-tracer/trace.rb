@@ -120,6 +120,7 @@ module Trace
     PATH = 'http.path'.freeze
     STATUS = 'http.status'.freeze
     LOCAL_COMPONENT = 'lc'.freeze
+    ERROR = 'error'.freeze
 
     def to_h
       {

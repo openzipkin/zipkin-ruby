@@ -18,7 +18,7 @@ describe ZipkinTracer::FaradayHandler do
     end
   end
 
-  let(:response_env) { { status: 200 } }
+  let(:response_env) { { status: 404 } }
   let(:wrapped_app) { lambda { |env| ResponseObject.new(env, response_env) } }
 
   # returns the request headers

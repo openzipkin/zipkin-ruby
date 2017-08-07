@@ -29,13 +29,9 @@ module ZipkinTracer
 
     def response_call(datum)
       if span = datum[:span]
-        if status = response_status(datum)
-          span.record_tag(
-            Trace::BinaryAnnotation::STATUS,
-            status,
-            Trace::BinaryAnnotation::Type::STRING,
-            local_endpoint
-          )
+        status = response_status(datum)
+        if status
+          record_response_tags(span, status, local_endpoint)
         end
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
         Trace.tracer.end_span(span)
@@ -47,6 +43,7 @@ module ZipkinTracer
     private
 
     SERVER_ADDRESS_SPECIAL_VALUE = '1'.freeze
+    STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
 
     def b3_headers
       {
@@ -72,6 +69,14 @@ module ZipkinTracer
 
     def response_status(datum)
       datum[:response] && datum[:response][:status] && datum[:response][:status].to_s
+    end
+
+    def record_response_tags(span, status, local_endpoint)
+      span.record_tag(Trace::BinaryAnnotation::STATUS, status, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+      if STATUS_ERROR_REGEXP.match(status)
+        span.record_tag(Trace::BinaryAnnotation::ERROR, status,
+          Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+      end
     end
 
     def trace!(datum, trace_id)
