@@ -28,6 +28,8 @@ module ZipkinTracer
     private
 
     SERVER_ADDRESS_SPECIAL_VALUE = '1'.freeze
+    STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
+
 
     def b3_headers
       {
@@ -46,17 +48,38 @@ module ZipkinTracer
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
       Trace.tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
+        @span = span # So we can record on exceptions
         # annotate with method (GET/POST/etc.) and uri path
         span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
         response = @app.call(env).on_complete do |renv|
-          # record HTTP status code on response
-          span.record_tag(Trace::BinaryAnnotation::STATUS, renv[:status].to_s, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+          record_response_tags(span, renv[:status].to_s, local_endpoint)
         end
         span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end
       response
+    rescue Net::ReadTimeout
+      record_error(@span, 'Request timed out.', local_endpoint)
+      raise
+    rescue Faraday::ConnectionFailed
+      record_error(@span, 'Request connection failed.', local_endpoint)
+      raise
+    rescue Faraday::ClientError
+      record_error(@span, 'Generic Faraday client error.', local_endpoint)
+      raise
+    end
+
+    def record_error(span, msg, local_endpoint)
+      span.record_tag(Trace::BinaryAnnotation::ERROR, msg, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+    end
+
+    def record_response_tags(span, status, local_endpoint)
+      span.record_tag(Trace::BinaryAnnotation::STATUS, status, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+      if STATUS_ERROR_REGEXP.match(status)
+        span.record_tag(Trace::BinaryAnnotation::ERROR, status,
+          Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+      end
     end
 
   end

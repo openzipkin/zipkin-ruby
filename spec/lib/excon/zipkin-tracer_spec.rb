@@ -5,7 +5,7 @@ require 'lib/middleware_shared_examples'
 describe ZipkinTracer::ExconHandler do
   # returns the request headers
   def process(body, url, headers = {})
-    stub_request(:post, url).to_return(status: 200, body: body, headers: headers)
+    stub_request(:post, url).to_return(status: 404, body: body, headers: headers)
 
     connection = Excon.new(url.to_s,
                            body: body,

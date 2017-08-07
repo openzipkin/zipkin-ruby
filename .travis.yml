@@ -2,9 +2,10 @@ language: ruby
 jdk:
   - oraclejdk8
 rvm:
-  - 2.3.0
-  - 2.2.4
-  - 2.1.8
+  - 2.4.1
+  - 2.3.4
+  - 2.2.7
+  - 2.1.10
   - 2.0
   - jruby-9.1.6.0
 deploy:

@@ -1,3 +1,6 @@
+# 0.27.0
+* Add tagging of errors for Faraday and Excon.
+
 # 0.26.0
 * Add sidekiq worker tracing.
 

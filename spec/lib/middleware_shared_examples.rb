@@ -66,7 +66,13 @@ shared_examples 'make requests' do |expect_to_trace_request|
 
     expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
       expect(key).to eq('http.status')
-      expect(value).to eq('200')
+      expect(value).to eq('404')
+      expect_host(host, '127.0.0.1', service_name)
+    end
+
+    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
+      expect(key).to eq('error')
+      expect(value).to eq('404')
       expect_host(host, '127.0.0.1', service_name)
     end
 
