@@ -6,9 +6,9 @@ module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
   class Config
     attr_reader :service_name, :service_port, :json_api_host,
-      :zookeeper, :sample_rate, :logger, :log_tracing,
-      :annotate_plugin, :filter_plugin, :whitelist_plugin,
-      :sampled_as_boolean, :record_on_server_receive,
+      :json_api_user, :json_api_password, :zookeeper, :sample_rate,
+      :logger, :log_tracing, :annotate_plugin, :filter_plugin,
+      :whitelist_plugin, :sampled_as_boolean, :record_on_server_receive,
       :kafka_producer, :kafka_topic
 
     def initialize(app, config_hash)
@@ -19,6 +19,12 @@ module ZipkinTracer
       @service_port      = config[:service_port]      || DEFAULTS[:service_port]
       # The address of the Zipkin server which we will send traces to
       @json_api_host     = config[:json_api_host]
+      # The username for basic authentication
+      @json_api_user     = config[:json_api_user]
+      # The password for basic authentication
+      @json_api_password = config[:json_api_password]
+      # SSL verify
+      @json_api_ssl_verify = config[:json_api_ssl_verify]
       # Zookeeper information
       @zookeeper         = config[:zookeeper]
       # Kafka producer information
