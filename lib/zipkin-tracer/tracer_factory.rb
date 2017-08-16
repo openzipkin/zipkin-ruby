@@ -7,6 +7,8 @@ module ZipkinTracer
         when :json
           require 'zipkin-tracer/zipkin_json_tracer'
           options = { json_api_host: config.json_api_host, logger: config.logger }
+          options[:json_api_user] = config.json_api_user unless config.json_api_user.nil?
+          options[:json_api_password] = config.json_api_password unless config.json_api_password.nil?
           Trace::ZipkinJsonTracer.new(options)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_tracer'

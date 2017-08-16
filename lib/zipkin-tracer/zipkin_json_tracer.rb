@@ -7,9 +7,13 @@ class AsyncJsonApiClient
   include SuckerPunch::Job
   SPANS_PATH = '/api/v1/spans'
 
-  def perform(json_api_host, spans)
+  def perform(json_api_host, json_api_user, json_api_password, spans)
     spans_with_ips = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans).map(&:to_h)
-    resp = Faraday.new(json_api_host).post do |req|
+
+    conn = Faraday.new(json_api_host)
+    conn.basic_auth(json_api_user, json_api_password) unless json_api_user.nil?
+
+    resp = conn.post do |req|
       req.url SPANS_PATH
       req.headers['Content-Type'] = 'application/json'
       req.body = JSON.generate(spans_with_ips)
@@ -27,11 +31,13 @@ module Trace
     def initialize(options)
       SuckerPunch.logger = options[:logger]
       @json_api_host = options[:json_api_host]
+      @json_api_user = options[:json_api_user]
+      @json_api_password = options[:json_api_password]
       super(options)
     end
 
     def flush!
-      AsyncJsonApiClient.perform_async(@json_api_host, spans.dup)
+      AsyncJsonApiClient.perform_async(@json_api_host, @json_api_user, @json_api_password, spans.dup)
     end
   end
 end
