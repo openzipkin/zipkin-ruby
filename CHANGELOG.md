@@ -1,3 +1,6 @@
+# 0.27.1
+* Rescue connection errors when sending information to Zipkin fails
+
 # 0.27.0
 * Add tagging of errors for Faraday and Excon.
 
