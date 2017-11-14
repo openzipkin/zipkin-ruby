@@ -15,8 +15,8 @@ class AsyncJsonApiClient
       req.body = JSON.generate(spans_with_ips)
     end
   rescue Net::ReadTimeout, Faraday::ConnectionFailed => e
-    error_message = "Got #{e.class.inspect} with Message #{e.message} error while connecting to #{json_api_host}. " \
-                    "- Please make sure the Zipkin server is running in that url and port."
+    error_message = "Error while connecting to #{json_api_host}: #{e.class.inspect} with message '#{e.message}'. " \
+                    "Please make sure the URL / port are properly specified for the Zipkin server."
     SuckerPunch.logger.error(error_message)
   rescue => e
     SuckerPunch.logger.error(e)
