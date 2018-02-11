@@ -6,6 +6,7 @@ require 'zipkin-tracer/hostname_resolver'
 class AsyncJsonApiClient
   include SuckerPunch::Job
   SPANS_PATH = '/api/v1/spans'
+  BAD_REQUEST = 400
 
   def perform(json_api_host, spans)
     spans_with_ips = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans).map(&:to_h)
@@ -14,6 +15,7 @@ class AsyncJsonApiClient
       req.headers['Content-Type'] = 'application/json'
       req.body = JSON.generate(spans_with_ips)
     end
+    SuckerPunch.logger.error(resp.body) if resp.status == BAD_REQUEST
   rescue Net::ReadTimeout, Faraday::ConnectionFailed => e
     error_message = "Error while connecting to #{json_api_host}: #{e.class.inspect} with message '#{e.message}'. " \
                     "Please make sure the URL / port are properly specified for the Zipkin server."
