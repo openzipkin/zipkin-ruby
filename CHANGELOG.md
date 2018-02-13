@@ -1,5 +1,6 @@
 # 0.27.2.1
 * Update version.rb to fix checksum mismatch on RubyGems.org
+* Add `condition` on Travis CI deployment
 
 # 0.27.2
 * Convert trace values to string

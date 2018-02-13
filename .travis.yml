@@ -16,6 +16,7 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-ruby
+    condition: "$TRAVIS_RUBY_VERSION == 2.4.1"
 notifications:
   webhooks:
     urls:
