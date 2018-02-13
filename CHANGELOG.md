@@ -1,3 +1,6 @@
+# 0.27.2.1
+* Update version.rb to fix checksum mismatch on RubyGems.org
+
 # 0.27.2
 * Convert trace values to string
 
