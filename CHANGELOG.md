@@ -1,6 +1,5 @@
 # 0.27.2
 * Convert trace values to string
-* Add logging on 400 Bad Request
 
 # 0.27.1
 * Rescue connection errors when sending information to Zipkin fails
