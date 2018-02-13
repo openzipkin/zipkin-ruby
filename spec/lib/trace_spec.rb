@@ -69,6 +69,7 @@ describe Trace do
     let(:duration) { 0 }
     let(:key) { 'key' }
     let(:value) { 'value' }
+    let(:numeric_value) { 123 }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
@@ -102,6 +103,13 @@ describe Trace do
         ann = span_with_parent.annotations[-1]
         expect(ann.value).to eq('value')
       end
+
+      it 'converts the value to string' do
+        span_with_parent.record(numeric_value)
+
+        ann = span_with_parent.annotations[-1]
+        expect(ann.value).to eq('123')
+      end
     end
 
     describe '#record_tag' do
@@ -111,6 +119,13 @@ describe Trace do
         ann = span_with_parent.binary_annotations[-1]
         expect(ann.key).to eq('key')
         expect(ann.value).to eq('value')
+      end
+
+      it 'converts the value to string' do
+        span_with_parent.record_tag(key, numeric_value)
+
+        ann = span_with_parent.binary_annotations[-1]
+        expect(ann.value).to eq('123')
       end
     end
 

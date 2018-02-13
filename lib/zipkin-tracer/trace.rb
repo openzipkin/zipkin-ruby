@@ -78,11 +78,11 @@ module Trace
 
     # We record information into spans, then we send these spans to zipkin
     def record(value, endpoint = Trace.default_endpoint)
-      annotations << Trace::Annotation.new(value, endpoint)
+      annotations << Trace::Annotation.new(value.to_s, endpoint)
     end
 
     def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
-      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
+      binary_annotations << Trace::BinaryAnnotation.new(key, value.to_s, type, endpoint)
     end
 
     def record_local_component(value)

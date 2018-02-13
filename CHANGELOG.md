@@ -1,3 +1,6 @@
+# 0.27.2
+* Convert trace values to string
+
 # 0.27.1
 * Rescue connection errors when sending information to Zipkin fails
 
