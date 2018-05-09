@@ -82,6 +82,16 @@ describe ZipkinTracer::ZipkinEnv do
       # In this spec we are forcing sampling with the whitelist_plugin
       expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
+
+    context 'trace_id_128bit is true' do
+      before do
+        allow(Trace).to receive(:trace_id_128bit).and_return(true)
+      end
+
+      it 'generates a 128-bit trace_id' do
+        expect(zipkin_env.trace_id.trace_id.to_s).to match(/^[a-f0-9]{32}$/i)
+      end
+    end
   end
 
   context 'with zipkin headers' do

@@ -34,7 +34,8 @@ module ZipkinTracer
         trace_id, span_id = @env.values_at(*B3_REQUIRED_HEADERS)
         parent_span_id = @env['HTTP_X_B3_PARENTSPANID']
       else
-        trace_id = span_id = Trace.generate_id
+        span_id = Trace.generate_id
+        trace_id = TraceGenerator.new.generate_id_from_span_id(span_id)
         parent_span_id = nil
       end
       [trace_id, span_id, parent_span_id]
