@@ -2,6 +2,11 @@ require 'spec_helper'
 
 describe Trace do
   let(:dummy_endpoint) { Trace::Endpoint.new('127.0.0.1', 9411, 'DummyService') }
+  let(:trace_id_128bit) { false }
+
+  before do
+    allow(Trace).to receive(:trace_id_128bit).and_return(trace_id_128bit)
+  end
 
   describe Trace::TraceId do
     let(:traceid) { '234555b04cf7e099' }
@@ -50,6 +55,59 @@ describe Trace do
       end
     end
 
+    context 'trace_id_128bit is false' do
+      let(:traceid) { '5af30660491a5a27234555b04cf7e099' }
+
+      it 'drops any bits higher than 64 bit' do
+        expect(trace_id.trace_id.to_s).to eq('234555b04cf7e099')
+      end
+    end
+
+    context 'trace_id_128bit is true' do
+      let(:trace_id_128bit) { true }
+      let(:traceid) { '5af30660491a5a27234555b04cf7e099' }
+
+      it 'returns a 128-bit trace_id ' do
+        expect(trace_id.trace_id.to_s).to eq(traceid)
+      end
+    end
+  end
+
+  describe Trace::TraceId128Bit do
+    let(:traceid) { '234555b04cf7e099' }
+    let(:traceid_128bit) { '5af30660491a5a27234555b04cf7e099' }
+    let(:traceid_numeric) { 120892377080251878477690677995565998233 }
+    let(:trace_id_128bit_instance) { described_class.from_value(traceid_128bit) }
+
+    describe '.from_value' do
+      it 'returns SpanId instance when traceid is 64-bit' do
+        expect(described_class.from_value(traceid)).to be_instance_of(Trace::SpanId)
+      end
+
+      it 'returns TraceId128Bit instance when traceid is 128-bit' do
+        expect(described_class.from_value(traceid_128bit)).to be_instance_of(described_class)
+      end
+
+      it 'returns TraceId128Bit instance when numeric value is given' do
+        expect(described_class.from_value(traceid_numeric)).to be_instance_of(described_class)
+      end
+
+      it 'returns TraceId128Bit instance when TraceId128Bit instance is given' do
+        expect(described_class.from_value(trace_id_128bit_instance)).to be_instance_of(described_class)
+      end
+    end
+
+    describe '#to_s' do
+      it 'returns trace_id value in string' do
+        expect(trace_id_128bit_instance.to_s).to eq(traceid_128bit)
+      end
+    end
+
+    describe '#to_i' do
+      it 'returns trace_id value in integer' do
+        expect(trace_id_128bit_instance.to_i).to eq(traceid_numeric)
+      end
+    end
   end
 
   describe Trace::Span do

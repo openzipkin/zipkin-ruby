@@ -1,3 +1,6 @@
+# 0.28.0
+* Add the `:trace_id_128bit` configuration option.
+
 # 0.27.2.1
 * Update version.rb to fix checksum mismatch on RubyGems.org
 * Add `condition` on Travis CI deployment

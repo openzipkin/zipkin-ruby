@@ -3,6 +3,7 @@ require 'zipkin-tracer/zipkin_tracer_base'
 # Module with a mix of functions and overwrites from the finagle implementation:
 # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb
 module Trace
+  attr_accessor :trace_id_128bit
 
   # We need this to access the tracer from the Faraday middleware.
   def self.tracer
@@ -19,7 +20,7 @@ module Trace
     attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags
 
     def initialize(trace_id, parent_id, span_id, sampled, flags)
-      @trace_id = SpanId.from_value(trace_id)
+      @trace_id = Trace.trace_id_128bit ? TraceId128Bit.from_value(trace_id) : SpanId.from_value(trace_id)
       @parent_id = parent_id.nil? ? nil : SpanId.from_value(parent_id)
       @span_id = SpanId.from_value(span_id)
       @sampled = sampled
@@ -42,6 +43,39 @@ module Trace
     def to_s
       "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}, sampled = #{@sampled.to_s}, flags = #{@flags.to_s})"
     end
+  end
+
+  # This class is the 128-bit version of the SpanId class:
+  # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb#L102
+  class TraceId128Bit < SpanId
+    HEX_REGEX_16 = /^[a-f0-9]{16}$/i
+    HEX_REGEX_32 = /^[a-f0-9]{32}$/i
+    MAX_SIGNED_I128 = (2 ** 128 / 2) -1
+    MASK = (2 ** 128) - 1
+
+    def self.from_value(v)
+      if v.is_a?(String) && v =~ HEX_REGEX_16
+        SpanId.new(v.hex)
+      elsif v.is_a?(String) && v =~ HEX_REGEX_32
+        new(v.hex)
+      elsif v.is_a?(Numeric)
+        new(v)
+      elsif v.is_a?(SpanId)
+        v
+      end
+    end
+
+    def initialize(value)
+      @value = value
+      @i128 = if @value > MAX_SIGNED_I128
+        -1 * ((@value ^ MASK) + 1)
+      else
+        @value
+      end
+    end
+
+    def to_s; '%032x' % @value; end
+    def to_i; @i128; end
   end
 
   # A span may contain many annotations

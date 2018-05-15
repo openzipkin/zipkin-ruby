@@ -2,6 +2,11 @@ require 'spec_helper'
 
 describe ZipkinTracer::TraceGenerator do
   let(:subject) { described_class.new }
+  let(:trace_id_128bit) { false }
+
+  before do
+    allow(Trace).to receive(:trace_id_128bit).and_return(trace_id_128bit)
+  end
 
   describe '#generate_id' do
     it 'returns a traceID' do
@@ -18,6 +23,14 @@ describe ZipkinTracer::TraceGenerator do
       allow(Trace).to receive(:sample_rate).and_return(0)
       trace_id = subject.generate_trace_id
       expect(trace_id.sampled?).to eq(false)
+    end
+
+    context 'trace_id_128bit is true' do
+      let(:trace_id_128bit) { true }
+
+      it 'returns a 128-bit traceID' do
+        expect(subject.generate_trace_id.trace_id.to_s).to match(/^[a-f0-9]{32}$/i)
+      end
     end
   end
 
@@ -36,4 +49,26 @@ describe ZipkinTracer::TraceGenerator do
     end
   end
 
+  describe '#generate_id_from_span_id' do
+    let(:span_id) { rand(2**64) }
+
+    context 'trace_id_128bit is false' do
+      it 'returns the span_id' do
+        expect(subject.generate_id_from_span_id(span_id)).to eq(span_id)
+      end
+    end
+
+    context 'trace_id_128bit is true' do
+      let(:trace_id_128bit) { true }
+      let(:generated_id) { subject.generate_id_from_span_id(span_id) }
+
+      before do
+        Timecop.freeze(Time.utc(2018, 5, 9, 14, 32))
+      end
+
+      it 'prepends high 8-bytes(4-bytes epoch seconds and 4-bytes random) to the span_id' do
+        expect(generated_id.to_s(16)).to match(/^5af30660[a-f0-9]{8}#{span_id.to_s(16)}$/)
+      end
+    end
+  end
 end

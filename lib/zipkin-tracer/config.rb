@@ -9,7 +9,7 @@ module ZipkinTracer
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
       :sampled_as_boolean, :record_on_server_receive,
-      :kafka_producer, :kafka_topic
+      :kafka_producer, :kafka_topic, :trace_id_128bit
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -46,7 +46,14 @@ module ZipkinTracer
       # Record the given tags on server receive, even if the zipkin headers were present in the incoming request?
       @record_on_server_receive = parse_tags(config[:record_on_server_receive])
 
+      # When set to true, high 8-bytes will be prepended to trace_id.
+      # The upper 4-bytes are epoch seconds and the lower 4-bytes are random.
+      # This makes it convertible to Amazon X-Ray trace ID format v1.
+      # (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
+      @trace_id_128bit = config[:trace_id_128bit].nil? ? DEFAULTS[:trace_id_128bit] : config[:trace_id_128bit]
+
       Trace.sample_rate = @sample_rate
+      Trace.trace_id_128bit = @trace_id_128bit
     end
 
     def adapter
@@ -68,7 +75,8 @@ module ZipkinTracer
     DEFAULTS = {
       sample_rate: 0.1,
       service_port: 80,
-      sampled_as_boolean: true
+      sampled_as_boolean: true,
+      trace_id_128bit: false
     }
 
     def parse_tags(tag_names)
