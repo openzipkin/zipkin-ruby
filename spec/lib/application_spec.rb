@@ -69,8 +69,8 @@ module ZipkinTracer
       end
 
       context 'Rails not available' do
-        it 'returns empty string' do
-          expect(subject).to eq("")
+        it 'returns nil' do
+          expect(subject).to eq(nil)
         end
       end
     end

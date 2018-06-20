@@ -12,14 +12,14 @@ module ZipkinTracer
     end
 
     def self.get_route(path_info, http_method)
-      return "" unless defined?(Rails)
+      return nil unless defined?(Rails)
       req = Rack::Request.new("PATH_INFO" => path_info, "REQUEST_METHOD" => http_method)
       # Returns a string like /some/path/:id
       Rails.application.routes.router.recognize(req) { |route|
         return route.path.spec.to_s
       }
     rescue
-      ""
+      nil
     end
 
     def self.logger
