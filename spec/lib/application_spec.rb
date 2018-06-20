@@ -38,6 +38,43 @@ module ZipkinTracer
       end
     end
 
+    describe '.get_route' do
+      subject { Application.get_route("path", "METHOD") }
+
+      context 'Rails available' do
+        before do
+          stub_const('Rails', Class.new)
+        end
+
+        context 'route for /api/v1/messages/123 is found' do
+          before do
+            route = "/api/v1/messages/:id"
+            allow(Rails).to receive_message_chain('application.routes.router.recognize') { route }
+          end
+
+          it 'returns route' do
+            expect(subject).to eq("/api/v1/messages/:id")
+          end
+        end
+
+        context 'route is not found' do
+          before do
+            allow(Rails).to receive_message_chain('application.routes.router.recognize') { nil }
+          end
+
+          it 'returns nil' do
+            expect(subject).to eq(nil)
+          end
+        end
+      end
+
+      context 'Rails not available' do
+        it 'returns empty string' do
+          expect(subject).to eq("")
+        end
+      end
+    end
+
     describe '.logger' do
       subject { Application.logger }
 
