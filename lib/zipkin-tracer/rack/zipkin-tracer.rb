@@ -30,7 +30,7 @@ module ZipkinTracer
         if !trace_id.sampled? || !routable_request?(env)
           @app.call(env)
         else
-          @tracer.with_new_span(trace_id, env[REQUEST_METHOD].to_s.downcase) do |span|
+          @tracer.with_new_span(trace_id, "#{env[REQUEST_METHOD].to_s.downcase} #{route(env)}".strip) do |span|
             trace!(span, zipkin_env) { @app.call(env) }
           end
         end
@@ -40,7 +40,11 @@ module ZipkinTracer
     private
 
     def routable_request?(env)
-      Application.routable_request?(env[PATH_INFO],  env[REQUEST_METHOD])
+      Application.routable_request?(env[PATH_INFO], env[REQUEST_METHOD])
+    end
+
+    def route(env)
+      Application.get_route(env[PATH_INFO], env[REQUEST_METHOD])
     end
 
     def annotate_plugin(span, env, status, response_headers, response_body)
