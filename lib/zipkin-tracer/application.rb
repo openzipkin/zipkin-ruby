@@ -11,19 +11,19 @@ module ZipkinTracer
       false
     end
 
-    def self.get_route(path_info, http_method)
+    def self.get_route(env)
       return nil unless defined?(Rails)
-      req = Rack::Request.new("PATH_INFO" => path_info, "REQUEST_METHOD" => http_method)
+      req = Rack::Request.new(env)
       # Returns a string like /some/path/:id
-      Rails.application.routes.router.recognize(req) { |route|
+      Rails.application.routes.router.recognize(req) do |route|
         return route.path.spec.to_s
-      }
+      end
     rescue
       nil
     end
 
     def self.logger
-      if defined?(Rails) # If we happen to be inside a Rails app, use its logger
+      if defined?(Rails.logger) # If we happen to be inside a Rails app, use its logger
         Rails.logger
       else
         Logger.new(STDOUT)

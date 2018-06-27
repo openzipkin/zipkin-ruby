@@ -39,7 +39,8 @@ module ZipkinTracer
     end
 
     describe '.get_route' do
-      subject { Application.get_route("path", "METHOD") }
+      let(:env) { { "PATH_INFO" => "path", "REQUEST_METHOD" => "METHOD" } }
+      subject { Application.get_route(env) }
 
       context 'Rails available' do
         before do
