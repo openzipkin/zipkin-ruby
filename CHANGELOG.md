@@ -1,3 +1,7 @@
+# 0.29.0
+* Add abstract route to span name
+* Fix not to raise "NoMethodError" for Rails:Module
+
 # 0.28.0
 * Add the `:trace_id_128bit` configuration option.
 
