@@ -4,7 +4,7 @@ module ZipkinTracer
   class Application
     # If the request is not valid for this service, we do not what to trace it.
     def self.routable_request?(path_info, http_method)
-      return true unless defined?(Rails) # If not running on a Rails app, we can't verify if it is invalid
+      return true unless defined?(Rails.application) # If not running on a Rails app, we can't verify if it is invalid
       Rails.application.routes.recognize_path(path_info, method: http_method)
       true
     rescue ActionController::RoutingError
@@ -12,7 +12,7 @@ module ZipkinTracer
     end
 
     def self.get_route(env)
-      return nil unless defined?(Rails)
+      return nil unless defined?(Rails.application)
       req = Rack::Request.new(env)
       # Returns a string like /some/path/:id
       Rails.application.routes.router.recognize(req) do |route|
