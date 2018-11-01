@@ -13,7 +13,11 @@ module ZipkinTracer
 
     def self.get_route(env)
       return nil unless defined?(Rails)
-      req = Rack::Request.new("PATH_INFO" => env[ZipkinTracer::RackHandler::PATH_INFO], "REQUEST_METHOD" => env[ZipkinTracer::RackHandler::REQUEST_METHOD])
+      stub_env = {
+        "PATH_INFO" => env[ZipkinTracer::RackHandler::PATH_INFO],
+        "REQUEST_METHOD" => env[ZipkinTracer::RackHandler::REQUEST_METHOD]
+      }
+      req = Rack::Request.new(stub_env)
       # Returns a string like /some/path/:id
       Rails.application.routes.router.recognize(req) do |route|
         return route.path.spec.to_s
