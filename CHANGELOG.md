@@ -1,3 +1,6 @@
+# 0.29.1
+* Patch abstract route to work with Grape
+
 # 0.29.0
 * Add abstract route to span name
 * Fix not to raise "NoMethodError" for Rails:Module
