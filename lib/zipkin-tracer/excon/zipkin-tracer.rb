@@ -80,12 +80,14 @@ module ZipkinTracer
     end
 
     def trace!(datum, trace_id)
+      method = datum[:method].to_s
       url_string = Excon::Utils::request_uri(datum)
       url = URI(url_string)
       service_name = service_name(datum, url.host)
 
-      span = Trace.tracer.start_span(trace_id, datum[:method].to_s.downcase)
+      span = Trace.tracer.start_span(trace_id, method.downcase)
       # annotate with method (GET/POST/etc.) and uri path
+      span.record_tag(Trace::BinaryAnnotation::METHOD, method.upcase, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
       span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
       span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint(url, service_name))
       span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)

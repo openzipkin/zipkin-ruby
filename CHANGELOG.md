@@ -1,3 +1,6 @@
+# 0.30.0
+* Add 'http.method' to client annotations
+
 # 0.29.1
 * Patch abstract route to work with Grape
 

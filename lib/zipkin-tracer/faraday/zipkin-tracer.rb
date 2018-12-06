@@ -44,12 +44,14 @@ module ZipkinTracer
     def trace!(env, trace_id)
       response = nil
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
+      method = env[:method].to_s
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
-      Trace.tracer.with_new_span(trace_id, env[:method].to_s.downcase) do |span|
+      Trace.tracer.with_new_span(trace_id, method.downcase) do |span|
         @span = span # So we can record on exceptions
         # annotate with method (GET/POST/etc.) and uri path
+        span.record_tag(Trace::BinaryAnnotation::METHOD, method.upcase, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
         span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
         span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
