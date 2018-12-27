@@ -1,0 +1,10 @@
+---
+:verbose: false
+:concurrency: 10
+
+:timeout: 30
+
+:queues:
+  - critical
+  - default
+  - low

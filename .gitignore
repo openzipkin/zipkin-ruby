@@ -29,3 +29,5 @@
 Gemfile.lock
 
 .byebug_history
+
+example/dump.rdb
