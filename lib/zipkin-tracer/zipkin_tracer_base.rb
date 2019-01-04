@@ -1,5 +1,4 @@
 require 'faraday'
-require 'finagle-thrift/tracer'
 
 module Trace
   # This class is a base for tracers sending information to Zipkin.
@@ -7,7 +6,7 @@ module Trace
   # is done with its request
   # Traces dealing with zipkin should inherit from this class and implement the
   # flush! method which actually sends the information
-  class ZipkinTracerBase < Tracer
+  class ZipkinTracerBase
 
     def initialize(options={})
       @options = options

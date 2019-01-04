@@ -3,7 +3,7 @@ require 'securerandom'
 require 'zipkin-tracer/zipkin_logger_tracer'
 
 describe Trace::ZipkinLoggerTracer do
-  let(:span_id) { Trace.generate_id }
+  let(:span_id) { ZipkinTracer::TraceGenerator.new.generate_id }
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY) }
   let(:name) { 'trusmis' }
   let(:logger) { Logger.new(nil) }

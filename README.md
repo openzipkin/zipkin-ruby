@@ -124,6 +124,8 @@ responds to #value!, it will be called (to block until completed).
 
 Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper based broker discovery being JVM based.
 
+The Kafka transport send data using Thrift. Since version 0.31.0, Thrift is not a dependency, thus the gem 'finagle-thrift' needs to be added to the Gemfile also.
+
 ### Logger
 
 The simplest tracer that does something. It will log all your spans.

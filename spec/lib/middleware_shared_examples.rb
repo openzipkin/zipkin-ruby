@@ -17,13 +17,15 @@ shared_examples 'makes requests without tracing' do
   end
 end
 
-
-
 shared_examples 'makes requests with tracing' do
-  before do
+  around do |example|
     Trace.tracer = Trace::NullTracer.new
-    Trace.push(trace_id)
     ::Trace.sample_rate = 1 # make sure initialized
+    ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+      example.run
+    end
+  end
+  before do
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
   end
@@ -105,7 +107,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
 
     it 'sets the X-B3 request headers with a new spanID' do
       request_headers  = nil
-      ::Trace.push(trace_id) do
+      ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
         request_headers = process('', url)
       end
 
@@ -118,16 +120,15 @@ shared_examples 'make requests' do |expect_to_trace_request|
     end
 
     it 'the original spanID is restored after the calling the middleware' do
-      old_trace_id = Trace.id
-      ::Trace.push(trace_id) do
+      old_trace_id = ZipkinTracer::TraceContainer.current
+      ZipkinTracer::TraceContainer.with_trace_id(old_trace_id) do
         process('', url)
       end
-      expect(::Trace.id).to eq(old_trace_id)
+      expect(ZipkinTracer::TraceContainer.current).to eq(old_trace_id)
     end
   end
 
   context 'without tracing id' do
-    after(:each) { ::Trace.pop }
 
     it 'expects tracing' do
       if expect_to_trace_request
@@ -152,7 +153,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
 
     it 'sets the X-B3 request headers with a new spanID' do
       request_headers = nil
-      ::Trace.push(trace_id) do
+      ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
         request_headers = process('', url)
       end
 
@@ -165,27 +166,23 @@ shared_examples 'make requests' do |expect_to_trace_request|
     end
 
     it 'the original spanID is restored after the calling the middleware' do
-      old_trace_id = Trace.id
-      ::Trace.push(trace_id) do
+      old_trace_id = ZipkinTracer::TraceContainer.current
+      ZipkinTracer::TraceContainer.with_trace_id(old_trace_id) do
         process('', url)
       end
-      expect(::Trace.id).to eq(old_trace_id)
+      expect(ZipkinTracer::TraceContainer.current).to eq(old_trace_id)
     end
 
     it 'does not trace the request' do
       expect(tracer).not_to receive(:set_rpc_name)
       expect(tracer).not_to receive(:record)
-      ::Trace.push(trace_id) do
-        process('', url)
-      end
+      process('', url)
     end
 
     it 'does not create any annotation' do
       expect(Trace::BinaryAnnotation).not_to receive(:new)
       expect(Trace::Annotation).not_to receive(:new)
-      ::Trace.push(trace_id) do
-        process('', url)
-      end
+      process('', url)
     end
   end
 

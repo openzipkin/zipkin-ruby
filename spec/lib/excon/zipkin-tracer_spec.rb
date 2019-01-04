@@ -77,7 +77,7 @@ describe ZipkinTracer::ExconHandler do
     allow(Trace::Span).to receive(:new).and_return(span)
     allow(span).to receive(:close).and_call_original
 
-    ::Trace.push(trace_id) do
+    ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
       connection.request
     end
 
@@ -97,14 +97,18 @@ describe ZipkinTracer::ExconHandler do
     end
 
     context 'request with path and query params' do
-      before do
+      around do |example|
         Trace.tracer = Trace::NullTracer.new
-        Trace.push(trace_id)
         ::Trace.sample_rate = 1 # make sure initialized
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          example.run
+        end
+      end
+
+      before do
         allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
         allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
       end
-
 
       let(:hostname) { 'service.example.com' }
       let(:host_ip) { 0x11223344 }
@@ -131,7 +135,7 @@ describe ZipkinTracer::ExconHandler do
           span = spy('Trace::Span')
           allow(Trace::Span).to receive(:new).and_return(span)
 
-          ::Trace.push(trace_id) do
+          ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
             connection.request
           end
 
@@ -158,7 +162,7 @@ describe ZipkinTracer::ExconHandler do
           span = spy('Trace::Span')
           allow(Trace::Span).to receive(:new).and_return(span)
 
-          ::Trace.push(trace_id) do
+          ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
             connection.request(path: url_path, query: { query: "params" })
           end
 
@@ -169,10 +173,14 @@ describe ZipkinTracer::ExconHandler do
     end
 
     context 'request with custom zipkin service name' do
-      before do
+      around do |example|
         Trace.tracer = Trace::NullTracer.new
-        Trace.push(trace_id)
         ::Trace.sample_rate = 1 # make sure initialized
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          example.run
+        end
+      end
+      before do
         allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
         allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
       end
@@ -210,7 +218,7 @@ describe ZipkinTracer::ExconHandler do
           end
         end.at_least(:once)
 
-        ::Trace.push(trace_id) do
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           connection.request
         end
       end
@@ -230,7 +238,7 @@ describe ZipkinTracer::ExconHandler do
           end
         end.at_least(:once)
 
-        ::Trace.push(trace_id) do
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           middlewares = [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
           Excon.get(url.to_s, middlewares: middlewares)
         end

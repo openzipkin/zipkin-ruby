@@ -1,5 +1,3 @@
-require 'finagle-thrift/trace'
-require 'finagle-thrift/tracer'
 require 'uri'
 require 'excon'
 

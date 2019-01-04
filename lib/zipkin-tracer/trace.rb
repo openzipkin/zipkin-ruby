@@ -1,17 +1,135 @@
-require 'finagle-thrift/trace'
 require 'zipkin-tracer/zipkin_tracer_base'
 # Module with a mix of functions and overwrites from the finagle implementation:
 # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb
 module Trace
+  # These methods and attr_accessor below are used as global configuration of this gem
+  # Most of these are set by the config class and then used around.
+  # TODO: Move this out of the Trace module , take out that extend self and be happier
+  extend self
   attr_accessor :trace_id_128bit
 
-  # We need this to access the tracer from the Faraday middleware.
   def self.tracer
     @tracer
   end
 
-  def sample_rate
+  def self.sample_rate
     @sample_rate
+  end
+
+  def self.tracer=(tracer)
+    @tracer = tracer
+  end
+
+  def self.sample_rate=(sample_rate)
+    if sample_rate > 1 || sample_rate < 0
+      raise ArgumentError.new("sample rate must be [0,1]")
+    end
+    @sample_rate = sample_rate
+  end
+
+  def default_endpoint=(endpoint)
+    @default_endpoint = endpoint
+  end
+
+  def default_endpoint
+    @default_endpoint
+  end
+
+  # These classes all come from Finagle-thrift + some needed modifications (.to_h)
+  # Moved here as a first step, eventually move them out of the Trace module
+
+  class Annotation
+    CLIENT_SEND = "cs"
+    CLIENT_RECV = "cr"
+    SERVER_SEND = "ss"
+    SERVER_RECV = "sr"
+
+    attr_reader :value, :host, :timestamp
+    def initialize(value, host)
+      @timestamp = (Time.now.to_f * 1000 * 1000).to_i # micros
+      @value = value
+      @host = host
+    end
+
+    def to_h
+      {
+        value: @value,
+        timestamp: @timestamp,
+        endpoint: host.to_h
+      }
+    end
+  end
+
+  class BinaryAnnotation
+    SERVER_ADDRESS = 'sa'.freeze
+    URI = 'http.uri'.freeze
+    METHOD = 'http.method'.freeze
+    PATH = 'http.path'.freeze
+    STATUS = 'http.status'.freeze
+    LOCAL_COMPONENT = 'lc'.freeze
+    ERROR = 'error'.freeze
+
+    module Type
+      BOOL = "BOOL"
+      BYTES = "BYTES"
+      I16 = "I16"
+      I32 = "I32"
+      I64 = "I64"
+      DOUBLE = "DOUBLE"
+      STRING = "STRING"
+    end
+    attr_reader :key, :value, :host
+
+    def initialize(key, value, annotation_type, host)
+      @key = key
+      @value = value
+      @annotation_type = annotation_type
+      @host = host
+    end
+
+    def to_h
+      {
+        key: @key,
+        value: @value,
+        endpoint: host.to_h
+      }
+    end
+  end
+
+  class Flags
+    # no flags set
+    EMPTY = 0
+    # the debug flag is used to ensure we pass all the sampling layers and that the trace is stored
+    DEBUG = 1
+  end
+
+  class SpanId
+    HEX_REGEX = /^[a-f0-9]{16,32}$/i
+    MAX_SIGNED_I64 = 9223372036854775807
+    MASK = (2 ** 64) - 1
+
+    def self.from_value(v)
+      if v.is_a?(String) && v =~ HEX_REGEX
+        # drops any bits higher than 64 by selecting right-most 16 characters
+        new(v.length > 16 ? v[v.length - 16, 16].hex : v.hex)
+      elsif v.is_a?(Numeric)
+        new(v)
+      elsif v.is_a?(SpanId)
+        v
+      end
+    end
+
+    def initialize(value)
+      @value = value
+      @i64 = if @value > MAX_SIGNED_I64
+        -1 * ((@value ^ MASK) + 1)
+      else
+        @value
+      end
+    end
+
+    def to_s; "%016x" % @value; end
+    def to_i; @i64; end
   end
 
   # A TraceId contains all the information of a given trace id
@@ -27,8 +145,8 @@ module Trace
       @flags = flags
     end
 
-    def next_id
-      TraceId.new(@trace_id, @span_id, Trace.generate_id, @sampled, @flags)
+    def next_id(next_span_id)
+      TraceId.new(@trace_id, @span_id, next_span_id, @sampled, @flags)
     end
 
     # the debug flag is used to ensure the trace passes ALL samplers
@@ -79,8 +197,8 @@ module Trace
   end
 
   # A span may contain many annotations
-  # This class is defined in finagle-thrift. We are adding extra methods here
   class Span
+    attr_accessor :name, :annotations, :binary_annotations, :debug
     def initialize(name, span_id)
       @name = name
       @span_id = span_id
@@ -136,51 +254,33 @@ module Trace
     end
   end
 
-  # This class is defined in finagle-thrift. We are adding extra methods here
-  class Annotation
-    def to_h
-      {
-        value: @value,
-        timestamp: @timestamp,
-        endpoint: host.to_h
-      }
-    end
-  end
-
-  # This class is defined in finagle-thrift. We are adding extra methods here
-  class BinaryAnnotation
-    SERVER_ADDRESS = 'sa'.freeze
-    URI = 'http.uri'.freeze
-    METHOD = 'http.method'.freeze
-    PATH = 'http.path'.freeze
-    STATUS = 'http.status'.freeze
-    LOCAL_COMPONENT = 'lc'.freeze
-    ERROR = 'error'.freeze
-
-    def to_h
-      {
-        key: @key,
-        value: @value,
-        endpoint: host.to_h
-      }
-    end
-  end
-
-  # This class is defined in finagle-thrift. We are adding extra methods here
-  class Endpoint
+  class Endpoint < Struct.new(:ipv4, :port, :service_name, :ip_format)
+    MAX_I32 = ((2 ** 31) - 1)
+    MASK = (2 ** 32) - 1
     UNKNOWN_URL = 'unknown'.freeze
 
-    # we cannot override the initializer to add an extra parameter so use a factory
-    attr_accessor :ip_format
+    def self.host_to_i32(host)
+      unsigned_i32 = Socket.getaddrinfo(host, nil)[0][3].split(".").map do |i|
+        i.to_i
+      end.inject(0) { |a,e| (a << 8) + e }
+
+      signed_i32 = if unsigned_i32 > MAX_I32
+        -1 * ((unsigned_i32 ^ MASK) + 1)
+      else
+        unsigned_i32
+      end
+
+      signed_i32
+    end
 
     def self.local_endpoint(service_port, service_name, ip_format)
       hostname = Socket.gethostname
-      Endpoint.make_endpoint(hostname, service_port, service_name, ip_format)
+      Endpoint.new(hostname, service_port, service_name, ip_format)
     end
 
     def self.remote_endpoint(url, remote_service_name, ip_format)
       service_name = remote_service_name || url.host.split('.').first || UNKNOWN_URL # default to url-derived service name
-      Endpoint.make_endpoint(url.host, url.port, service_name, ip_format)
+      Endpoint.new(url.host, url.port, service_name, ip_format)
     end
 
     def to_h
@@ -189,13 +289,6 @@ module Trace
         port: port,
         serviceName: service_name
       }
-    end
-
-    private
-    def self.make_endpoint(hostname, service_port, service_name, ip_format)
-      ep = Endpoint.new(hostname, service_port, service_name)
-      ep.ip_format = ip_format
-      ep
     end
 
   end

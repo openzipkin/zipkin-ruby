@@ -21,14 +21,14 @@ Gem::Specification.new do |s|
   s.require_path              = 'lib'
 
   s.add_dependency 'faraday', '~> 0.8'
-  s.add_dependency 'finagle-thrift', '~> 1.4.2'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
   s.add_development_dependency 'excon', '~> 0.53'
-  s.add_development_dependency 'rspec', '~> 3.3'
-  s.add_development_dependency 'rack-test', '~> 0.6'
+  s.add_development_dependency 'rspec', '~> 3.8'
+  s.add_development_dependency 'rack-test', '~> 1.1'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 3.0'
+  s.add_development_dependency 'simplecov', '~> 0.16'
 end

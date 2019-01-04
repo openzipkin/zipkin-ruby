@@ -1,3 +1,6 @@
+# 0.31.0
+* Remove dependency from finagle-thrift
+
 # 0.30.0
 * Add 'http.method' to client annotations
 

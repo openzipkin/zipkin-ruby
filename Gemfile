@@ -14,10 +14,3 @@ platform :jruby do
   gem 'hermann', '~> 0.27.0'
 end
 
-platform :ruby_20 do
-  gem 'rack', '~> 1.0'
-end
-
-platform :ruby_21 do
-  gem 'rack', '~> 1.0'
-end
