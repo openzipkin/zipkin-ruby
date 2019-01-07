@@ -165,8 +165,8 @@ lambda do |span, env, status, response_headers, response_body|
   # string annotation
   span.record_tag('http.referrer', env['HTTP_REFERRER'])
   # integer annotation
-  span.record_tag('http.content_size', [env['CONTENT_SIZE']].pack('N'), Trace::BinaryAnnotation::Type::I32, ep)
-  span.record_tag('http.status', [status.to_i].pack('n'), Trace::BinaryAnnotation::Type::I16, ep)
+  span.record_tag('http.content_size', env['CONTENT_SIZE'].to_s)
+  span.record_tag('http.status', status)
 end
 ```
 

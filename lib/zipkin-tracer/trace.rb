@@ -71,11 +71,6 @@ module Trace
 
     module Type
       BOOL = "BOOL"
-      BYTES = "BYTES"
-      I16 = "I16"
-      I32 = "I32"
-      I64 = "I64"
-      DOUBLE = "DOUBLE"
       STRING = "STRING"
     end
     attr_reader :key, :value, :host
