@@ -1,6 +1,7 @@
 require 'zipkin-tracer/zipkin_tracer_base'
-# Module with a mix of functions and overwrites from the finagle implementation:
+# Most of this code is copied from Finagle
 # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb
+# But moved and improved here.
 module Trace
   # These methods and attr_accessor below are used as global configuration of this gem
   # Most of these are set by the config class and then used around.
@@ -62,7 +63,7 @@ module Trace
 
   class BinaryAnnotation
     SERVER_ADDRESS = 'sa'.freeze
-    URI = 'http.uri'.freeze
+    URI = 'http.url'.freeze
     METHOD = 'http.method'.freeze
     PATH = 'http.path'.freeze
     STATUS = 'http.status'.freeze
@@ -128,7 +129,6 @@ module Trace
   end
 
   # A TraceId contains all the information of a given trace id
-  # This class is defined in finagle-thrift. We are overwriting it here
   class TraceId
     attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags
 
@@ -158,8 +158,6 @@ module Trace
     end
   end
 
-  # This class is the 128-bit version of the SpanId class:
-  # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb#L102
   class TraceId128Bit < SpanId
     HEX_REGEX_16 = /^[a-f0-9]{16}$/i
     HEX_REGEX_32 = /^[a-f0-9]{32}$/i
