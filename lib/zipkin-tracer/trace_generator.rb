@@ -4,7 +4,7 @@ module ZipkinTracer
     # Next id, based on the current information in the container
     def next_trace_id
       if TraceContainer.tracing_information_set?
-        TraceContainer.current.next_id(generate_id)
+        TraceContainer.current.next_id
       else
         generate_trace_id
       end

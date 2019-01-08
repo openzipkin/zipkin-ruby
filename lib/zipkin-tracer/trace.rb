@@ -146,8 +146,8 @@ module Trace
       @flags = flags
     end
 
-    def next_id(next_span_id)
-      TraceId.new(@trace_id, @span_id, next_span_id, @sampled, @flags)
+    def next_id
+      TraceId.new(@trace_id, @span_id, ZipkinTracer::TraceGenerator.new.generate_id, @sampled, @flags)
     end
 
     # the debug flag is used to ensure the trace passes ALL samplers

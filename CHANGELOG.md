@@ -1,3 +1,6 @@
+# 0.32.1
+* Delete added parameter to trace.next_id
+
 # 0.32.0
 * Restore Trace.id for now as software needs to migrate out of it.
 
