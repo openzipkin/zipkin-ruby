@@ -4,7 +4,7 @@ module ZipkinTracer
     # Next id, based on the current information in the container
     def next_trace_id
       if TraceContainer.tracing_information_set?
-        TraceContainer.current.next_id
+        TraceContainer.current.next_id(generate_id)
       else
         generate_trace_id
       end
@@ -23,11 +23,11 @@ module ZipkinTracer
       Trace.trace_id_128bit ? generate_id_128bit(span_id) : span_id
     end
 
-    private
-
     def generate_id
       rand(TRACE_ID_UPPER_BOUND)
     end
+
+    private
 
     def generate_id_128bit(span_id)
       trace_id_low_64bit = '%016x' % span_id

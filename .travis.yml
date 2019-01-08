@@ -2,12 +2,10 @@ language: ruby
 jdk:
   - oraclejdk8
 rvm:
+  - 2.6.0
   - 2.5.3
   - 2.4.5
   - 2.3.8
-  - 2.2.10
-  - 2.1.10
-  - 2.0
   - jruby-9.1.6.0
 deploy:
   provider: rubygems
@@ -17,7 +15,7 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-ruby
-    condition: "$TRAVIS_RUBY_VERSION == 2.5.3"
+    condition: "$TRAVIS_RUBY_VERSION == 2.6.0"
 notifications:
   webhooks:
     urls:

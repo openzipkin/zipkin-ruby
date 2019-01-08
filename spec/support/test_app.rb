@@ -28,10 +28,10 @@ class TestApp
 
   def store_current_trace_info
     current_trace_info = {
-      'trace_id'        => ::Trace.id.trace_id.to_s,
-      'parent_span_id'  => ::Trace.id.parent_id.to_s,
-      'span_id'         => ::Trace.id.span_id.to_s,
-      'sampled'         => ::Trace.id.sampled.to_s
+      'trace_id'        => ZipkinTracer::TraceContainer.current.trace_id.to_s,
+      'parent_span_id'  => ZipkinTracer::TraceContainer.current.parent_id.to_s,
+      'span_id'         => ZipkinTracer::TraceContainer.current.span_id.to_s,
+      'sampled'         => ZipkinTracer::TraceContainer.current.sampled.to_s
     }
     self.class.add_trace(current_trace_info.to_json)
   end

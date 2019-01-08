@@ -2,6 +2,7 @@
 begin
   require 'hermann/producer'
   require 'hermann/discovery/zookeeper'
+  require 'finagle-thrift'
 rescue LoadError => e
 end
 
@@ -26,7 +27,7 @@ module Trace
       end
       super(options)
     end
-    
+
     def flush!
       resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
       resolved_spans.each do |span|

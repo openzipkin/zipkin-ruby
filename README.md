@@ -124,6 +124,8 @@ responds to #value!, it will be called (to block until completed).
 
 Caveat: Hermann is only usable from within Jruby, due to its implementation of zookeeper based broker discovery being JVM based.
 
+The Kafka transport send data using Thrift. Since version 0.31.0, Thrift is not a dependency, thus the gem 'finagle-thrift' needs to be added to the Gemfile also.
+
 ### Logger
 
 The simplest tracer that does something. It will log all your spans.
@@ -163,8 +165,8 @@ lambda do |span, env, status, response_headers, response_body|
   # string annotation
   span.record_tag('http.referrer', env['HTTP_REFERRER'])
   # integer annotation
-  span.record_tag('http.content_size', [env['CONTENT_SIZE']].pack('N'), Trace::BinaryAnnotation::Type::I32, ep)
-  span.record_tag('http.status', [status.to_i].pack('n'), Trace::BinaryAnnotation::Type::I16, ep)
+  span.record_tag('http.content_size', env['CONTENT_SIZE'].to_s)
+  span.record_tag('http.status', status)
 end
 ```
 

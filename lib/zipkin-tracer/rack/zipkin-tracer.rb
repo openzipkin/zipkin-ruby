@@ -1,6 +1,4 @@
 require 'rack'
-require 'finagle-thrift/trace'
-require 'finagle-thrift/tracer'
 require 'zipkin-tracer/config'
 require 'zipkin-tracer/tracer_factory'
 require 'zipkin-tracer/rack/zipkin_env'
