@@ -1,4 +1,5 @@
 require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/trace_container'
 # Most of this code is copied from Finagle
 # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb
 # But moved and improved here.
@@ -8,6 +9,11 @@ module Trace
   # TODO: Move this out of the Trace module , take out that extend self and be happier
   extend self
   attr_accessor :trace_id_128bit
+
+  # This method is deprecated, please use TraceContainer.current
+  def id
+    ZipkinTracer::TraceContainer.current
+  end
 
   def self.tracer
     @tracer

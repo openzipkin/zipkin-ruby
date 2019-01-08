@@ -1,3 +1,6 @@
+# 0.32.0
+* Restore Trace.id for now as software needs to migrate out of it.
+
 # 0.31.0
 * Remove dependency from finagle-thrift
 * Use http.url instead of http.uri
