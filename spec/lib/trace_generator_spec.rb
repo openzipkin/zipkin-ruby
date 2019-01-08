@@ -61,13 +61,14 @@ describe ZipkinTracer::TraceGenerator do
     context 'trace_id_128bit is true' do
       let(:trace_id_128bit) { true }
       let(:generated_id) { subject.generate_id_from_span_id(span_id) }
+      let(:trace_id_low_64bit) { '%016x' % span_id }
 
       before do
         Timecop.freeze(Time.utc(2018, 5, 9, 14, 32))
       end
 
       it 'prepends high 8-bytes(4-bytes epoch seconds and 4-bytes random) to the span_id' do
-        expect(generated_id.to_s(16)).to match(/^5af30660[a-f0-9]{8}#{span_id.to_s(16)}$/)
+        expect(generated_id.to_s(16)).to match(/^5af30660[a-f0-9]{8}#{trace_id_low_64bit}$/)
       end
     end
   end
