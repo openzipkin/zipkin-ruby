@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage                  = 'https://github.com/openzipkin/zipkin-tracer'
   s.summary                   = 'Ruby tracing via Zipkin'
   s.description               = 'Adds tracing instrumentation for ruby applications'
-  s.license                   = 'Apache'
+  s.license                   = 'Apache-2.0'
 
   s.required_rubygems_version = '>= 1.3.5'
   s.required_ruby_version     = '>= 2.0.0'
