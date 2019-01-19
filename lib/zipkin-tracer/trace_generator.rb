@@ -10,6 +10,14 @@ module ZipkinTracer
       end
     end
 
+    def current
+      if TraceContainer.tracing_information_set?
+        TraceContainer.current
+      else
+        generate_trace_id
+      end
+    end
+
     def generate_trace_id
       span_id = generate_id
       Trace::TraceId.new(generate_id_from_span_id(span_id), nil, span_id, should_sample?.to_s, Trace::Flags::EMPTY)

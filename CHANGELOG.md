@@ -1,3 +1,6 @@
+# 0.32.2
+* Recover the old Trace.id logic but based not the new API. Again, for compatibility.
+
 # 0.32.1
 * Delete added parameter to trace.next_id
 

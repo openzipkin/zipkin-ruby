@@ -10,9 +10,11 @@ module Trace
   extend self
   attr_accessor :trace_id_128bit
 
-  # This method is deprecated, please use TraceContainer.current
+  # This method is deprecated, please use TraceGenerator.current
+  # Note that this method will always return a trace, it will
+  # generate a new one if none was available.
   def id
-    ZipkinTracer::TraceContainer.current
+    ZipkinTracer::TraceGenerator.current
   end
 
   def self.tracer
