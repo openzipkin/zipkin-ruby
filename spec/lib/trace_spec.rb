@@ -8,6 +8,11 @@ describe Trace do
     allow(Trace).to receive(:trace_id_128bit).and_return(trace_id_128bit)
   end
 
+  it "id returns the next generator id" do
+    expect_any_instance_of(ZipkinTracer::TraceGenerator).to receive(:current)
+    Trace.id
+  end
+
   describe Trace::TraceId do
     let(:traceid) { '234555b04cf7e099' }
     let(:span_id) { 'c3a555b04cf7e099' }

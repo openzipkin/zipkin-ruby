@@ -14,7 +14,7 @@ module Trace
   # Note that this method will always return a trace, it will
   # generate a new one if none was available.
   def id
-    ZipkinTracer::TraceGenerator.current
+    ZipkinTracer::TraceGenerator.new.current
   end
 
   def self.tracer

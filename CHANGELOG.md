@@ -1,3 +1,6 @@
+# 0.32.3
+* Fix bug using trace generator.
+
 # 0.32.2
 * Recover the old Trace.id logic but based not the new API. Again, for compatibility.
 
