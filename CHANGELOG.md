@@ -1,5 +1,6 @@
 # 0.32.4
 * Update the ':service_port' configuration to be optional.
+* Fix 'sa' annotation encoding.
 
 # 0.32.3
 * Fix bug using trace generator.
