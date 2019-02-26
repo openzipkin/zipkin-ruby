@@ -266,12 +266,25 @@ describe Trace do
     end
 
     describe '#to_h' do
-      it 'returns a hash representation of an endpoint' do
-        expect(dummy_endpoint.to_h).to eq(
-          ipv4: '127.0.0.1',
-          port: 9411,
-          serviceName: 'DummyService'
-        )
+      context 'with service_port' do
+        it 'returns a hash representation of an endpoint' do
+          expect(dummy_endpoint.to_h).to eq(
+            ipv4: '127.0.0.1',
+            port: 9411,
+            serviceName: 'DummyService'
+          )
+        end
+      end
+
+      context 'without service_port' do
+        let(:dummy_endpoint) { Trace::Endpoint.new('127.0.0.1', nil, 'DummyService') }
+
+        it 'returns a hash representation of an endpoint witout "port"' do
+          expect(dummy_endpoint.to_h).to eq(
+            ipv4: '127.0.0.1',
+            serviceName: 'DummyService'
+          )
+        end
       end
     end
   end

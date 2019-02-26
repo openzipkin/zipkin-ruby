@@ -285,11 +285,12 @@ module Trace
     end
 
     def to_h
-      {
+      hsh = {
         ipv4: ipv4,
-        port: port,
         serviceName: service_name
       }
+      hsh[:port] = port if port
+      hsh
     end
 
   end

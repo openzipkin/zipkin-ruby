@@ -16,7 +16,7 @@ module ZipkinTracer
       # The name of the current service
       @service_name      = config[:service_name]
       # The port where the current service is running
-      @service_port      = config[:service_port]      || DEFAULTS[:service_port]
+      @service_port      = config[:service_port]
       # The address of the Zipkin server which we will send traces to
       @json_api_host     = config[:json_api_host]
       # Zookeeper information
@@ -74,7 +74,6 @@ module ZipkinTracer
 
     DEFAULTS = {
       sample_rate: 0.1,
-      service_port: 80,
       sampled_as_boolean: true,
       trace_id_128bit: false
     }

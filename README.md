@@ -18,7 +18,7 @@ use ZipkinTracer::RackHandler, config # config is optional
 where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the following keys:
 
 * `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
-* `:service_port` **REQUIRED** - the port of the service being traced (e.g. 80 or 443)
+* `:service_port` - the port of the service being traced (e.g. 80 or 443)
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer

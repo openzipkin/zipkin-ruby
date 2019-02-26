@@ -21,7 +21,7 @@ module ZipkinTracer
 
     it 'sets defaults' do
       config = Config.new(nil, {})
-      [:sample_rate, :service_port, :sampled_as_boolean, :trace_id_128bit].each do |key|
+      [:sample_rate, :sampled_as_boolean, :trace_id_128bit].each do |key|
         expect(config.send(key)).to_not eq(nil)
       end
     end

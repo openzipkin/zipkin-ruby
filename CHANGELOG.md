@@ -1,3 +1,6 @@
+# 0.32.4
+* Update the ':service_port' configuration to be optional.
+
 # 0.32.3
 * Fix bug using trace generator.
 
