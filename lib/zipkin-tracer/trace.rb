@@ -94,7 +94,8 @@ module Trace
     def to_h
       {
         key: @key,
-        value: @value,
+        # special case address binary annotations which use BOOL type
+        value: @annotation_type == Trace::BinaryAnnotation::Type::BOOL ? true : @value,
         endpoint: host.to_h
       }
     end

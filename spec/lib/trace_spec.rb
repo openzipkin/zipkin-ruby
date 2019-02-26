@@ -231,6 +231,16 @@ describe Trace do
           endpoint: dummy_endpoint.to_h
         )
       end
+
+      it 'returns a hash representation of an address binary annotation' do
+        addr = Trace::BinaryAnnotation.new('sa', 1, 'BOOL', dummy_endpoint)
+
+        expect(addr.to_h).to eq(
+          key: 'sa',
+          value: true,
+          endpoint: dummy_endpoint.to_h
+        )
+      end
     end
   end
 
