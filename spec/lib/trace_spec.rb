@@ -133,6 +133,7 @@ describe Trace do
     let(:key) { 'key' }
     let(:value) { 'value' }
     let(:numeric_value) { 123 }
+    let(:boolean_value) { true }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
@@ -189,6 +190,13 @@ describe Trace do
 
         ann = span_with_parent.binary_annotations[-1]
         expect(ann.value).to eq('123')
+      end
+
+      it 'does not convert the boolean value to string' do
+        span_with_parent.record_tag(key, boolean_value, Trace::BinaryAnnotation::Type::BOOL)
+
+        ann = span_with_parent.binary_annotations[-1]
+        expect(ann.value).to eq(true)
       end
     end
 

@@ -235,7 +235,8 @@ module Trace
     end
 
     def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
-      binary_annotations << Trace::BinaryAnnotation.new(key, value.to_s, type, endpoint)
+      value = value.to_s if type == Trace::BinaryAnnotation::Type::STRING
+      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
     end
 
     def record_local_component(value)
