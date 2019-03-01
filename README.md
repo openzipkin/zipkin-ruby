@@ -18,7 +18,6 @@ use ZipkinTracer::RackHandler, config # config is optional
 where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the following keys:
 
 * `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
-* `:service_port` - the port of the service being traced (e.g. 80 or 443)
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
@@ -64,7 +63,6 @@ Sidekiq tracing can be turned on by adding ZipkinTracer::Sidekiq::Middleware to 
 ```ruby
 zipkin_tracer_config = {
   service_name: 'service',
-  service_port: 3000,
   json_api_host: 'http://zipkin.io',
   traceable_workers: [:MyWorker, :MyWorker2],
   sample_rate: 0.5

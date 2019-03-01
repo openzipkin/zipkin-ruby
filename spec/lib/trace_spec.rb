@@ -249,8 +249,8 @@ describe Trace do
     describe '.local_endpoint' do
       it 'auto detects the hostname' do
         allow(Socket).to receive(:gethostname).and_return('z1.example.com')
-        expect(Trace::Endpoint).to receive(:new).with('z1.example.com', 80, service_name, :string)
-        Trace::Endpoint.local_endpoint(80, service_name, :string)
+        expect(Trace::Endpoint).to receive(:new).with('z1.example.com', nil, service_name, :string)
+        Trace::Endpoint.local_endpoint(service_name, :string)
       end
     end
 

@@ -87,7 +87,7 @@ describe ZipkinTracer::TracerFactory do
       end
 
       it 'sets the trace endpoint service name to the default configuration file value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with(nil, 'zipkin-tester', :string) { 'endpoint' }
+        expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester', :string) { 'endpoint' }
         expect(Trace).to receive(:default_endpoint=).with('endpoint')
         described_class.new.tracer(config)
       end
@@ -95,7 +95,7 @@ describe ZipkinTracer::TracerFactory do
       context 'json adapter' do
         let(:config) { configuration(service_name: 'zipkin-tester', json_api_host: 'host') }
         it 'calls with string ip format' do
-          expect(Trace::Endpoint).to receive(:local_endpoint).with(nil, 'zipkin-tester', :string) { 'endpoint' }
+          expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester', :string) { 'endpoint' }
           expect(Trace).to receive(:default_endpoint=).with('endpoint')
           described_class.new.tracer(config)
         end
@@ -109,7 +109,7 @@ describe ZipkinTracer::TracerFactory do
       end
 
       it 'sets the trace endpoint service name to the environment variable value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with(nil, 'zipkin-env-var-tester', :string) { 'endpoint' }
+        expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-env-var-tester', :string) { 'endpoint' }
         expect(Trace).to receive(:default_endpoint=).with('endpoint')
         described_class.new.tracer(config)
       end

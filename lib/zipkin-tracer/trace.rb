@@ -275,9 +275,9 @@ module Trace
       signed_i32
     end
 
-    def self.local_endpoint(service_port, service_name, ip_format)
+    def self.local_endpoint(service_name, ip_format)
       hostname = Socket.gethostname
-      Endpoint.new(hostname, service_port, service_name, ip_format)
+      Endpoint.new(hostname, nil, service_name, ip_format)
     end
 
     def self.remote_endpoint(url, remote_service_name, ip_format)

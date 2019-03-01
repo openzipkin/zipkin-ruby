@@ -28,7 +28,6 @@ module ZipkinTracer
       # TODO: move this to the TracerBase and kill scribe tracer
       ip_format = [:kafka, :kafka_producer].include?(config.adapter) ? :i32 : :string
       Trace.default_endpoint = Trace::Endpoint.local_endpoint(
-        config.service_port,
         service_name(config.service_name),
         ip_format
       )
