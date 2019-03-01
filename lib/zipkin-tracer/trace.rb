@@ -235,7 +235,8 @@ module Trace
     end
 
     def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
-      binary_annotations << Trace::BinaryAnnotation.new(key, value.to_s, type, endpoint)
+      value = value.to_s if type == Trace::BinaryAnnotation::Type::STRING
+      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
     end
 
     def record_local_component(value)
@@ -274,9 +275,9 @@ module Trace
       signed_i32
     end
 
-    def self.local_endpoint(service_port, service_name, ip_format)
+    def self.local_endpoint(service_name, ip_format)
       hostname = Socket.gethostname
-      Endpoint.new(hostname, service_port, service_name, ip_format)
+      Endpoint.new(hostname, nil, service_name, ip_format)
     end
 
     def self.remote_endpoint(url, remote_service_name, ip_format)
@@ -285,11 +286,12 @@ module Trace
     end
 
     def to_h
-      {
+      hsh = {
         ipv4: ipv4,
-        port: port,
         serviceName: service_name
       }
+      hsh[:port] = port if port
+      hsh
     end
 
   end

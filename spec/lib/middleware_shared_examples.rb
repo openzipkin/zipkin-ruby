@@ -67,7 +67,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
 
     expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
       expect(key).to eq('sa')
-      expect(value).to eq('1')
+      expect(value).to eq(true)
       expect(type).to eq('BOOL')
       expect_host(host, hostname, service_name)
     end

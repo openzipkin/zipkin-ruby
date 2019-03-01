@@ -5,7 +5,7 @@ module ZipkinTracer
     before do
       allow(Application).to receive(:logger).and_return(Logger.new(nil))
     end
-    [:service_name, :service_port, :json_api_host,
+    [:service_name, :json_api_host,
       :zookeeper, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
       it "can set and read configuration values for #{method}" do
@@ -21,7 +21,7 @@ module ZipkinTracer
 
     it 'sets defaults' do
       config = Config.new(nil, {})
-      [:sample_rate, :service_port, :sampled_as_boolean, :trace_id_128bit].each do |key|
+      [:sample_rate, :sampled_as_boolean, :trace_id_128bit].each do |key|
         expect(config.send(key)).to_not eq(nil)
       end
     end

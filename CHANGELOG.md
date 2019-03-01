@@ -1,3 +1,7 @@
+# 0.32.4
+* Remove the ':service_port' configuration.
+* Fix 'sa' annotation encoding.
+
 # 0.32.3
 * Fix bug using trace generator.
 

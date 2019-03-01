@@ -5,7 +5,7 @@ require 'zipkin-tracer/rack/zipkin-tracer'
 module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
   class Config
-    attr_reader :service_name, :service_port, :json_api_host,
+    attr_reader :service_name, :json_api_host,
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
       :sampled_as_boolean, :record_on_server_receive,
@@ -15,8 +15,6 @@ module ZipkinTracer
       config = config_hash || Application.config(app)
       # The name of the current service
       @service_name      = config[:service_name]
-      # The port where the current service is running
-      @service_port      = config[:service_port]      || DEFAULTS[:service_port]
       # The address of the Zipkin server which we will send traces to
       @json_api_host     = config[:json_api_host]
       # Zookeeper information
@@ -74,7 +72,6 @@ module ZipkinTracer
 
     DEFAULTS = {
       sample_rate: 0.1,
-      service_port: 80,
       sampled_as_boolean: true,
       trace_id_128bit: false
     }

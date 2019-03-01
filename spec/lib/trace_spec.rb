@@ -133,6 +133,7 @@ describe Trace do
     let(:key) { 'key' }
     let(:value) { 'value' }
     let(:numeric_value) { 123 }
+    let(:boolean_value) { true }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
@@ -190,6 +191,13 @@ describe Trace do
         ann = span_with_parent.binary_annotations[-1]
         expect(ann.value).to eq('123')
       end
+
+      it 'does not convert the boolean value to string' do
+        span_with_parent.record_tag(key, boolean_value, Trace::BinaryAnnotation::Type::BOOL)
+
+        ann = span_with_parent.binary_annotations[-1]
+        expect(ann.value).to eq(true)
+      end
     end
 
     describe '#record_local_component' do
@@ -241,8 +249,8 @@ describe Trace do
     describe '.local_endpoint' do
       it 'auto detects the hostname' do
         allow(Socket).to receive(:gethostname).and_return('z1.example.com')
-        expect(Trace::Endpoint).to receive(:new).with('z1.example.com', 80, service_name, :string)
-        Trace::Endpoint.local_endpoint(80, service_name, :string)
+        expect(Trace::Endpoint).to receive(:new).with('z1.example.com', nil, service_name, :string)
+        Trace::Endpoint.local_endpoint(service_name, :string)
       end
     end
 
@@ -266,12 +274,25 @@ describe Trace do
     end
 
     describe '#to_h' do
-      it 'returns a hash representation of an endpoint' do
-        expect(dummy_endpoint.to_h).to eq(
-          ipv4: '127.0.0.1',
-          port: 9411,
-          serviceName: 'DummyService'
-        )
+      context 'with service_port' do
+        it 'returns a hash representation of an endpoint' do
+          expect(dummy_endpoint.to_h).to eq(
+            ipv4: '127.0.0.1',
+            port: 9411,
+            serviceName: 'DummyService'
+          )
+        end
+      end
+
+      context 'without service_port' do
+        let(:dummy_endpoint) { Trace::Endpoint.new('127.0.0.1', nil, 'DummyService') }
+
+        it 'returns a hash representation of an endpoint witout "port"' do
+          expect(dummy_endpoint.to_h).to eq(
+            ipv4: '127.0.0.1',
+            serviceName: 'DummyService'
+          )
+        end
       end
     end
   end

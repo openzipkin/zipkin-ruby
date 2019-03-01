@@ -12,7 +12,6 @@ describe ZipkinTracer::Sidekiq::Middleware do
       let(:config) do
         {
           service_name: 'test_service',
-          service_port: 3000,
           traceable_workers: [ :String ]
         }
       end
