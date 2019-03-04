@@ -12,7 +12,7 @@ module ZipkinTracer
     REQUEST_METHOD = Rack::REQUEST_METHOD rescue 'REQUEST_METHOD'.freeze
 
     DEFAULT_SERVER_RECV_TAGS = {
-     Trace::BinaryAnnotation::PATH => PATH_INFO
+     Trace::Span::Tag::PATH => PATH_INFO
     }.freeze
 
     def initialize(app, config = nil)
@@ -55,12 +55,11 @@ module ZipkinTracer
 
     def trace!(span, zipkin_env, &block)
       trace_request_information(span, zipkin_env)
-      span.record(Trace::Annotation::SERVER_RECV)
+      span.kind = Trace::Span::Kind::SERVER
       span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
     ensure
       annotate_plugin(span, zipkin_env.env, status, headers, body)
-      span.record(Trace::Annotation::SERVER_SEND)
     end
 
     def trace_request_information(span, zipkin_env)

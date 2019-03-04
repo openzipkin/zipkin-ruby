@@ -1,17 +1,17 @@
 require 'resolv'
 
 module ZipkinTracer
-  # Resolves hostnames in the endpoints of the annotations.
+  # Resolves hostnames in the endpoints of the spans.
   # Resolving hostnames is a very expensive operation. We want to store them raw in the main thread
   # and resolve them in a different thread where we do not affect execution times.
   class HostnameResolver
     def spans_with_ips(spans)
       host_to_ip = hosts_to_ipv4(spans)
 
-      each_annotation(spans) do |annotation|
-        hostname = annotation.host.ipv4
+      each_endpoint(spans) do |endpoint|
+        hostname = endpoint.ipv4
         unless resolved_ip_address?(hostname.to_s)
-          annotation.host.ipv4 = host_to_ip[hostname]
+          endpoint.ipv4 = host_to_ip[hostname]
         end
       end
     end
@@ -28,24 +28,19 @@ module ZipkinTracer
         ip_string.to_i.to_s == ip_string
     end
 
-    def each_annotation(spans, &block)
+    def each_endpoint(spans, &block)
       spans.each do |span|
-        span.annotations.each do |annotation|
-          yield annotation
-        end
-        span.binary_annotations.each do |annotation|
-          yield annotation
+        [span.local_endpoint, span.remote_endpoint].each do |endpoint|
+          yield endpoint if endpoint
         end
       end
     end
 
-    # Annotations come in pairs like CS/CR, SS/SR.
-    # Each annnotation has a hostname so we, for sure, will have the same host multiple times.
     # Using this to resolve only once per host
     def hosts_to_ipv4(spans)
       hosts = []
-      each_annotation(spans) do |annotation|
-        hosts.push(annotation.host)
+      each_endpoint(spans) do |endpoint|
+        hosts.push(endpoint)
       end
       hosts.uniq!
       resolve(hosts)
@@ -61,7 +56,7 @@ module ZipkinTracer
     end
 
     def host_to_ip(hostname, ip_format)
-      ipv4 = begin
+      begin
         ip_format == :string ? Socket.getaddrinfo(hostname, nil, :INET).first[IP_FIELD] : Trace::Endpoint.host_to_i32(hostname)
       rescue
         ip_format == :string ? LOCALHOST : LOCALHOST_I32

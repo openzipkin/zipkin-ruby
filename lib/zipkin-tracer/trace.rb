@@ -48,54 +48,17 @@ module Trace
   # Moved here as a first step, eventually move them out of the Trace module
 
   class Annotation
-    CLIENT_SEND = "cs"
-    CLIENT_RECV = "cr"
-    SERVER_SEND = "ss"
-    SERVER_RECV = "sr"
-
-    attr_reader :value, :host, :timestamp
-    def initialize(value, host)
+    attr_reader :value, :timestamp
+    
+    def initialize(value)
       @timestamp = (Time.now.to_f * 1000 * 1000).to_i # micros
       @value = value
-      @host = host
     end
 
     def to_h
       {
         value: @value,
-        timestamp: @timestamp,
-        endpoint: host.to_h
-      }
-    end
-  end
-
-  class BinaryAnnotation
-    SERVER_ADDRESS = 'sa'.freeze
-    URI = 'http.url'.freeze
-    METHOD = 'http.method'.freeze
-    PATH = 'http.path'.freeze
-    STATUS = 'http.status'.freeze
-    LOCAL_COMPONENT = 'lc'.freeze
-    ERROR = 'error'.freeze
-
-    module Type
-      BOOL = "BOOL"
-      STRING = "STRING"
-    end
-    attr_reader :key, :value, :host
-
-    def initialize(key, value, annotation_type, host)
-      @key = key
-      @value = value
-      @annotation_type = annotation_type
-      @host = host
-    end
-
-    def to_h
-      {
-        key: @key,
-        value: @value,
-        endpoint: host.to_h
+        timestamp: @timestamp
       }
     end
   end
@@ -199,12 +162,29 @@ module Trace
 
   # A span may contain many annotations
   class Span
-    attr_accessor :name, :annotations, :binary_annotations, :debug
+    module Tag
+      METHOD = "http.method".freeze
+      PATH = "http.path".freeze
+      STATUS = "http.status".freeze
+      LOCAL_COMPONENT = "lc".freeze
+      ERROR = "error".freeze
+    end
+
+    module Kind
+      CLIENT = "CLIENT".freeze
+      SERVER = "SERVER".freeze
+    end
+
+    attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
+
     def initialize(name, span_id)
       @name = name
       @span_id = span_id
+      @kind = nil
+      @local_endpoint = nil
+      @remote_endpoint = nil
       @annotations = []
-      @binary_annotations = []
+      @tags = {}
       @debug = span_id.debug?
       @timestamp = to_microseconds(Time.now)
       @duration = UNKNOWN_DURATION
@@ -219,28 +199,30 @@ module Trace
         name: @name,
         traceId: @span_id.trace_id.to_s,
         id: @span_id.span_id.to_s,
-        annotations: @annotations.map(&:to_h),
-        binaryAnnotations: @binary_annotations.map(&:to_h),
+        localEndpoint: @local_endpoint.to_h,
         timestamp: @timestamp,
         duration: @duration,
         debug: @debug
       }
       h[:parentId] = @span_id.parent_id.to_s unless @span_id.parent_id.nil?
+      h[:kind] = @kind unless @kind.nil?
+      h[:remoteEndpoint] = @remote_endpoint.to_h unless @remote_endpoint.nil?
+      h[:annotations] = @annotations.map(&:to_h) unless @annotations.empty?
+      h[:tags] = @tags unless @tags.empty?
       h
     end
 
     # We record information into spans, then we send these spans to zipkin
-    def record(value, endpoint = Trace.default_endpoint)
-      annotations << Trace::Annotation.new(value.to_s, endpoint)
+    def record(value)
+      annotations << Trace::Annotation.new(value.to_s)
     end
 
-    def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
-      value = value.to_s if type == Trace::BinaryAnnotation::Type::STRING
-      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
+    def record_tag(key, value)
+      @tags[key] = value
     end
 
     def record_local_component(value)
-      record_tag(BinaryAnnotation::LOCAL_COMPONENT, value)
+      record_tag(Tag::LOCAL_COMPONENT, value)
     end
 
     def has_parent_span?
@@ -293,6 +275,5 @@ module Trace
       hsh[:port] = port if port
       hsh
     end
-
   end
 end

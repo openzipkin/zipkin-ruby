@@ -84,7 +84,7 @@ It can be used to measure the performance of process, record value of variables,
 
 When `local_component_span` method is called, it creates a new span and a local component, and provides the following methods to create annotations.
 * record(key) - annotation
-* record_tag(key, value) - binary annotation
+* record_tag(key, value) - tag
 
 Example:
 ```ruby
@@ -105,7 +105,7 @@ Only one of the following tracers can be used at a given time.
 
 Sends traces as JSON over HTTP. This is the preferred tracer to use as the openzipkin project moves away from Thrift.
 
-You need to specify the `:json_api_host` parameter to wherever your zipkin collector is running. It will POST traces to the `/api/v1/spans` path.
+You need to specify the `:json_api_host` parameter to wherever your zipkin collector is running. It will POST traces to the `/api/v2/spans` path.
 
 
 ### Kafka

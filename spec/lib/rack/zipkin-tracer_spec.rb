@@ -46,8 +46,7 @@ describe ZipkinTracer::RackHandler do
       expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
       expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
-      expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
-      expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
+      expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
 
       status, headers, body = subject.call(mock_env)
       expect(status).to eq(app_status)
@@ -98,8 +97,7 @@ describe ZipkinTracer::RackHandler do
         expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
         expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get /thing/:id').and_call_original
         expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/thing/123')
-        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
-        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
+        expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
 
         status, headers, body = subject.call(mock_env_route)
         expect(status).to eq(app_status)
@@ -187,7 +185,7 @@ describe ZipkinTracer::RackHandler do
       expect(tracer).to receive(:with_new_span).and_call_original.ordered
 
       expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(3).times
-      expect_any_instance_of(Trace::Span).to receive(:record).exactly(2).times
+      expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
       status, _, _ = subject.call(mock_env)
 
       # return expected status
@@ -218,10 +216,9 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, whitelist_plugin: lambda { |env| true }, sample_rate: 0) }
 
       it 'samples the request' do
+        expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
         expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
-        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_RECV)
         expect_any_instance_of(Trace::Span).to receive(:record).with('whitelisted')
-        expect_any_instance_of(Trace::Span).to receive(:record).with(Trace::Annotation::SERVER_SEND)
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end

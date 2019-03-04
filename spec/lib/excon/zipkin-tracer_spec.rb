@@ -135,12 +135,11 @@ describe ZipkinTracer::ExconHandler do
           span = spy('Trace::Span')
           allow(Trace::Span).to receive(:new).and_return(span)
 
+          expect(span).to receive(:record_tag).with("http.path", "/some/path/here")
+
           ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
             connection.request
           end
-
-          expect(span).to have_received(:record_tag)
-            .with("http.path", "/some/path/here", "STRING", anything)
         end
       end
 
@@ -162,12 +161,11 @@ describe ZipkinTracer::ExconHandler do
           span = spy('Trace::Span')
           allow(Trace::Span).to receive(:new).and_return(span)
 
+          expect(span).to receive(:record_tag).with("http.path", "/some/path/here")
+
           ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
             connection.request(path: url_path, query: { query: "params" })
           end
-
-          expect(span).to have_received(:record_tag)
-            .with("http.path", "/some/path/here", "STRING", anything)
         end
       end
     end
@@ -210,13 +208,9 @@ describe ZipkinTracer::ExconHandler do
         span = spy('Trace::Span')
         allow(Trace::Span).to receive(:new).and_return(span)
 
-        expect(span).to receive(:record_tag) do |name, _, _, host|
-          if name == Trace::BinaryAnnotation::SERVER_ADDRESS
-            expect(host.service_name).to eql("fake-service-name")
-          else
-            true
-          end
-        end.at_least(:once)
+        expect(span).to receive(:remote_endpoint=) do |host|
+          expect(host.service_name).to eql("fake-service-name")
+        end.once
 
         ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           connection.request
@@ -230,13 +224,7 @@ describe ZipkinTracer::ExconHandler do
         span = spy('Trace::Span')
         allow(Trace::Span).to receive(:new).and_return(span)
 
-        expect(span).to receive(:record_tag) do |name, value, _, _|
-          if name == Trace::BinaryAnnotation::STATUS
-            expect(value).to eql("200")
-          else
-            true
-          end
-        end.at_least(:once)
+        expect(span).to receive(:record_tag).with(Trace::Span::Tag::STATUS, "200").once
 
         ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           middlewares = [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]

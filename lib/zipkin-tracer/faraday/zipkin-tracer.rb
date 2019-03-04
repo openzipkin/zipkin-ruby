@@ -44,42 +44,37 @@ module ZipkinTracer
       # handle either a URI object (passed by Faraday v0.8.x in testing), or something string-izable
       method = env[:method].to_s
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
-      local_endpoint = Trace.default_endpoint # The rack middleware set this up for us.
-      remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, local_endpoint.ip_format) # The endpoint we are calling.
+      remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name, Trace.default_endpoint.ip_format) # The endpoint we are calling.
       Trace.tracer.with_new_span(trace_id, method.downcase) do |span|
         @span = span # So we can record on exceptions
         # annotate with method (GET/POST/etc.) and uri path
-        span.record_tag(Trace::BinaryAnnotation::METHOD, method.upcase, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::PATH, url.path, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-        span.record_tag(Trace::BinaryAnnotation::SERVER_ADDRESS, SERVER_ADDRESS_SPECIAL_VALUE, Trace::BinaryAnnotation::Type::BOOL, remote_endpoint)
-        span.record(Trace::Annotation::CLIENT_SEND, local_endpoint)
+        span.kind = Trace::Span::Kind::CLIENT
+        span.remote_endpoint = remote_endpoint
+        span.record_tag(Trace::Span::Tag::METHOD, method.upcase)
+        span.record_tag(Trace::Span::Tag::PATH, url.path)
         response = @app.call(env).on_complete do |renv|
-          record_response_tags(span, renv[:status].to_s, local_endpoint)
+          record_response_tags(span, renv[:status].to_s)
         end
-        span.record(Trace::Annotation::CLIENT_RECV, local_endpoint)
       end
       response
     rescue Net::ReadTimeout
-      record_error(@span, 'Request timed out.', local_endpoint)
+      record_error(@span, 'Request timed out.')
       raise
     rescue Faraday::ConnectionFailed
-      record_error(@span, 'Request connection failed.', local_endpoint)
+      record_error(@span, 'Request connection failed.')
       raise
     rescue Faraday::ClientError
-      record_error(@span, 'Generic Faraday client error.', local_endpoint)
+      record_error(@span, 'Generic Faraday client error.')
       raise
     end
 
-    def record_error(span, msg, local_endpoint)
-      span.record_tag(Trace::BinaryAnnotation::ERROR, msg, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
+    def record_error(span, msg)
+      span.record_tag(Trace::Span::Tag::ERROR, msg)
     end
 
-    def record_response_tags(span, status, local_endpoint)
-      span.record_tag(Trace::BinaryAnnotation::STATUS, status, Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-      if STATUS_ERROR_REGEXP.match(status)
-        span.record_tag(Trace::BinaryAnnotation::ERROR, status,
-          Trace::BinaryAnnotation::Type::STRING, local_endpoint)
-      end
+    def record_response_tags(span, status)
+      span.record_tag(Trace::Span::Tag::STATUS, status)
+      span.record_tag(Trace::Span::Tag::ERROR, status) if STATUS_ERROR_REGEXP.match(status)
     end
 
   end

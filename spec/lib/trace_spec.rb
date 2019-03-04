@@ -118,10 +118,6 @@ describe Trace do
   describe Trace::Span do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }
-    let(:annotations) { [
-      Trace::Annotation.new(Trace::Annotation::SERVER_RECV, dummy_endpoint).to_h,
-      Trace::Annotation.new(Trace::Annotation::SERVER_SEND, dummy_endpoint).to_h
-    ] }
     let(:span_without_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY))
     end
@@ -133,27 +129,32 @@ describe Trace do
     let(:key) { 'key' }
     let(:value) { 'value' }
     let(:numeric_value) { 123 }
-    let(:boolean_value) { true }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
       [span_with_parent, span_without_parent].each do |span|
-        annotations.each { |a| span.annotations << a }
+        span.kind = Trace::Span::Kind::CLIENT
+        span.local_endpoint = dummy_endpoint
+        span.remote_endpoint = dummy_endpoint
+        span.record(value)
+        span.record_tag(key, value)
       end
-      allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name'))
     end
 
     describe '#to_h' do
       it 'returns a hash representation of a span' do
         expected_hash = {
           name: 'get',
+          kind: 'CLIENT',
           traceId: span_id,
+          localEndpoint: dummy_endpoint.to_h,
+          remoteEndpoint: dummy_endpoint.to_h,
           id: span_id,
-          annotations: annotations,
-          binaryAnnotations: [],
           debug: false,
           timestamp: timestamp,
-          duration: duration
+          duration: duration,
+          annotations: [{ timestamp: timestamp, value: "value" }],
+          tags: { "key" => "value" }
         }
         expect(span_without_parent.to_h).to eq(expected_hash)
         expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
@@ -177,66 +178,42 @@ describe Trace do
     end
 
     describe '#record_tag' do
-      it 'records a binary annotation' do
+      it 'records a tag' do
         span_with_parent.record_tag(key, value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.key).to eq('key')
-        expect(ann.value).to eq('value')
+        tags = span_with_parent.tags
+        expect(tags[key]).to eq('value')
       end
 
-      it 'converts the value to string' do
+      it 'allows a numeric value' do
         span_with_parent.record_tag(key, numeric_value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.value).to eq('123')
-      end
-
-      it 'does not convert the boolean value to string' do
-        span_with_parent.record_tag(key, boolean_value, Trace::BinaryAnnotation::Type::BOOL)
-
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.value).to eq(true)
+        tags = span_with_parent.tags
+        expect(tags[key]).to eq(123)
       end
     end
 
     describe '#record_local_component' do
-      it 'records a binary annotation ' do
+      it 'records a local_component tag' do
         span_with_parent.record_local_component(value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.key).to eq('lc')
-        expect(ann.value).to eq('value')
+        tags = span_with_parent.tags
+        expect(tags['lc']).to eq('value')
       end
     end
 
   end
 
   describe Trace::Annotation do
-    let(:annotation) { Trace::Annotation.new(Trace::Annotation::SERVER_RECV, dummy_endpoint) }
+    let(:annotation) { Trace::Annotation.new(Trace::Span::Tag::ERROR) }
 
     describe '#to_h' do
       before { Timecop.freeze(Time.utc(2016, 1, 16, 23, 45)) }
 
       it 'returns a hash representation of an annotation' do
         expect(annotation.to_h).to eq(
-          value: 'sr',
-          timestamp: 1452987900000000,
-          endpoint: dummy_endpoint.to_h
-        )
-      end
-    end
-  end
-
-  describe Trace::BinaryAnnotation do
-    let(:annotation) { Trace::BinaryAnnotation.new('http.path', '/', 'STRING', dummy_endpoint) }
-
-    describe '#to_h' do
-      it 'returns a hash representation of a binary annotation' do
-        expect(annotation.to_h).to eq(
-          key: 'http.path',
-          value: '/',
-          endpoint: dummy_endpoint.to_h
+          value: 'error',
+          timestamp: 1452987900000000
         )
       end
     end

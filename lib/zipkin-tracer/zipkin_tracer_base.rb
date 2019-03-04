@@ -22,12 +22,10 @@ module Trace
 
     def end_span(span)
       span.close
-      # If in a thread not handling incoming http requests, it will not have Annotation::SERVER_SEND, so the span
+      # If in a thread not handling incoming http requests, it will not have Kind::SERVER, so the span
       # will never be flushed and will cause memory leak.
-      # It will have CLIENT_SEND and CLIENT_RECV if the thread sends out http requests, so use CLIENT_RECV as the sign
-      # to flush the span.
       # If no parent span, then current span needs to flush when it ends.
-      if !span.has_parent_span? || span.annotations.any? { |ann| ann.value == Annotation::SERVER_SEND }
+      if !span.has_parent_span? || span.kind == Trace::Span::Kind::SERVER
         flush!
         reset
       end
@@ -35,6 +33,7 @@ module Trace
 
     def start_span(trace_id, name)
       span = Span.new(name, trace_id)
+      span.local_endpoint = Trace.default_endpoint
       store_span(trace_id, span)
       span
     end
