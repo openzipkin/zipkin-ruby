@@ -49,7 +49,7 @@ module Trace
 
   class Annotation
     attr_reader :value, :timestamp
-    
+
     def initialize(value)
       @timestamp = (Time.now.to_f * 1000 * 1000).to_i # micros
       @value = value
@@ -101,14 +101,15 @@ module Trace
 
   # A TraceId contains all the information of a given trace id
   class TraceId
-    attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags
+    attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags, :shared
 
-    def initialize(trace_id, parent_id, span_id, sampled, flags)
+    def initialize(trace_id, parent_id, span_id, sampled, flags, shared = false)
       @trace_id = Trace.trace_id_128bit ? TraceId128Bit.from_value(trace_id) : SpanId.from_value(trace_id)
       @parent_id = parent_id.nil? ? nil : SpanId.from_value(parent_id)
       @span_id = SpanId.from_value(span_id)
       @sampled = sampled
       @flags = flags
+      @shared = shared
     end
 
     def next_id
@@ -125,7 +126,8 @@ module Trace
     end
 
     def to_s
-      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}, sampled = #{@sampled.to_s}, flags = #{@flags.to_s})"
+      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}," \
+      " sampled = #{@sampled.to_s}, flags = #{@flags.to_s}, shared = #{@shared.to_s})"
     end
   end
 
@@ -209,6 +211,7 @@ module Trace
       h[:remoteEndpoint] = @remote_endpoint.to_h unless @remote_endpoint.nil?
       h[:annotations] = @annotations.map(&:to_h) unless @annotations.empty?
       h[:tags] = @tags unless @tags.empty?
+      h[:shared] = true if @span_id.shared
       h
     end
 

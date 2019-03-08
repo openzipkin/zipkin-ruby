@@ -19,7 +19,8 @@ describe Trace do
     let(:parent_id) { 'f0e71086411b1445' }
     let(:sampled) { true }
     let(:flags) { Trace::Flags::EMPTY }
-    let(:trace_id) { Trace::TraceId.new(traceid, parent_id, span_id, sampled, flags) }
+    let(:shared) { false }
+    let(:trace_id) { Trace::TraceId.new(traceid, parent_id, span_id, sampled, flags, shared) }
 
     it 'is not a debug trace' do
       expect(trace_id.debug?).to eq(false)
@@ -60,6 +61,13 @@ describe Trace do
       end
     end
 
+    context 'shared value is true' do
+      let(:shared) { true }
+      it 'is shared' do
+        expect(trace_id.shared).to eq(true)
+      end
+    end
+
     context 'trace_id_128bit is false' do
       let(:traceid) { '5af30660491a5a27234555b04cf7e099' }
 
@@ -74,6 +82,15 @@ describe Trace do
 
       it 'returns a 128-bit trace_id ' do
         expect(trace_id.trace_id.to_s).to eq(traceid)
+      end
+    end
+
+    describe '#to_s' do
+      it 'returns all information' do
+        expect(trace_id.to_s).to eq(
+          'TraceId(trace_id = 234555b04cf7e099, parent_id = f0e71086411b1445, span_id = c3a555b04cf7e099,' \
+          ' sampled = true, flags = 0, shared = false)'
+        )
       end
     end
   end
@@ -118,17 +135,17 @@ describe Trace do
   describe Trace::Span do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }
+    let(:timestamp) { 1452987900000000 }
+    let(:duration) { 0 }
+    let(:key) { 'key' }
+    let(:value) { 'value' }
+    let(:numeric_value) { 123 }
     let(:span_without_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY))
     end
     let(:span_with_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, parent_id, span_id, true, Trace::Flags::EMPTY))
     end
-    let(:timestamp) { 1452987900000000 }
-    let(:duration) { 0 }
-    let(:key) { 'key' }
-    let(:value) { 'value' }
-    let(:numeric_value) { 123 }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
@@ -142,22 +159,55 @@ describe Trace do
     end
 
     describe '#to_h' do
-      it 'returns a hash representation of a span' do
-        expected_hash = {
-          name: 'get',
-          kind: 'CLIENT',
-          traceId: span_id,
-          localEndpoint: dummy_endpoint.to_h,
-          remoteEndpoint: dummy_endpoint.to_h,
-          id: span_id,
-          debug: false,
-          timestamp: timestamp,
-          duration: duration,
-          annotations: [{ timestamp: timestamp, value: "value" }],
-          tags: { "key" => "value" }
-        }
-        expect(span_without_parent.to_h).to eq(expected_hash)
-        expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
+      context 'client span' do
+        let(:expected_hash) do
+          {
+            name: 'get',
+            kind: 'CLIENT',
+            traceId: span_id,
+            localEndpoint: dummy_endpoint.to_h,
+            remoteEndpoint: dummy_endpoint.to_h,
+            id: span_id,
+            debug: false,
+            timestamp: timestamp,
+            duration: duration,
+            annotations: [{ timestamp: timestamp, value: "value" }],
+            tags: { "key" => "value" }
+          }
+        end
+
+        it 'returns a hash representation of a span' do
+          expect(span_without_parent.to_h).to eq(expected_hash)
+          expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
+        end
+      end
+
+      context 'server span' do
+        let(:shared_server_span) do
+          Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY, true))
+        end
+        let(:expected_hash) do
+          {
+            name: 'get',
+            kind: 'SERVER',
+            traceId: span_id,
+            localEndpoint: dummy_endpoint.to_h,
+            id: span_id,
+            debug: false,
+            timestamp: timestamp,
+            duration: duration,
+            shared: true
+          }
+        end
+
+        before do
+          shared_server_span.kind = Trace::Span::Kind::SERVER
+          shared_server_span.local_endpoint = dummy_endpoint
+        end
+
+        it 'returns a hash representation of a span' do
+          expect(shared_server_span.to_h).to eq(expected_hash)
+        end
       end
     end
 

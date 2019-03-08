@@ -83,6 +83,10 @@ describe ZipkinTracer::ZipkinEnv do
       expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
 
+    it 'shared is false' do
+      expect(zipkin_env.trace_id.shared).to eq(false)
+    end
+
     context 'trace_id_128bit is true' do
       before do
         allow(Trace).to receive(:trace_id_128bit).and_return(true)
@@ -101,6 +105,10 @@ describe ZipkinTracer::ZipkinEnv do
 
     it '#called_with_zipkin_headers? returns true' do
       expect(zipkin_env.called_with_zipkin_headers?).to eq(true)
+    end
+
+    it 'shared is true' do
+      expect(zipkin_env.trace_id.shared).to eq(true)
     end
 
     context 'parent_id is not provided' do
