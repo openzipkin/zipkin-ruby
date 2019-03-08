@@ -164,7 +164,7 @@ lambda do |span, env, status, response_headers, response_body|
   span.record_tag('http.referrer', env['HTTP_REFERRER'])
   # integer annotation
   span.record_tag('http.content_size', env['CONTENT_SIZE'].to_s)
-  span.record_tag('http.status', status)
+  span.record_tag('http.status_code', status)
 end
 ```
 

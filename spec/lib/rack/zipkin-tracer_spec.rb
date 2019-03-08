@@ -175,7 +175,7 @@ describe ZipkinTracer::RackHandler do
         # string annotation
         span.record_tag('foo', env['foo'] || 'FOO')
         # integer annotation
-        span.record_tag('http.status', status)
+        span.record_tag('http.status_code', status)
       end
     end
     subject { middleware(app, annotate_plugin: annotate) }

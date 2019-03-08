@@ -70,7 +70,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
     end
 
     expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value|
-      expect(key).to eq('http.status')
+      expect(key).to eq('http.status_code')
       expect(value).to eq('404')
     end
 

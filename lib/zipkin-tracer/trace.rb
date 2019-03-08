@@ -165,7 +165,7 @@ module Trace
     module Tag
       METHOD = "http.method".freeze
       PATH = "http.path".freeze
-      STATUS = "http.status".freeze
+      STATUS = "http.status_code".freeze
       LOCAL_COMPONENT = "lc".freeze
       ERROR = "error".freeze
     end
