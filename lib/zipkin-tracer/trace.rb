@@ -168,7 +168,7 @@ module Trace
       METHOD = "http.method".freeze
       PATH = "http.path".freeze
       STATUS = "http.status_code".freeze
-      LOCAL_COMPONENT = "lc".freeze
+      LOCAL_COMPONENT = "lc".freeze # TODO: Remove LOCAL_COMPONENT and related methods when no longer needed
       ERROR = "error".freeze
     end
 
