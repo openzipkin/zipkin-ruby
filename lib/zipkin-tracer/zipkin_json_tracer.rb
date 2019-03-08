@@ -5,7 +5,7 @@ require 'zipkin-tracer/hostname_resolver'
 
 class AsyncJsonApiClient
   include SuckerPunch::Job
-  SPANS_PATH = '/api/v1/spans'
+  SPANS_PATH = '/api/v2/spans'
 
   def perform(json_api_host, spans)
     spans_with_ips = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans).map(&:to_h)

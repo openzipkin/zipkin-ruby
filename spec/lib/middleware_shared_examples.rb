@@ -53,45 +53,30 @@ shared_examples 'make requests' do |expect_to_trace_request|
     expect(tracer).to receive(:start_span).with(anything, 'post').and_call_original
     expect(tracer).to receive(:end_span).with(anything).and_call_original
 
-    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
-      expect(key).to eq('http.method')
-      expect(value).to eq('POST')
-      expect_host(host, '127.0.0.1', service_name)
-    end
+    expect_any_instance_of(Trace::Span).to receive(:kind=).with('CLIENT')
 
-    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
-      expect(key).to eq('http.path')
-      expect(value).to eq(url_path)
-      expect_host(host, '127.0.0.1', service_name)
-    end
-
-    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
-      expect(key).to eq('sa')
-      expect(value).to eq(true)
-      expect(type).to eq('BOOL')
+    expect_any_instance_of(Trace::Span).to receive(:remote_endpoint=) do |_, host|
       expect_host(host, hostname, service_name)
     end
 
-    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
-      expect(key).to eq('http.status')
-      expect(value).to eq('404')
-      expect_host(host, '127.0.0.1', service_name)
+    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value|
+      expect(key).to eq('http.method')
+      expect(value).to eq('POST')
     end
 
-    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value, type, host|
+    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value|
+      expect(key).to eq('http.path')
+      expect(value).to eq(url_path)
+    end
+
+    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value|
+      expect(key).to eq('http.status_code')
+      expect(value).to eq('404')
+    end
+
+    expect_any_instance_of(Trace::Span).to receive(:record_tag) do |_, key, value|
       expect(key).to eq('error')
       expect(value).to eq('404')
-      expect_host(host, '127.0.0.1', service_name)
-    end
-
-    expect_any_instance_of(Trace::Span).to receive(:record) do |_, value, host|
-      expect(value).to eq(Trace::Annotation::CLIENT_SEND)
-      expect_host(host, '127.0.0.1', service_name)
-    end
-
-    expect_any_instance_of(Trace::Span).to receive(:record) do |_, value, host|
-      expect(value).to eq(Trace::Annotation::CLIENT_RECV)
-      expect_host(host, '127.0.0.1', service_name)
     end
   end
 
@@ -180,7 +165,6 @@ shared_examples 'make requests' do |expect_to_trace_request|
     end
 
     it 'does not create any annotation' do
-      expect(Trace::BinaryAnnotation).not_to receive(:new)
       expect(Trace::Annotation).not_to receive(:new)
       process('', url)
     end

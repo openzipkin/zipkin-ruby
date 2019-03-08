@@ -30,13 +30,13 @@ describe ZipkinTracer::HostnameResolver do
       expect(resolved_spans.first).to be_kind_of(Trace::Span)
     end
 
-    it 'resolves the hostnames in the annotations' do
-      ip = resolved_spans.first.annotations.first.host.ipv4
+    it 'resolves the hostnames in local_endpoint' do
+      ip = resolved_spans.first.local_endpoint.ipv4
       expect(ip).to eq(expected_ip)
     end
 
-    it 'resolves the hostnames in the binnary annotations' do
-      ip = resolved_spans.first.binary_annotations.first.host.ipv4
+    it 'resolves the hostnames in remote_endpoint' do
+      ip = resolved_spans.first.remote_endpoint.ipv4
       expect(ip).to eq(expected_ip)
     end
   end
@@ -44,7 +44,8 @@ describe ZipkinTracer::HostnameResolver do
   context 'resolving to i32 addresses' do
     before do
       endpoint.ip_format = :i32
-      Trace.default_endpoint = endpoint
+      span.local_endpoint = endpoint
+      span.remote_endpoint = endpoint
       span.record('diary')
       span.record_tag('secret', 'book')
       allow(Socket).to receive(:getaddrinfo).with(hostname, nil).and_return([[nil, nil, nil, ipv4]])
@@ -54,7 +55,7 @@ describe ZipkinTracer::HostnameResolver do
     context 'host lookup failure' do
       before { allow(Socket).to receive(:getaddrinfo).and_raise }
       it 'falls back to localhost as an i32' do
-        ip = resolved_spans.first.annotations.first.host.ipv4
+        ip = resolved_spans.first.local_endpoint.ipv4
         expect(ip).to eq(0x7f000001)
       end
     end
@@ -65,7 +66,8 @@ describe ZipkinTracer::HostnameResolver do
   context 'with spans containing local addresses' do
     before do
       local_endpoint.ip_format = :string
-      Trace.default_endpoint = local_endpoint
+      span.local_endpoint = local_endpoint
+      span.remote_endpoint = local_endpoint
       span.record('diary')
       span.record_tag('secret', 'book')
       allow(Socket).to receive(:getaddrinfo).with(local_hostname, nil, :INET).and_return([[nil, nil, nil, ipv4]])
@@ -78,7 +80,8 @@ describe ZipkinTracer::HostnameResolver do
   context 'with spans resolving to string addresses' do
     before do
       endpoint.ip_format = :string
-      Trace.default_endpoint = endpoint
+      span.local_endpoint = endpoint
+      span.remote_endpoint = endpoint
       span.record('diary')
       span.record_tag('secret', 'book')
       allow(Socket).to receive(:getaddrinfo).with(hostname, nil, :INET).and_return([[nil, nil, nil, ipv4]])
@@ -88,7 +91,7 @@ describe ZipkinTracer::HostnameResolver do
     context 'host lookup failure' do
       before { allow(Socket).to receive(:getaddrinfo).and_raise }
       it 'falls back to localhost as an string' do
-        ip = resolved_spans.first.annotations.first.host.ipv4
+        ip = resolved_spans.first.local_endpoint.ipv4
         expect(ip).to eq('127.0.0.1')
       end
     end

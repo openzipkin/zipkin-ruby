@@ -1,3 +1,6 @@
+# 0.33.0
+* Switch to Zipkin v2 span format
+
 # 0.32.4
 * Remove the ':service_port' configuration.
 * Fix 'sa' annotation encoding.

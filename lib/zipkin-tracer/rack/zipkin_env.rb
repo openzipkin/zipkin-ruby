@@ -10,10 +10,10 @@ module ZipkinTracer
     end
 
     def trace_id(default_flags = Trace::Flags::EMPTY)
-      trace_id, span_id, parent_span_id = retrieve_or_generate_ids
+      trace_id, span_id, parent_span_id, shared = retrieve_or_generate_ids
       sampled = sampled_header_value(@env['HTTP_X_B3_SAMPLED'])
       flags = (@env['HTTP_X_B3_FLAGS'] || default_flags).to_i
-      Trace::TraceId.new(trace_id, parent_span_id, span_id, sampled, flags)
+      Trace::TraceId.new(trace_id, parent_span_id, span_id, sampled, flags, shared)
     end
 
     def called_with_zipkin_headers?
@@ -33,12 +33,14 @@ module ZipkinTracer
       if called_with_zipkin_headers?
         trace_id, span_id = @env.values_at(*B3_REQUIRED_HEADERS)
         parent_span_id = @env['HTTP_X_B3_PARENTSPANID']
+        shared = true
       else
         span_id = TraceGenerator.new.generate_id
         trace_id = TraceGenerator.new.generate_id_from_span_id(span_id)
         parent_span_id = nil
+        shared = false
       end
-      [trace_id, span_id, parent_span_id]
+      [trace_id, span_id, parent_span_id, shared]
     end
 
     def new_sampled_header_value(sampled)

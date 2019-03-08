@@ -10,17 +10,20 @@ describe Trace::ZipkinTracerBase do
   let(:rpc_name) { 'this_is_an_rpc' }
   let(:previous_rpc_name) { 'this_is_previous_rpc' }
   let(:tracer) { described_class.new }
+  let(:default_endpoint) { Trace::Endpoint.new('127.0.0.1', '80', 'service_name') }
   let(:span_hash) { {
     name: rpc_name,
     traceId: span_id,
     id: span_id,
-    annotations: [],
-    binaryAnnotations: [],
+    localEndpoint: default_endpoint.to_h,
     timestamp: 1452987900000000,
     duration: 0,
     debug: false
   } }
-  before { Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 0)) }
+  before do
+    Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 0))
+    allow(::Trace).to receive(:default_endpoint).and_return(default_endpoint)
+  end
 
   describe '#flush!' do
     it 'raises if not implemented' do
@@ -34,18 +37,21 @@ describe Trace::ZipkinTracerBase do
     it 'sets the span name' do
       expect(span.name).to eq(rpc_name)
     end
+    it 'sets the local endpoint' do
+      expect(span.local_endpoint).to eq(default_endpoint)
+    end
     context "no parentId" do
       it 'returns an empty span' do
-        expect(span.binary_annotations).to eq([])
         expect(span.annotations).to eq([])
+        expect(span.tags).to eq({})
         expect(span.to_h).to eq(span_hash)
       end
     end
     context "with parentId" do
       let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
       it 'returns an empty span' do
-        expect(span.binary_annotations).to eq([])
         expect(span.annotations).to eq([])
+        expect(span.tags).to eq({})
         expect(span.to_h).to eq(span_hash.merge({parentId: parent_id}))
       end
     end
@@ -57,7 +63,6 @@ describe Trace::ZipkinTracerBase do
 
   describe '#end_span' do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
-    before { allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name')) }
     it 'closes the span' do
       span #touch it so it happens before we freeze time again
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45, 1))
@@ -65,20 +70,14 @@ describe Trace::ZipkinTracerBase do
       tracer.end_span(span)
       expect(span.to_h).to eq(span_hash.merge(duration: 1_000_000))
     end
-    it 'flush if SS is annotated in this span' do
-      span.record(Trace::Annotation::SERVER_SEND)
+    it 'flush if kind is SERVER in this span' do
+      span.kind = Trace::Span::Kind::SERVER
       expect(tracer).to receive(:flush!)
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
     end
-    it 'flush if CR is annotated in this span and the span does not have parent span' do
-      span.record(Trace::Annotation::CLIENT_RECV)
-      expect(tracer).to receive(:flush!)
-      expect(tracer).to receive(:reset)
-      tracer.end_span(span)
-    end
-    it "flush if SS has not been annotated but span has no parent span " do
-      span.record(Trace::Annotation::SERVER_RECV)
+    it 'flush if kind is CLIENT in this span and the span does not have parent span' do
+      span.kind = Trace::Span::Kind::CLIENT
       expect(tracer).to receive(:flush!)
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
@@ -87,9 +86,8 @@ describe Trace::ZipkinTracerBase do
 
   describe '#end_span with parent span' do
     let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
-    before { allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name')) }
     it 'does not flush if the current span has a parent span' do
-      span.record(Trace::Annotation::CLIENT_RECV)
+      span.kind = Trace::Span::Kind::CLIENT
       expect(tracer).not_to receive(:flush!)
       expect(tracer).not_to receive(:reset)
       tracer.end_span(span)

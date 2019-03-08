@@ -48,54 +48,17 @@ module Trace
   # Moved here as a first step, eventually move them out of the Trace module
 
   class Annotation
-    CLIENT_SEND = "cs"
-    CLIENT_RECV = "cr"
-    SERVER_SEND = "ss"
-    SERVER_RECV = "sr"
+    attr_reader :value, :timestamp
 
-    attr_reader :value, :host, :timestamp
-    def initialize(value, host)
+    def initialize(value)
       @timestamp = (Time.now.to_f * 1000 * 1000).to_i # micros
       @value = value
-      @host = host
     end
 
     def to_h
       {
         value: @value,
-        timestamp: @timestamp,
-        endpoint: host.to_h
-      }
-    end
-  end
-
-  class BinaryAnnotation
-    SERVER_ADDRESS = 'sa'.freeze
-    URI = 'http.url'.freeze
-    METHOD = 'http.method'.freeze
-    PATH = 'http.path'.freeze
-    STATUS = 'http.status'.freeze
-    LOCAL_COMPONENT = 'lc'.freeze
-    ERROR = 'error'.freeze
-
-    module Type
-      BOOL = "BOOL"
-      STRING = "STRING"
-    end
-    attr_reader :key, :value, :host
-
-    def initialize(key, value, annotation_type, host)
-      @key = key
-      @value = value
-      @annotation_type = annotation_type
-      @host = host
-    end
-
-    def to_h
-      {
-        key: @key,
-        value: @value,
-        endpoint: host.to_h
+        timestamp: @timestamp
       }
     end
   end
@@ -138,14 +101,15 @@ module Trace
 
   # A TraceId contains all the information of a given trace id
   class TraceId
-    attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags
+    attr_reader :trace_id, :parent_id, :span_id, :sampled, :flags, :shared
 
-    def initialize(trace_id, parent_id, span_id, sampled, flags)
+    def initialize(trace_id, parent_id, span_id, sampled, flags, shared = false)
       @trace_id = Trace.trace_id_128bit ? TraceId128Bit.from_value(trace_id) : SpanId.from_value(trace_id)
       @parent_id = parent_id.nil? ? nil : SpanId.from_value(parent_id)
       @span_id = SpanId.from_value(span_id)
       @sampled = sampled
       @flags = flags
+      @shared = shared
     end
 
     def next_id
@@ -162,7 +126,8 @@ module Trace
     end
 
     def to_s
-      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}, sampled = #{@sampled.to_s}, flags = #{@flags.to_s})"
+      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}," \
+      " sampled = #{@sampled.to_s}, flags = #{@flags.to_s}, shared = #{@shared.to_s})"
     end
   end
 
@@ -199,12 +164,29 @@ module Trace
 
   # A span may contain many annotations
   class Span
-    attr_accessor :name, :annotations, :binary_annotations, :debug
+    module Tag
+      METHOD = "http.method".freeze
+      PATH = "http.path".freeze
+      STATUS = "http.status_code".freeze
+      LOCAL_COMPONENT = "lc".freeze # TODO: Remove LOCAL_COMPONENT and related methods when no longer needed
+      ERROR = "error".freeze
+    end
+
+    module Kind
+      CLIENT = "CLIENT".freeze
+      SERVER = "SERVER".freeze
+    end
+
+    attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
+
     def initialize(name, span_id)
       @name = name
       @span_id = span_id
+      @kind = nil
+      @local_endpoint = nil
+      @remote_endpoint = nil
       @annotations = []
-      @binary_annotations = []
+      @tags = {}
       @debug = span_id.debug?
       @timestamp = to_microseconds(Time.now)
       @duration = UNKNOWN_DURATION
@@ -219,28 +201,31 @@ module Trace
         name: @name,
         traceId: @span_id.trace_id.to_s,
         id: @span_id.span_id.to_s,
-        annotations: @annotations.map(&:to_h),
-        binaryAnnotations: @binary_annotations.map(&:to_h),
+        localEndpoint: @local_endpoint.to_h,
         timestamp: @timestamp,
         duration: @duration,
         debug: @debug
       }
       h[:parentId] = @span_id.parent_id.to_s unless @span_id.parent_id.nil?
+      h[:kind] = @kind unless @kind.nil?
+      h[:remoteEndpoint] = @remote_endpoint.to_h unless @remote_endpoint.nil?
+      h[:annotations] = @annotations.map(&:to_h) unless @annotations.empty?
+      h[:tags] = @tags unless @tags.empty?
+      h[:shared] = true if @span_id.shared
       h
     end
 
     # We record information into spans, then we send these spans to zipkin
-    def record(value, endpoint = Trace.default_endpoint)
-      annotations << Trace::Annotation.new(value.to_s, endpoint)
+    def record(value)
+      annotations << Trace::Annotation.new(value.to_s)
     end
 
-    def record_tag(key, value, type = Trace::BinaryAnnotation::Type::STRING, endpoint = Trace.default_endpoint)
-      value = value.to_s if type == Trace::BinaryAnnotation::Type::STRING
-      binary_annotations << Trace::BinaryAnnotation.new(key, value, type, endpoint)
+    def record_tag(key, value)
+      @tags[key] = value
     end
 
     def record_local_component(value)
-      record_tag(BinaryAnnotation::LOCAL_COMPONENT, value)
+      record_tag(Tag::LOCAL_COMPONENT, value)
     end
 
     def has_parent_span?
@@ -293,6 +278,5 @@ module Trace
       hsh[:port] = port if port
       hsh
     end
-
   end
 end

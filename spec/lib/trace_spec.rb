@@ -19,7 +19,8 @@ describe Trace do
     let(:parent_id) { 'f0e71086411b1445' }
     let(:sampled) { true }
     let(:flags) { Trace::Flags::EMPTY }
-    let(:trace_id) { Trace::TraceId.new(traceid, parent_id, span_id, sampled, flags) }
+    let(:shared) { false }
+    let(:trace_id) { Trace::TraceId.new(traceid, parent_id, span_id, sampled, flags, shared) }
 
     it 'is not a debug trace' do
       expect(trace_id.debug?).to eq(false)
@@ -60,6 +61,13 @@ describe Trace do
       end
     end
 
+    context 'shared value is true' do
+      let(:shared) { true }
+      it 'is shared' do
+        expect(trace_id.shared).to eq(true)
+      end
+    end
+
     context 'trace_id_128bit is false' do
       let(:traceid) { '5af30660491a5a27234555b04cf7e099' }
 
@@ -74,6 +82,15 @@ describe Trace do
 
       it 'returns a 128-bit trace_id ' do
         expect(trace_id.trace_id.to_s).to eq(traceid)
+      end
+    end
+
+    describe '#to_s' do
+      it 'returns all information' do
+        expect(trace_id.to_s).to eq(
+          'TraceId(trace_id = 234555b04cf7e099, parent_id = f0e71086411b1445, span_id = c3a555b04cf7e099,' \
+          ' sampled = true, flags = 0, shared = false)'
+        )
       end
     end
   end
@@ -118,45 +135,79 @@ describe Trace do
   describe Trace::Span do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }
-    let(:annotations) { [
-      Trace::Annotation.new(Trace::Annotation::SERVER_RECV, dummy_endpoint).to_h,
-      Trace::Annotation.new(Trace::Annotation::SERVER_SEND, dummy_endpoint).to_h
-    ] }
+    let(:timestamp) { 1452987900000000 }
+    let(:duration) { 0 }
+    let(:key) { 'key' }
+    let(:value) { 'value' }
+    let(:numeric_value) { 123 }
     let(:span_without_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY))
     end
     let(:span_with_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, parent_id, span_id, true, Trace::Flags::EMPTY))
     end
-    let(:timestamp) { 1452987900000000 }
-    let(:duration) { 0 }
-    let(:key) { 'key' }
-    let(:value) { 'value' }
-    let(:numeric_value) { 123 }
-    let(:boolean_value) { true }
 
     before do
       Timecop.freeze(Time.utc(2016, 1, 16, 23, 45))
       [span_with_parent, span_without_parent].each do |span|
-        annotations.each { |a| span.annotations << a }
+        span.kind = Trace::Span::Kind::CLIENT
+        span.local_endpoint = dummy_endpoint
+        span.remote_endpoint = dummy_endpoint
+        span.record(value)
+        span.record_tag(key, value)
       end
-      allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name'))
     end
 
     describe '#to_h' do
-      it 'returns a hash representation of a span' do
-        expected_hash = {
-          name: 'get',
-          traceId: span_id,
-          id: span_id,
-          annotations: annotations,
-          binaryAnnotations: [],
-          debug: false,
-          timestamp: timestamp,
-          duration: duration
-        }
-        expect(span_without_parent.to_h).to eq(expected_hash)
-        expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
+      context 'client span' do
+        let(:expected_hash) do
+          {
+            name: 'get',
+            kind: 'CLIENT',
+            traceId: span_id,
+            localEndpoint: dummy_endpoint.to_h,
+            remoteEndpoint: dummy_endpoint.to_h,
+            id: span_id,
+            debug: false,
+            timestamp: timestamp,
+            duration: duration,
+            annotations: [{ timestamp: timestamp, value: "value" }],
+            tags: { "key" => "value" }
+          }
+        end
+
+        it 'returns a hash representation of a span' do
+          expect(span_without_parent.to_h).to eq(expected_hash)
+          expect(span_with_parent.to_h).to eq(expected_hash.merge(parentId: parent_id))
+        end
+      end
+
+      context 'server span' do
+        let(:shared_server_span) do
+          Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY, true))
+        end
+        let(:expected_hash) do
+          {
+            name: 'get',
+            kind: 'SERVER',
+            traceId: span_id,
+            localEndpoint: dummy_endpoint.to_h,
+            id: span_id,
+            debug: false,
+            timestamp: timestamp,
+            duration: duration,
+            shared: true
+          }
+        end
+
+        before do
+          shared_server_span.kind = Trace::Span::Kind::SERVER
+          shared_server_span.local_endpoint = dummy_endpoint
+        end
+
+        it 'returns a hash representation of a span' do
+          expect(shared_server_span.to_h).to eq(expected_hash)
+        end
       end
     end
 
@@ -177,66 +228,42 @@ describe Trace do
     end
 
     describe '#record_tag' do
-      it 'records a binary annotation' do
+      it 'records a tag' do
         span_with_parent.record_tag(key, value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.key).to eq('key')
-        expect(ann.value).to eq('value')
+        tags = span_with_parent.tags
+        expect(tags[key]).to eq('value')
       end
 
-      it 'converts the value to string' do
+      it 'allows a numeric value' do
         span_with_parent.record_tag(key, numeric_value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.value).to eq('123')
-      end
-
-      it 'does not convert the boolean value to string' do
-        span_with_parent.record_tag(key, boolean_value, Trace::BinaryAnnotation::Type::BOOL)
-
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.value).to eq(true)
+        tags = span_with_parent.tags
+        expect(tags[key]).to eq(123)
       end
     end
 
     describe '#record_local_component' do
-      it 'records a binary annotation ' do
+      it 'records a local_component tag' do
         span_with_parent.record_local_component(value)
 
-        ann = span_with_parent.binary_annotations[-1]
-        expect(ann.key).to eq('lc')
-        expect(ann.value).to eq('value')
+        tags = span_with_parent.tags
+        expect(tags['lc']).to eq('value')
       end
     end
 
   end
 
   describe Trace::Annotation do
-    let(:annotation) { Trace::Annotation.new(Trace::Annotation::SERVER_RECV, dummy_endpoint) }
+    let(:annotation) { Trace::Annotation.new(Trace::Span::Tag::ERROR) }
 
     describe '#to_h' do
       before { Timecop.freeze(Time.utc(2016, 1, 16, 23, 45)) }
 
       it 'returns a hash representation of an annotation' do
         expect(annotation.to_h).to eq(
-          value: 'sr',
-          timestamp: 1452987900000000,
-          endpoint: dummy_endpoint.to_h
-        )
-      end
-    end
-  end
-
-  describe Trace::BinaryAnnotation do
-    let(:annotation) { Trace::BinaryAnnotation.new('http.path', '/', 'STRING', dummy_endpoint) }
-
-    describe '#to_h' do
-      it 'returns a hash representation of a binary annotation' do
-        expect(annotation.to_h).to eq(
-          key: 'http.path',
-          value: '/',
-          endpoint: dummy_endpoint.to_h
+          value: 'error',
+          timestamp: 1452987900000000
         )
       end
     end
