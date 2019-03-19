@@ -28,6 +28,7 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
 * `:record_on_server_receive` - a CSV style list of tags to record on server receive, even if the zipkin headers were present in the incoming request. Currently only supports the value `http.path`, others being discarded.
 * `:trace_id_128bit` - When set to true, high 8-bytes will be prepended to trace_id. The upper 4-bytes are epoch seconds and the lower 4-bytes are random. This makes it convertible to Amazon X-Ray trace ID format v1. (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
+* `:additional_paths` - A comma separated list of path prefixes (e.g. `/v1, /v2`) you want to trace in non-Rails applications.
 
 ### Sending traces on outgoing requests with Faraday
 

@@ -23,7 +23,8 @@ describe ZipkinTracer::RackHandler do
   let(:app_status) { 200 }
   let(:app_headers) { { 'Content-Type' => 'text/plain' } }
   let(:app_body) { path }
-  let(:path) { '/'}
+  let(:path) { '/' }
+  let(:route) { nil }
   let(:tracer) { Trace.tracer }
 
   let(:app) {
@@ -44,13 +45,26 @@ describe ZipkinTracer::RackHandler do
   shared_examples_for 'traces the request' do
     it 'traces the request' do
       expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
-      expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
+      expect(tracer).to receive(:with_new_span).ordered.with(anything, "get #{route}".strip).and_call_original
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', path)
       expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
 
-      status, headers, body = subject.call(mock_env)
+      status, headers, body = subject.call(mock_env(path))
       expect(status).to eq(app_status)
       expect(headers).to eq(app_headers)
+      expect { |b| body.each &b }.to yield_with_args(app_body)
+    end
+  end
+
+  shared_examples_for 'does not trace the request' do
+    it 'calls the app and does not trace the request' do
+      expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
+      expect(tracer).not_to receive(:with_new_span)
+      expect_any_instance_of(Trace::Span).not_to receive(:kind=)
+
+      status, _, body = subject.call(mock_env(path))
+      # return expected status
+      expect(status).to eq(200)
       expect { |b| body.each &b }.to yield_with_args(app_body)
     end
   end
@@ -78,32 +92,20 @@ describe ZipkinTracer::RackHandler do
   context 'Using Rails' do
     subject { middleware(app) }
 
-    context 'accessing a valid URL "/" of our service' do
-      before do
-        allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(true)
-        allow(ZipkinTracer::Application).to receive(:get_route).and_return(nil)
-      end
+    before do
+      allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(true)
+      allow(ZipkinTracer::Application).to receive(:get_route).and_return(route)
+    end
 
+    context 'accessing a valid URL "/" of our service' do
       it_should_behave_like 'traces the request'
     end
 
     context 'accessing a valid URL "/thing/123" of our service' do
-      before do
-        allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(true)
-        allow(ZipkinTracer::Application).to receive(:get_route).and_return("/thing/:id")
-      end
+      let(:path) { "/thing/123" }
+      let(:route) { "/thing/:id" }
 
-      it 'traces the request' do
-        expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
-        expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get /thing/:id').and_call_original
-        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/thing/123')
-        expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
-
-        status, headers, body = subject.call(mock_env_route)
-        expect(status).to eq(app_status)
-        expect(headers).to eq(app_headers)
-        expect { |b| body.each &b }.to yield_with_args("/thing/123")
-      end
+      it_should_behave_like 'traces the request'
     end
 
     context 'accessing an invalid URL of our service' do
@@ -111,14 +113,26 @@ describe ZipkinTracer::RackHandler do
         allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(false)
       end
 
-      it 'calls the app and does not trace the request' do
-        expect_any_instance_of(Trace::Span).not_to receive(:record)
+      it_should_behave_like 'does not trace the request'
+    end
+  end
 
-        status, _, body = subject.call(mock_env)
-        # return expected status
-        expect(status).to eq(200)
-        expect { |b| body.each &b }.to yield_with_args(app_body)
-      end
+  context 'non-Rails app' do
+    subject { middleware(app, additional_paths: '/some, /thing') }
+    before do
+      allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(false)
+    end
+
+    context 'accessing a valid URL "/thing/123" of our service' do
+      let(:path) { "/thing/123" }
+
+      it_should_behave_like 'traces the request'
+    end
+
+    context 'accessing an invalid URL of our service' do
+      let(:path) { '/unconfigured_path'}
+
+      it_should_behave_like 'does not trace the request'
     end
   end
 

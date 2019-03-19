@@ -1,3 +1,6 @@
+# 0.34.0
+* Add the ':additional_paths' configuration option to enable tracing on non-Rails-routable paths
+
 # 0.33.0
 * Switch to Zipkin v2 span format
 

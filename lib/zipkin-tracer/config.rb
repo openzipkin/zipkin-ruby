@@ -9,7 +9,7 @@ module ZipkinTracer
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
       :sampled_as_boolean, :record_on_server_receive,
-      :kafka_producer, :kafka_topic, :trace_id_128bit
+      :kafka_producer, :kafka_topic, :trace_id_128bit, :additional_paths
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -26,8 +26,6 @@ module ZipkinTracer
       @sample_rate       = config[:sample_rate]       || DEFAULTS[:sample_rate]
       # A block of code which can be called to do extra annotations of traces
       @annotate_plugin   = config[:annotate_plugin]   # call for trace annotation
-      @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
-      @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
       # A block of code which can be called to skip traces. Skip tracing if returns false
       @filter_plugin     = config[:filter_plugin]
       # A block of code which can be called to force sampling. Forces sampling if returns true
@@ -49,6 +47,9 @@ module ZipkinTracer
       # This makes it convertible to Amazon X-Ray trace ID format v1.
       # (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
       @trace_id_128bit = config[:trace_id_128bit].nil? ? DEFAULTS[:trace_id_128bit] : config[:trace_id_128bit]
+
+      # A comma separated list of path prefixes you want to trace in non-Rails applications.
+      @additional_paths = present?(config[:additional_paths]) ? config[:additional_paths].split(",").map(&:strip) : nil
 
       Trace.sample_rate = @sample_rate
       Trace.trace_id_128bit = @trace_id_128bit
