@@ -35,8 +35,8 @@ describe ZipkinTracer::ZipkinEnv do
       )
     end
 
-    it 'sampling is not forced' do
-      expect(zipkin_env.force_sample?).to eq(false)
+    it 'trace is not sampled' do
+      expect(zipkin_env.trace_id.sampled?).to eq(false)
     end
   end
 
@@ -51,8 +51,8 @@ describe ZipkinTracer::ZipkinEnv do
       )
     end
 
-    it 'sampling is forced' do
-      expect(zipkin_env.force_sample?).to eq(true)
+    it 'trace is sampled' do
+      expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
   end
 

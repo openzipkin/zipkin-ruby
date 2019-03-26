@@ -1,8 +1,9 @@
 require 'spec_helper'
+
 module ZipkinTracer
   RSpec.describe Application do
     describe '.routable_request?' do
-      subject { Application.routable_request?("path", "METHOD") }
+      subject { Application.routable_request?({}) }
 
       context 'Rails available' do
         before do
@@ -12,6 +13,7 @@ module ZipkinTracer
         context 'route is found' do
           before do
             allow(Rails).to receive_message_chain('application.routes.recognize_path') { nil }
+            stub_const('ActionController::RoutingError', StandardError)
           end
 
           it 'is true' do
@@ -38,9 +40,9 @@ module ZipkinTracer
       end
     end
 
-    describe '.get_route' do
+    describe '.route' do
       let(:env) { { "PATH_INFO" => "path", "REQUEST_METHOD" => "METHOD" } }
-      subject { Application.get_route(env) }
+      subject { Application.route(env) }
 
       context 'Rails available' do
         before do

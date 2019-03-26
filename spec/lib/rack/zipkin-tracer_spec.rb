@@ -90,7 +90,7 @@ describe ZipkinTracer::RackHandler do
     context 'accessing a valid URL "/thing/123" of our service' do
       before do
         allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(true)
-        allow(ZipkinTracer::Application).to receive(:get_route).and_return("/thing/:id")
+        allow(ZipkinTracer::Application).to receive(:route).and_return("/thing/:id")
       end
 
       it 'traces the request' do
@@ -218,7 +218,6 @@ describe ZipkinTracer::RackHandler do
       it 'samples the request' do
         expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
         expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
-        expect_any_instance_of(Trace::Span).to receive(:record).with('whitelisted')
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end

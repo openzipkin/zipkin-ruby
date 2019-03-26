@@ -26,8 +26,6 @@ module ZipkinTracer
       @sample_rate       = config[:sample_rate]       || DEFAULTS[:sample_rate]
       # A block of code which can be called to do extra annotations of traces
       @annotate_plugin   = config[:annotate_plugin]   # call for trace annotation
-      @filter_plugin     = config[:filter_plugin]     # skip tracing if returns false
-      @whitelist_plugin  = config[:whitelist_plugin]  # force sampling if returns true
       # A block of code which can be called to skip traces. Skip tracing if returns false
       @filter_plugin     = config[:filter_plugin]
       # A block of code which can be called to force sampling. Forces sampling if returns true
