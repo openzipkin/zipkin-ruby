@@ -1,7 +1,7 @@
 module ZipkinTracer
   # Useful methods on the Application we are instrumenting
   class Application
-    # Does our framework know if this request will be routed to a controller?
+    # Determines if our framework knows whether the request will be routed to a controller
     def self.routable_request?(env)
       return true unless defined?(Rails) # If not running on a Rails app, we can't verify if it is invalid
       path_info = env[ZipkinTracer::RackHandler::PATH_INFO]
@@ -28,7 +28,7 @@ module ZipkinTracer
     end
 
     def self.logger
-      if defined?(Rails.logger) # If we happen to be inside a Rails app, use its logger
+      if defined?(Rails.logger)
         Rails.logger
       else
         Logger.new(STDOUT)
