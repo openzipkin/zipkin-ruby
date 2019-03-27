@@ -57,7 +57,7 @@ module ZipkinTracer
     end
 
     def sampled_header_value(parent_trace_sampled)
-      if parent_trace_sampled  # A service upstream decided this goes in all the way
+      if parent_trace_sampled # A service upstream decided this goes in all the way
         parent_trace_sampled
       else
         new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered? && routable_request?)

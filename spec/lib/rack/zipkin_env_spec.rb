@@ -56,6 +56,22 @@ describe ZipkinTracer::ZipkinEnv do
     end
   end
 
+  context 'Not sampling in this node and not tracing information in the environment' do
+    let(:config) do
+      instance_double(
+        ZipkinTracer::Config,
+        filter_plugin: proc { false },
+        whitelist_plugin: proc { false },
+        sample_rate: 0,
+        sampled_as_boolean: sampled_as_boolean
+      )
+    end
+
+    it 'trace is not sampled' do
+      expect(zipkin_env.trace_id.sampled?).to eq(false)
+    end
+  end
+
   context 'without zipkin headers' do
     let(:env) { mock_env }
 
@@ -79,7 +95,7 @@ describe ZipkinTracer::ZipkinEnv do
     end
 
     it 'sampling information is set' do
-      # In this spec we are forcing sampling with the whitelist_plugin
+      # Because sample rate == 1
       expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
 
@@ -109,6 +125,11 @@ describe ZipkinTracer::ZipkinEnv do
 
     it 'shared is true' do
       expect(zipkin_env.trace_id.shared).to eq(true)
+    end
+
+    it 'sampling information is set' do
+      # Because sample rate == 1
+      expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
 
     context 'parent_id is not provided' do
@@ -145,6 +166,32 @@ describe ZipkinTracer::ZipkinEnv do
       let(:zipkin_headers) do
         { 'HTTP_X_B3_TRACEID' => id, 'HTTP_X_B3_SPANID' => id, 'HTTP_X_B3_PARENTSPANID' => parent_id,
           'HTTP_X_B3_SAMPLED' => 'true', 'HTTP_X_B3_FLAGS' => 0 }
+      end
+
+      it 'uses the trace_id and span_id' do
+        trace_id = zipkin_env.trace_id
+        expect(trace_id.trace_id.to_i).to eq(id)
+        expect(trace_id.span_id.to_i).to eq(id)
+      end
+
+      it 'uses the parent_id' do
+        expect(zipkin_env.trace_id.parent_id.to_i).to eq(parent_id)
+      end
+
+      it 'uses the sampling information' do
+        expect(zipkin_env.trace_id.sampled?).to eq(true)
+      end
+
+      it 'uses the flags' do
+        expect(zipkin_env.trace_id.flags.to_i).to eq(0)
+      end
+    end
+
+    context 'Sampled admits using 1 as well as true' do
+      let(:parent_id) { rand(131) }
+      let(:zipkin_headers) do
+        { 'HTTP_X_B3_TRACEID' => id, 'HTTP_X_B3_SPANID' => id, 'HTTP_X_B3_PARENTSPANID' => parent_id,
+          'HTTP_X_B3_SAMPLED' => '1', 'HTTP_X_B3_FLAGS' => 0 }
       end
 
       it 'uses the trace_id and span_id' do
