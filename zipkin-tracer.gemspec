@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.license                   = 'Apache-2.0'
 
   s.required_rubygems_version = '>= 1.3.5'
-  s.required_ruby_version     = '>= 2.0.0'
+  s.required_ruby_version     = '>= 2.3.0'
 
   s.files                     = Dir.glob('{bin,lib}/**/*')
   s.require_path              = 'lib'

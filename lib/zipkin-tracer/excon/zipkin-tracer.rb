@@ -37,7 +37,6 @@ module ZipkinTracer
 
     private
 
-    SERVER_ADDRESS_SPECIAL_VALUE = true
     STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
 
     def b3_headers

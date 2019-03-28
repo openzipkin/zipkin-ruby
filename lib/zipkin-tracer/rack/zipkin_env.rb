@@ -20,10 +20,6 @@ module ZipkinTracer
       @called_with_zipkin_headers ||= B3_REQUIRED_HEADERS.all? { |key| @env.key?(key) }
     end
 
-    def force_sample?
-      @force_sample ||= @config.whitelist_plugin && @config.whitelist_plugin.call(@env)
-    end
-
     private
 
     B3_REQUIRED_HEADERS = %w(HTTP_X_B3_TRACEID HTTP_X_B3_SPANID).freeze
@@ -61,15 +57,24 @@ module ZipkinTracer
     end
 
     def sampled_header_value(parent_trace_sampled)
-      if parent_trace_sampled  # A service upstream decided this goes in all the way
+      if parent_trace_sampled # A service upstream decided this goes in all the way
         parent_trace_sampled
       else
-        new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered?)
+        new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered? && routable_request?)
       end
+    end
+
+    def force_sample?
+      @config.whitelist_plugin && @config.whitelist_plugin.call(@env)
     end
 
     def filtered?
       @config.filter_plugin && !@config.filter_plugin.call(@env)
     end
+
+    def routable_request?
+      Application.routable_request?(@env)
+    end
+
   end
 end

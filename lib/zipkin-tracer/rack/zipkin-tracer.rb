@@ -25,7 +25,7 @@ module ZipkinTracer
       zipkin_env = ZipkinEnv.new(env, @config)
       trace_id = zipkin_env.trace_id
       TraceContainer.with_trace_id(trace_id) do
-        if !trace_id.sampled? || !routable_request?(env)
+        if !trace_id.sampled?
           @app.call(env)
         else
           @tracer.with_new_span(trace_id, span_name(env)) do |span|
@@ -37,16 +37,8 @@ module ZipkinTracer
 
     private
 
-    def routable_request?(env)
-      Application.routable_request?(env[PATH_INFO], env[REQUEST_METHOD])
-    end
-
-    def route(env)
-      Application.get_route(env)
-    end
-
     def span_name(env)
-      "#{env[REQUEST_METHOD].to_s.downcase} #{route(env)}".strip
+      "#{env[REQUEST_METHOD].to_s.downcase} #{Application.route(env)}".strip
     end
 
     def annotate_plugin(span, env, status, response_headers, response_body)
@@ -56,7 +48,6 @@ module ZipkinTracer
     def trace!(span, zipkin_env, &block)
       trace_request_information(span, zipkin_env)
       span.kind = Trace::Span::Kind::SERVER
-      span.record('whitelisted') if zipkin_env.force_sample?
       status, headers, body = yield
     ensure
       annotate_plugin(span, zipkin_env.env, status, headers, body)

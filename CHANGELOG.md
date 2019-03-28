@@ -1,3 +1,7 @@
+# 0.34.0
+* Whitelist plugin ensure a request is traced even if it is not routable
+* Gem requires Ruby > 2.3.0. In practice this was true already.
+
 # 0.33.0
 * Switch to Zipkin v2 span format
 
