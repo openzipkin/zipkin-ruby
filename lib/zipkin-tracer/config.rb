@@ -39,8 +39,6 @@ module ZipkinTracer
       if @sampled_as_boolean
         @logger && @logger.warn("Using a boolean in the Sampled header is deprecated. Consider setting sampled_as_boolean to false")
       end
-      # Record the given tags on server receive, even if the zipkin headers were present in the incoming request?
-      @record_on_server_receive = parse_tags(config[:record_on_server_receive])
 
       # When set to true, high 8-bytes will be prepended to trace_id.
       # The upper 4-bytes are epoch seconds and the lower 4-bytes are random.
@@ -73,14 +71,6 @@ module ZipkinTracer
       sampled_as_boolean: true,
       trace_id_128bit: false
     }
-
-    def parse_tags(tag_names)
-      return {} unless present?(tag_names)
-      names = tag_names.split(",").map(&:strip)
-      (ZipkinTracer::RackHandler::DEFAULT_SERVER_RECV_TAGS.keys & names).each_with_object({}) do |name, tags|
-        tags[name] = ZipkinTracer::RackHandler::DEFAULT_SERVER_RECV_TAGS[name]
-      end
-    end
 
     def present?(str)
       return false if str.nil?

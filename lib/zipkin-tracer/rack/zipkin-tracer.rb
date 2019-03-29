@@ -11,10 +11,6 @@ module ZipkinTracer
     PATH_INFO = Rack::PATH_INFO rescue 'PATH_INFO'.freeze
     REQUEST_METHOD = Rack::REQUEST_METHOD rescue 'REQUEST_METHOD'.freeze
 
-    DEFAULT_SERVER_RECV_TAGS = {
-     Trace::Span::Tag::PATH => PATH_INFO
-    }.freeze
-
     def initialize(app, config = nil)
       @app = app
       @config = Config.new(app, config).freeze
@@ -37,6 +33,11 @@ module ZipkinTracer
 
     private
 
+    SERVER_RECV_TAGS = {
+      Trace::Span::Tag::PATH => PATH_INFO,
+      Trace::Span::Tag::METHOD => REQUEST_METHOD
+    }.freeze
+
     def span_name(env)
       "#{env[REQUEST_METHOD].to_s.downcase} #{Application.route(env)}".strip
     end
@@ -46,23 +47,17 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
-      trace_request_information(span, zipkin_env)
-      span.kind = Trace::Span::Kind::SERVER
       status, headers, body = yield
     ensure
+      trace_server_information(span, zipkin_env, status)
+
       annotate_plugin(span, zipkin_env.env, status, headers, body)
     end
 
-    def trace_request_information(span, zipkin_env)
-      tags = if !@config.record_on_server_receive.empty?
-        # if the user specified tags to record on server receive, use these no matter what
-        @config.record_on_server_receive
-      elsif !zipkin_env.called_with_zipkin_headers?
-        # if the request comes from a non zipkin-enabled source record the default tags
-        DEFAULT_SERVER_RECV_TAGS
-      end
-      return if tags.nil?
-      tags.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
+    def trace_server_information(span, zipkin_env, status)
+      span.kind = Trace::Span::Kind::SERVER
+      span.record_tag(Trace::Span::Tag::STATUS, status)
+      SERVER_RECV_TAGS.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
     end
   end
 end
