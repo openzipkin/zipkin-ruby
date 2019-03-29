@@ -1,3 +1,7 @@
+# 0.35.0
+* removes record_on_server_receive option
+* records status_code and method on all server receive events.
+
 # 0.34.0
 * Whitelist plugin ensure a request is traced even if it is not routable
 * Gem requires Ruby > 2.3.0. In practice this was true already.
