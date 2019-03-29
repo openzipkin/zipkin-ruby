@@ -23,7 +23,7 @@ describe ZipkinTracer::RackHandler do
   def expect_tags(path = '/')
     expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
     expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', path)
-    expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.status_code', 200)
+    expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.status_code', '200')
     expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.method', 'GET')
   end
 

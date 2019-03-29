@@ -25,8 +25,6 @@ module ZipkinTracer
 
     private
 
-    STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
-
     def b3_headers
       {
         trace_id: 'X-B3-TraceId',
@@ -51,7 +49,7 @@ module ZipkinTracer
         span.record_tag(Trace::Span::Tag::METHOD, method.upcase)
         span.record_tag(Trace::Span::Tag::PATH, url.path)
         response = @app.call(env).on_complete do |renv|
-          record_response_tags(span, renv[:status].to_s)
+          span.record_status(renv[:status])
         end
       end
       response
@@ -68,11 +66,6 @@ module ZipkinTracer
 
     def record_error(span, msg)
       span.record_tag(Trace::Span::Tag::ERROR, msg)
-    end
-
-    def record_response_tags(span, status)
-      span.record_tag(Trace::Span::Tag::STATUS, status)
-      span.record_tag(Trace::Span::Tag::ERROR, status) if STATUS_ERROR_REGEXP.match(status)
     end
 
   end

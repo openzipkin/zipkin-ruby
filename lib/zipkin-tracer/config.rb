@@ -8,7 +8,7 @@ module ZipkinTracer
     attr_reader :service_name, :json_api_host,
       :zookeeper, :sample_rate, :logger, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
-      :sampled_as_boolean, :record_on_server_receive,
+      :sampled_as_boolean,
       :kafka_producer, :kafka_topic, :trace_id_128bit
 
     def initialize(app, config_hash)

@@ -221,7 +221,7 @@ module Trace
     end
 
     def record_tag(key, value)
-      @tags[key] = value
+      @tags[key] = value.to_s
     end
 
     def record_local_component(value)
@@ -230,6 +230,15 @@ module Trace
 
     def has_parent_span?
       !@span_id.parent_id.nil?
+    end
+
+    STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
+
+    def record_status(status)
+      return if status.nil?
+      status = status.to_s
+      record_tag(Tag::STATUS, status)
+      record_tag(Tag::ERROR, status) if STATUS_ERROR_REGEXP.match(status)
     end
 
     private
