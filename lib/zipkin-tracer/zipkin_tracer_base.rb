@@ -13,12 +13,6 @@ module Trace
       reset
     end
 
-    # This is the common format: IP
-    # Overwrite this method to use different format in this tracer.
-    def ip_format
-      :string
-    end
-
     def with_new_span(trace_id, name)
       span = start_span(trace_id, name)
       result = yield span
