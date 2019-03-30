@@ -20,6 +20,13 @@ describe ZipkinTracer::RackHandler do
     expect(host.ipv4).to eq(host_ip)
   end
 
+  def expect_tags(path = '/')
+    expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
+    expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', path)
+    expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.status_code', '200')
+    expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.method', 'GET')
+  end
+
   let(:app_status) { 200 }
   let(:app_headers) { { 'Content-Type' => 'text/plain' } }
   let(:app_body) { path }
@@ -45,33 +52,12 @@ describe ZipkinTracer::RackHandler do
     it 'traces the request' do
       expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
-      expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
+      expect_tags
 
       status, headers, body = subject.call(mock_env)
       expect(status).to eq(app_status)
       expect(headers).to eq(app_headers)
       expect { |b| body.each &b }.to yield_with_args(app_body)
-    end
-  end
-
-  context 'Zipkin headers are passed to the middleware' do
-    subject { middleware(app) }
-    let(:env) { mock_env(',', ZipkinTracer::ZipkinEnv::B3_REQUIRED_HEADERS.map {|a| Hash[a, 1] }.inject(:merge)) }
-
-    it 'does not set the RPC method' do
-      expect(::Trace).not_to receive(:set_rpc_name)
-      subject.call(env)
-    end
-
-    it 'does not set the path info' do
-      expect_any_instance_of(Trace::Span).not_to receive(:record_tag)
-      subject.call(env)
-    end
-
-    it 'force-sets the path info, excluding unknown keys' do
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/,')
-      middleware(app, record_on_server_receive: 'whatever, http.path , unknown,keys ').call(env)
     end
   end
 
@@ -96,8 +82,7 @@ describe ZipkinTracer::RackHandler do
       it 'traces the request' do
         expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
         expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get /thing/:id').and_call_original
-        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/thing/123')
-        expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
+        expect_tags('/thing/123')
 
         status, headers, body = subject.call(mock_env_route)
         expect(status).to eq(app_status)
@@ -183,9 +168,10 @@ describe ZipkinTracer::RackHandler do
     it 'traces a request with additional annotations' do
       expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
       expect(tracer).to receive(:with_new_span).and_call_original.ordered
+      expect_tags
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.status_code', 200)
+      expect_any_instance_of(Trace::Span).to receive(:record_tag).with('foo', 'FOO')
 
-      expect_any_instance_of(Trace::Span).to receive(:record_tag).exactly(3).times
-      expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
       status, _, _ = subject.call(mock_env)
 
       # return expected status
@@ -216,8 +202,7 @@ describe ZipkinTracer::RackHandler do
       subject { middleware(app, whitelist_plugin: lambda { |env| true }, sample_rate: 0) }
 
       it 'samples the request' do
-        expect_any_instance_of(Trace::Span).to receive(:kind=).with(Trace::Span::Kind::SERVER)
-        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', '/')
+        expect_tags
         status, _, _ = subject.call(mock_env)
         expect(status).to eq(200)
       end

@@ -139,7 +139,7 @@ describe Trace do
     let(:duration) { 0 }
     let(:key) { 'key' }
     let(:value) { 'value' }
-    let(:numeric_value) { 123 }
+    let(:numeric_value) { '123' }
     let(:span_without_parent) do
       Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY))
     end
@@ -239,7 +239,7 @@ describe Trace do
         span_with_parent.record_tag(key, numeric_value)
 
         tags = span_with_parent.tags
-        expect(tags[key]).to eq(123)
+        expect(tags[key]).to eq('123')
       end
     end
 

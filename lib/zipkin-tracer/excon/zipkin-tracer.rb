@@ -27,8 +27,7 @@ module ZipkinTracer
 
     def response_call(datum)
       if span = datum[:span]
-        status = response_status(datum)
-        record_response_tags(span, status) if status
+        span.record_status(response_status(datum))
         Trace.tracer.end_span(span)
       end
 
@@ -36,8 +35,6 @@ module ZipkinTracer
     end
 
     private
-
-    STATUS_ERROR_REGEXP = /\A(4.*|5.*)\z/.freeze
 
     def b3_headers
       {
@@ -59,11 +56,6 @@ module ZipkinTracer
 
     def response_status(datum)
       datum[:response] && datum[:response][:status] && datum[:response][:status].to_s
-    end
-
-    def record_response_tags(span, status)
-      span.record_tag(Trace::Span::Tag::STATUS, status)
-      span.record_tag(Trace::Span::Tag::ERROR, status) if STATUS_ERROR_REGEXP.match(status)
     end
 
     def trace!(datum, trace_id)

@@ -221,10 +221,9 @@ describe ZipkinTracer::ExconHandler do
         stub_request(:get, url)
           .to_return(status: 200, body: '', headers: {})
 
-        span = spy('Trace::Span')
-        allow(Trace::Span).to receive(:new).and_return(span)
-
-        expect(span).to receive(:record_tag).with(Trace::Span::Tag::STATUS, "200").once
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.path', "/some/path/here")
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.status_code', '200')
+        expect_any_instance_of(Trace::Span).to receive(:record_tag).with('http.method', 'GET')
 
         ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           middlewares = [ZipkinTracer::ExconHandler] + Excon.defaults[:middlewares]
