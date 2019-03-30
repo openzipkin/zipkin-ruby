@@ -13,11 +13,12 @@ describe ZipkinTracer::HostnameResolver do
   let(:local_hostname) { 'MRBADGUY' }
   let(:local_endpoint) { Trace::Endpoint.new(local_hostname, 80, name) }
   let(:span) { Trace::Span.new(name, trace_id) }
-  let(:resolved_spans) { described_class.new.spans_with_ips([span]) }
+  let(:ip_format) { :string }
+  let(:resolved_spans) { described_class.new.spans_with_ips([span], ip_format) }
 
   context 'no spans' do
     it 'returns an empty array' do
-      expect(described_class.new.spans_with_ips([])).to eq([])
+      expect(described_class.new.spans_with_ips([], ip_format)).to eq([])
     end
   end
 
@@ -43,13 +44,13 @@ describe ZipkinTracer::HostnameResolver do
 
   context 'resolving to i32 addresses' do
     before do
-      endpoint.ip_format = :i32
       span.local_endpoint = endpoint
       span.remote_endpoint = endpoint
       span.record('diary')
       span.record_tag('secret', 'book')
       allow(Socket).to receive(:getaddrinfo).with(hostname, nil).and_return([[nil, nil, nil, ipv4]])
     end
+    let(:ip_format) { :i32 }
     let(:expected_ip) { 1684300900 }  # 1684300900 == 100.100.100.100 into i32 notation
 
     context 'host lookup failure' do
@@ -65,7 +66,6 @@ describe ZipkinTracer::HostnameResolver do
 
   context 'with spans containing local addresses' do
     before do
-      local_endpoint.ip_format = :string
       span.local_endpoint = local_endpoint
       span.remote_endpoint = local_endpoint
       span.record('diary')
@@ -79,7 +79,6 @@ describe ZipkinTracer::HostnameResolver do
 
   context 'with spans resolving to string addresses' do
     before do
-      endpoint.ip_format = :string
       span.local_endpoint = endpoint
       span.remote_endpoint = endpoint
       span.record('diary')

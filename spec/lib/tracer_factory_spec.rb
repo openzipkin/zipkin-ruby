@@ -80,39 +80,5 @@ describe ZipkinTracer::TracerFactory do
       end
     end
 
-    context 'no domain environment variable' do
-      let(:config) { configuration(service_name: 'zipkin-tester') }
-      before do
-        ENV['DOMAIN'] = ''
-      end
-
-      it 'sets the trace endpoint service name to the default configuration file value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester', :string) { 'endpoint' }
-        expect(Trace).to receive(:default_endpoint=).with('endpoint')
-        described_class.new.tracer(config)
-      end
-
-      context 'json adapter' do
-        let(:config) { configuration(service_name: 'zipkin-tester', json_api_host: 'host') }
-        it 'calls with string ip format' do
-          expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester', :string) { 'endpoint' }
-          expect(Trace).to receive(:default_endpoint=).with('endpoint')
-          described_class.new.tracer(config)
-        end
-      end
-    end
-
-    context 'domain environment variable initialized' do
-      let(:config) { configuration(service_name: 'zipkin-tester') }
-      before do
-        ENV['DOMAIN'] = 'zipkin-env-var-tester.example.com'
-      end
-
-      it 'sets the trace endpoint service name to the environment variable value' do
-        expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-env-var-tester', :string) { 'endpoint' }
-        expect(Trace).to receive(:default_endpoint=).with('endpoint')
-        described_class.new.tracer(config)
-      end
-    end
   end
 end

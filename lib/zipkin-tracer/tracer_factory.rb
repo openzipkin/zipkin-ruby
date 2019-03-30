@@ -25,19 +25,8 @@ module ZipkinTracer
       end
       Trace.tracer = tracer
 
-      # TODO: move this to the TracerBase and kill scribe tracer
-      ip_format = [:kafka, :kafka_producer].include?(config.adapter) ? :i32 : :string
-      Trace.default_endpoint = Trace::Endpoint.local_endpoint(
-        service_name(config.service_name),
-        ip_format
-      )
       tracer
     end
 
-    # Use the Domain environment variable to extract the service name, otherwise use the default config name
-    # TODO: move to the config object
-    def service_name(default_name)
-      ENV["DOMAIN"].to_s.empty? ? default_name : ENV["DOMAIN"].split('.').first
-    end
   end
 end

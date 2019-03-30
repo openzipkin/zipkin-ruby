@@ -250,33 +250,17 @@ module Trace
     end
   end
 
-  class Endpoint < Struct.new(:ipv4, :port, :service_name, :ip_format)
-    MAX_I32 = ((2 ** 31) - 1)
-    MASK = (2 ** 32) - 1
+  class Endpoint < Struct.new(:ipv4, :port, :service_name)
     UNKNOWN_URL = 'unknown'.freeze
 
-    def self.host_to_i32(host)
-      unsigned_i32 = Socket.getaddrinfo(host, nil)[0][3].split(".").map do |i|
-        i.to_i
-      end.inject(0) { |a,e| (a << 8) + e }
-
-      signed_i32 = if unsigned_i32 > MAX_I32
-        -1 * ((unsigned_i32 ^ MASK) + 1)
-      else
-        unsigned_i32
-      end
-
-      signed_i32
-    end
-
-    def self.local_endpoint(service_name, ip_format)
+    def self.local_endpoint(service_name)
       hostname = Socket.gethostname
-      Endpoint.new(hostname, nil, service_name, ip_format)
+      Endpoint.new(hostname, nil, service_name)
     end
 
-    def self.remote_endpoint(url, remote_service_name, ip_format)
+    def self.remote_endpoint(url, remote_service_name)
       service_name = remote_service_name || url.host.split('.').first || UNKNOWN_URL # default to url-derived service name
-      Endpoint.new(url.host, url.port, service_name, ip_format)
+      Endpoint.new(url.host, url.port, service_name)
     end
 
     def to_h
