@@ -1,3 +1,6 @@
+# 0.35.1
+* Fix bug with Rails 5.1 when calling recognize_path with a nil path
+
 # 0.35.0
 * removes record_on_server_receive option
 * records status_code and method on all server receive events.
