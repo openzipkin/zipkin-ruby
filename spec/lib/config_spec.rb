@@ -91,6 +91,40 @@ module ZipkinTracer
           expect(config.adapter).to eq(:kafka_producer)
         end
       end
+
+      context 'no domain environment variable' do
+        before do
+          ENV['DOMAIN'] = ''
+        end
+
+        it 'sets the trace endpoint service name to the default configuration file value' do
+          expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester') { 'endpoint' }
+          expect(Trace).to receive(:default_endpoint=).with('endpoint')
+          Config.new(nil, service_name: 'zipkin-tester')
+        end
+
+        context 'json adapter' do
+          let(:config) { { service_name: 'zipkin-tester', json_api_host: 'host' } }
+          it 'calls with string ip format' do
+            expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-tester') { 'endpoint' }
+            expect(Trace).to receive(:default_endpoint=).with('endpoint')
+            Config.new(nil, config)
+          end
+        end
+      end
+
+      context 'domain environment variable initialized' do
+        let(:config) { { service_name: 'zipkin-tester' } }
+        before do
+          ENV['DOMAIN'] = 'zipkin-env-var-tester.example.com'
+        end
+
+        it 'sets the trace endpoint service name to the environment variable value' do
+          expect(Trace::Endpoint).to receive(:local_endpoint).with('zipkin-env-var-tester') { 'endpoint' }
+          expect(Trace).to receive(:default_endpoint=).with('endpoint')
+          Config.new(nil, config)
+        end
+      end
     end
   end
 end

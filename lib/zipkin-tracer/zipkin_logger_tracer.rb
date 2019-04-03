@@ -5,6 +5,7 @@ require 'json'
 module Trace
   class ZipkinLoggerTracer < ZipkinTracerBase
     TRACING_KEY = 'Tracing information'
+    IP_FORMAT = :string
 
     def initialize(options)
       @logger = options[:logger]
@@ -13,7 +14,7 @@ module Trace
     end
 
     def flush!
-      formatted_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans).map(&:to_h)
+      formatted_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans, IP_FORMAT).map(&:to_h)
       if @logger_accepts_data
         @logger.info_with_data(TRACING_KEY, formatted_spans)
       else

@@ -48,6 +48,10 @@ module ZipkinTracer
 
       Trace.sample_rate = @sample_rate
       Trace.trace_id_128bit = @trace_id_128bit
+
+      Trace.default_endpoint = Trace::Endpoint.local_endpoint(
+        domain_service_name(@service_name)
+      )
     end
 
     def adapter
@@ -65,6 +69,12 @@ module ZipkinTracer
     end
 
     private
+
+    # Use the Domain environment variable to extract the service name, otherwise use the default config name
+    # TODO: move to the config object
+    def domain_service_name(default_name)
+      ENV["DOMAIN"].to_s.empty? ? default_name : ENV["DOMAIN"].split('.').first
+    end
 
     DEFAULTS = {
       sample_rate: 0.1,

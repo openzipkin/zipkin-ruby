@@ -14,6 +14,7 @@ module Trace
   # Spans are encoded using Thrift
   class ZipkinKafkaTracer < ZipkinTracerBase
     DEFAULT_KAFKA_TOPIC = "zipkin".freeze
+    IP_FORMAT = :i32
 
     def initialize(options = {})
       @topic  = options[:topic] || DEFAULT_KAFKA_TOPIC
@@ -29,7 +30,7 @@ module Trace
     end
 
     def flush!
-      resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans)
+      resolved_spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans, IP_FORMAT)
       resolved_spans.each do |span|
         buf = ''
         trans = Thrift::MemoryBufferTransport.new(buf)

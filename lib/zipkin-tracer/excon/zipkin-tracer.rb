@@ -47,7 +47,7 @@ module ZipkinTracer
     end
 
     def remote_endpoint(url, service_name)
-      Trace::Endpoint.remote_endpoint(url, service_name, Trace.default_endpoint.ip_format) # The endpoint we are calling.
+      Trace::Endpoint.remote_endpoint(url, service_name) # The endpoint we are calling.
     end
 
     def service_name(datum, default)

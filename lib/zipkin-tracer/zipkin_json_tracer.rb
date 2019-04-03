@@ -8,7 +8,8 @@ class AsyncJsonApiClient
   SPANS_PATH = '/api/v2/spans'
 
   def perform(json_api_host, spans)
-    spans_with_ips = ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans).map(&:to_h)
+    spans_with_ips =
+      ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans, ZipkinJsonTracer::IP_FORMAT).map(&:to_h)
     resp = Faraday.new(json_api_host).post do |req|
       req.url SPANS_PATH
       req.headers['Content-Type'] = 'application/json'
@@ -27,6 +28,7 @@ module Trace
   # This class sends information to the Zipkin API.
   # The API accepts a JSON representation of a list of spans
   class ZipkinJsonTracer < ZipkinTracerBase
+    IP_FORMAT = :string
 
     def initialize(options)
       SuckerPunch.logger = options[:logger]
