@@ -16,6 +16,10 @@ module ZipkinTracer
           options = { producer: config.kafka_producer }
           options[:topic] = config.kafka_topic unless config.kafka_topic.nil?
           Trace::ZipkinKafkaTracer.new(options)
+        when :sqs
+          require 'zipkin-tracer/zipkin_sqs_tracer'
+          options = { logger: config.logger, queue_name: config.sqs_queue_name , region: config.sqs_region }
+          Trace::ZipkinSqsTracer.new(options)
         when :logger
           require 'zipkin-tracer/zipkin_logger_tracer'
           Trace::ZipkinLoggerTracer.new(logger: config.logger)
@@ -27,6 +31,5 @@ module ZipkinTracer
 
       tracer
     end
-
   end
 end

@@ -1,3 +1,6 @@
+# 0.36.0
+* Add ZipkinSqsTracer to send spans via Amazon SQS
+
 # 0.35.1
 * Fix bug with Rails 5.1 when calling recognize_path with a nil path
 

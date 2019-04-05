@@ -21,6 +21,8 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
 * `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
 * `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
+* `:sqs_queue_name` - the name of the Amazon SQS queue to use the SQS tracer
+* `:sqs_region` - the AWS region for the Amazon SQS queue
 * `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
 * `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
@@ -53,7 +55,6 @@ end
 
 Note that supplying the service name for the destination service is optional;
 the tracing will default to a service name derived from the first section of the destination URL (e.g. 'service.example.com' => 'service').
-
 
 ### Tracing Sidekiq workers
 
@@ -106,7 +107,6 @@ Sends traces as JSON over HTTP. This is the preferred tracer to use as the openz
 
 You need to specify the `:json_api_host` parameter to wherever your zipkin collector is running. It will POST traces to the `/api/v2/spans` path.
 
-
 ### Kafka
 
 Uses Kafka as the transport.
@@ -123,6 +123,18 @@ Caveat: Hermann is only usable from within Jruby, due to its implementation of z
 
 The Kafka transport send data using Thrift. Since version 0.31.0, Thrift is not a dependency, thus the gem 'finagle-thrift' needs to be added to the Gemfile also.
 
+### Amazon SQS
+
+Uses Amazon SQS as the transport.
+
+If `:sqs_queue_name` is set in the config, then the gem will use Amazon SQS; you will need the `aws-sdk-sqs` gem installed, as it is not part of zipkin-tracer's gemspec.
+
+The following [Amazon SQS permissions](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-api-permissions-reference.html) are required:
+- `sqs:SendMessage`
+- `sqs:GetQueueUrl`
+
+Optionally, you can set `:sqs_region` to specify the AWS region to connect to.
+
 ### Logger
 
 The simplest tracer that does something. It will log all your spans.
@@ -132,10 +144,9 @@ You need to set `:log_tracing` to true in the configuration.
 
 ### Null
 
-If the configuration does not provide either a JSON, Zookeeper or Scribe server then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
+If the configuration does not provide either a JSON host, Zookeeper server or Amazon SQS queue then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
 
 Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin you can still use this gem. Just do not specify any server :)
-
 
 
 ## Plugins

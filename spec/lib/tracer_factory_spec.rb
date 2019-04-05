@@ -62,6 +62,15 @@ describe ZipkinTracer::TracerFactory do
       end
     end
 
+    context 'configured to use Amazon SQS' do
+      let(:config) { configuration(sqs_queue_name: 'zipkin-sqs') }
+
+      it 'creates a sqs tracer' do
+        allow(Trace::ZipkinSqsTracer).to receive(:new) { tracer }
+        expect(Trace).to receive(:tracer=).with(tracer)
+        expect(described_class.new.tracer(config)).to eq(tracer)
+      end
+    end
 
     context 'no transport configured' do
       it 'creates a null tracer' do
@@ -70,7 +79,8 @@ describe ZipkinTracer::TracerFactory do
           { json_api_host: nil },
           { json_api_host: "" },
           { json_api_host: "\n\t 　\r" },
-          { zookeeper: "" }
+          { zookeeper: "" },
+          { sqs_queue_name: "" }
         ].each do |options|
           config = configuration(options)
           allow(Trace::NullTracer).to receive(:new) { tracer }

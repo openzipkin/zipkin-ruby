@@ -92,6 +92,24 @@ module ZipkinTracer
         end
       end
 
+      context 'sqs' do
+        context 'Aws::SQS is defined' do
+          it 'returns :sqs if sqs_queue_name has been set' do
+            config = Config.new(nil, sqs_queue_name: 'zipkin-sqs')
+            expect(config.adapter).to eq(:sqs)
+          end
+        end
+
+        context 'Aws::SQS is not defined' do
+          before { hide_const('Aws::SQS') }
+
+          it 'does not return :sqs' do
+            config = Config.new(nil, sqs_queue_name: 'zipkin-sqs')
+            expect(config.adapter).to eq(nil)
+          end
+        end
+      end
+
       context 'no domain environment variable' do
         before do
           ENV['DOMAIN'] = ''

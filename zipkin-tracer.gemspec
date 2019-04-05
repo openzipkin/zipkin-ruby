@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
+  s.add_development_dependency 'aws-sdk-sqs', '~> 1.0'
   s.add_development_dependency 'excon', '~> 0.53'
   s.add_development_dependency 'rspec', '~> 3.8'
   s.add_development_dependency 'rack-test', '~> 1.1'
