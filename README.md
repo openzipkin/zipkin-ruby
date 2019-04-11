@@ -19,9 +19,9 @@ where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the fo
 
 * `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
-* `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the JSON tracer
-* `:zookeeper` - the address of the zookeeper server to use by the Kafka tracer
-* `:sqs_queue_name` - the name of the Amazon SQS queue to use the SQS tracer
+* `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
+* `:zookeeper` - the address of the zookeeper server to use by the Kafka sender
+* `:sqs_queue_name` - the name of the Amazon SQS queue to use the SQS sender
 * `:sqs_region` - the AWS region for the Amazon SQS queue
 * `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
 * `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
@@ -97,13 +97,13 @@ end
 ```
 
 
-## Tracers
+## Senders
 
-Only one of the following tracers can be used at a given time.
+Only one of the following senders can be used at a given time.
 
-### JSON
+### HTTP
 
-Sends traces as JSON over HTTP. This is the preferred tracer to use as the openzipkin project moves away from Thrift.
+Sends traces as JSON over HTTP. This is the preferred sender to use as the openzipkin project moves away from Thrift.
 
 You need to specify the `:json_api_host` parameter to wherever your zipkin collector is running. It will POST traces to the `/api/v2/spans` path.
 
@@ -137,14 +137,14 @@ Optionally, you can set `:sqs_region` to specify the AWS region to connect to.
 
 ### Logger
 
-The simplest tracer that does something. It will log all your spans.
-This tracer can be used for debugging purpose (to see what is going to be sent) or to deliver zipkin information into the logs for later retrieval and analysis.
+The simplest sender that does something. It will log all your spans.
+This sender can be used for debugging purpose (to see what is going to be sent) or to deliver zipkin information into the logs for later retrieval and analysis.
 
 You need to set `:log_tracing` to true in the configuration.
 
 ### Null
 
-If the configuration does not provide either a JSON host, Zookeeper server or Amazon SQS queue then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
+If the configuration does not provide either an API host, Zookeeper server or Amazon SQS queue then the middlewares will not attempt to send traces although they will still generate proper IDs and pass them to other services.
 
 Thus, if you only want to generate IDs for instance for logging and do not intent to integrate with Zipkin you can still use this gem. Just do not specify any server :)
 

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_null_tracer'
+require 'zipkin-tracer/zipkin_null_sender'
 require 'lib/middleware_shared_examples'
 
 describe ZipkinTracer::ExconHandler do
@@ -54,7 +54,7 @@ describe ZipkinTracer::ExconHandler do
   it 'has a trace with correct duration' do
     request_duration_in_seconds = 1
     Timecop.freeze
-    Trace.tracer = Trace::NullTracer.new
+    Trace.tracer = Trace::NullSender.new
     ::Trace.sample_rate = 1
     trace_id = ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG)
     url = 'https://www.example.com'
@@ -98,7 +98,7 @@ describe ZipkinTracer::ExconHandler do
 
     context 'request with path and query params' do
       around do |example|
-        Trace.tracer = Trace::NullTracer.new
+        Trace.tracer = Trace::NullSender.new
         ::Trace.sample_rate = 1 # make sure initialized
         ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           example.run
@@ -172,7 +172,7 @@ describe ZipkinTracer::ExconHandler do
 
     context 'request with custom zipkin service name' do
       around do |example|
-        Trace.tracer = Trace::NullTracer.new
+        Trace.tracer = Trace::NullSender.new
         ::Trace.sample_rate = 1 # make sure initialized
         ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
           example.run

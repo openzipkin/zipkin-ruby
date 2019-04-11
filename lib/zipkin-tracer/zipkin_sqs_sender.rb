@@ -1,10 +1,10 @@
 require "aws-sdk-sqs"
 require "json"
-require "zipkin-tracer/zipkin_tracer_base"
+require "zipkin-tracer/zipkin_sender_base"
 require "zipkin-tracer/hostname_resolver"
 
 module Trace
-  class ZipkinSqsTracer < ZipkinTracerBase
+  class ZipkinSqsSender < ZipkinSenderBase
     IP_FORMAT = :string
 
     def initialize(options)

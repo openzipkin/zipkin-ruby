@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'securerandom'
-require 'zipkin-tracer/zipkin_logger_tracer'
+require 'zipkin-tracer/zipkin_logger_sender'
 
-describe Trace::ZipkinLoggerTracer do
+describe Trace::ZipkinLoggerSender do
   let(:span_id) { ZipkinTracer::TraceGenerator.new.generate_id }
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY) }
   let(:name) { 'trusmis' }

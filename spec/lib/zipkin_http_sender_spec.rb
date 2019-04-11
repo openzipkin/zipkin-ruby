@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_json_tracer'
+require 'zipkin-tracer/zipkin_http_sender'
 
-describe Trace::ZipkinJsonTracer do
+describe Trace::ZipkinHttpSender do
   let(:json_api_host) { 'http://json.example.com' }
   let(:default_options) { { json_api_host: json_api_host } }
 

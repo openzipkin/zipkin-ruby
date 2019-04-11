@@ -1,7 +1,7 @@
 require "spec_helper"
-require "zipkin-tracer/zipkin_sqs_tracer"
+require "zipkin-tracer/zipkin_sqs_sender"
 
-describe Trace::ZipkinSqsTracer do
+describe Trace::ZipkinSqsSender do
   let(:span_id) { ZipkinTracer::TraceGenerator.new.generate_id }
   let(:trace_id) { Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY) }
   let(:queue_name) { "zipkin-sqs" }

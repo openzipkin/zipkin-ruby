@@ -1,8 +1,5 @@
 module Trace
-  # Monkey patching Nulltracer from thrift.
-  # All our tracers have a start_span method, adding it to
-  # the NullTracer also.
-  class NullTracer
+  class NullSender
     def with_new_span(trace_id, name)
       span = start_span(trace_id, name)
       result = yield span
