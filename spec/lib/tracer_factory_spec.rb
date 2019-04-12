@@ -18,7 +18,7 @@ describe ZipkinTracer::TracerFactory do
 
   let(:logger) { Logger.new(nil) }
   let(:subject) { described_class.new(config) }
-  let(:tracer) { double('Trace::NullTracer') }
+  let(:tracer) { double('Trace::NullSender') }
 
   before do
     allow(ZipkinTracer::Application).to receive(:logger).and_return(logger)
@@ -31,7 +31,6 @@ describe ZipkinTracer::TracerFactory do
         require 'zipkin-tracer/zipkin_kafka_sender'
 
         let(:zookeeper) { 'localhost:2181' }
-        let(:zipkinKafkaTracer) { double('ZipkinKafkaTracer') }
         let(:config) { configuration(zookeeper: zookeeper) }
 
         it 'creates a zipkin kafka sender' do

@@ -4,7 +4,7 @@ require 'spec_helper'
 if RUBY_PLATFORM == 'java'
   require 'zipkin-tracer/zipkin_kafka_sender'
 
-  describe Trace::ZipkinKafkaTracer, :platform => :java do
+  describe Trace::ZipkinKafkaSender, :platform => :java do
     let(:span_id) { 'c3a555b04cf7e099' }
     let(:parent_id) { 'f0e71086411b1445' }
     let(:sampled) { true }
@@ -32,7 +32,7 @@ if RUBY_PLATFORM == 'java'
         end
 
         it 'has default topic' do
-          expect(tracer.instance_variable_get(:@topic)).to eq Trace::ZipkinKafkaTracer::DEFAULT_KAFKA_TOPIC
+          expect(tracer.instance_variable_get(:@topic)).to eq Trace::ZipkinKafkaSender::DEFAULT_KAFKA_TOPIC
         end
 
         it 'connects to zookeeper to create a Hermann producer' do
