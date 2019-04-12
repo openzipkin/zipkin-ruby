@@ -10,19 +10,22 @@ describe Trace::ZipkinSqsSender do
   let(:tracer) { described_class.new(logger: logger, queue_name: queue_name, region: region) }
 
   describe "#initialize" do
+    it 'sets the SuckerPunch logger' do
+      expect(SuckerPunch).to receive(:logger=).with(logger)
+      tracer
+    end
+
     context "without region" do
-      it "creates a new instance without region" do
-        expect(Aws::SQS::Client).to receive(:new).with({})
-        tracer
+      it "does not set region in sqs_options" do
+        expect(tracer.instance_variable_get(:@sqs_options)).to eq({})
       end
     end
 
     context "with region" do
       let(:region) { "us-west-2"}
 
-      it "creates a new instance with the given region" do
-        expect(Aws::SQS::Client).to receive(:new).with(region: "us-west-2")
-        tracer
+      it "sets region in sqs_options" do
+        expect(tracer.instance_variable_get(:@sqs_options)).to eq(region: "us-west-2")
       end
     end
   end
