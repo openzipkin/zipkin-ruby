@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/zipkin_sender_base'
 
-describe Trace::ZipkinTracerBase do
+describe Trace::ZipkinSenderBase do
   let(:span_id) { 'c3a555b04cf7e099' }
   let(:parent_id) { 'f0e71086411b1445' }
   let(:sampled) { true }

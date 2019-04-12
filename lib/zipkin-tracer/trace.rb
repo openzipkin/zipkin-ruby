@@ -1,4 +1,4 @@
-require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/zipkin_sender_base'
 require 'zipkin-tracer/trace_container'
 # Most of this code is copied from Finagle
 # https://github.com/twitter/finagle/blob/finagle-6.39.0/finagle-thrift/src/main/ruby/lib/finagle-thrift/trace.rb

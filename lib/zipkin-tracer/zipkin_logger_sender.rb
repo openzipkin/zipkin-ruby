@@ -1,9 +1,9 @@
-require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/zipkin_sender_base'
 require 'zipkin-tracer/hostname_resolver'
 require 'json'
 
 module Trace
-  class ZipkinLoggerTracer < ZipkinTracerBase
+  class ZipkinLoggerSender < ZipkinSenderBase
     TRACING_KEY = 'Tracing information'
     IP_FORMAT = :string
 

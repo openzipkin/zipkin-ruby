@@ -6,13 +6,13 @@ begin
 rescue LoadError => e
 end
 
-require 'zipkin-tracer/zipkin_tracer_base'
+require 'zipkin-tracer/zipkin_sender_base'
 require 'zipkin-tracer/hostname_resolver'
 
 module Trace
   # This class sends information to Zipkin through Kafka.
   # Spans are encoded using Thrift
-  class ZipkinKafkaTracer < ZipkinTracerBase
+  class ZipkinKafkaSender < ZipkinSenderBase
     DEFAULT_KAFKA_TOPIC = "zipkin".freeze
     IP_FORMAT = :i32
 

@@ -10,7 +10,7 @@ shared_examples 'makes requests without tracing' do
   end
   context 'We are not sampling this request' do
     before do
-      Trace.tracer = Trace::NullTracer.new
+      Trace.tracer = Trace::NullSender.new
       ::Trace.sample_rate = 0 # make sure initialized
     end
     include_examples 'make requests', false
@@ -19,7 +19,7 @@ end
 
 shared_examples 'makes requests with tracing' do
   around do |example|
-    Trace.tracer = Trace::NullTracer.new
+    Trace.tracer = Trace::NullSender.new
     ::Trace.sample_rate = 1 # make sure initialized
     ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
       example.run

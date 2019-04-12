@@ -1,12 +1,12 @@
 require 'faraday'
 
 module Trace
-  # This class is a base for tracers sending information to Zipkin.
+  # This class is a base for senders sending information to Zipkin.
   # It knows about zipkin types of annotations and send traces when the server
   # is done with its request
-  # Traces dealing with zipkin should inherit from this class and implement the
+  # Senders dealing with zipkin should inherit from this class and implement the
   # flush! method which actually sends the information
-  class ZipkinTracerBase
+  class ZipkinSenderBase
 
     def initialize(options={})
       @options = options

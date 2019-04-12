@@ -1,3 +1,7 @@
+# 0.36.0
+* Add ZipkinSqsSender to send spans via Amazon SQS
+* Rename ZipkinJsonTracer to ZipkinHttpSender and rename others to replace the term "tracer" with "sender"
+
 # 0.35.1
 * Fix bug with Rails 5.1 when calling recognize_path with a nil path
 

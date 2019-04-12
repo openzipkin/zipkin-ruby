@@ -5,11 +5,10 @@ require 'zipkin-tracer/rack/zipkin-tracer'
 module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
   class Config
-    attr_reader :service_name, :json_api_host,
-      :zookeeper, :sample_rate, :logger, :log_tracing,
+    attr_reader :service_name, :sample_rate,
+      :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin,
-      :sampled_as_boolean,
-      :kafka_producer, :kafka_topic, :trace_id_128bit
+      :logger, :sampled_as_boolean, :trace_id_128bit
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -22,6 +21,9 @@ module ZipkinTracer
       # Kafka producer information
       @kafka_producer    = config[:producer]
       @kafka_topic       = config[:topic] if present?(config[:topic])
+      # Amazon SQS queue information
+      @sqs_queue_name    = config[:sqs_queue_name]
+      @sqs_region        = config[:sqs_region]
       # Percentage of traces which by default this service traces (as float, 1.0 means 100%)
       @sample_rate       = config[:sample_rate]       || DEFAULTS[:sample_rate]
       # A block of code which can be called to do extra annotations of traces
@@ -61,6 +63,8 @@ module ZipkinTracer
         :kafka
       elsif @kafka_producer && @kafka_producer.respond_to?(:push)
         :kafka_producer
+      elsif present?(@sqs_queue_name) && defined?(Aws::SQS)
+        :sqs
       elsif !!@log_tracing
         :logger
       else

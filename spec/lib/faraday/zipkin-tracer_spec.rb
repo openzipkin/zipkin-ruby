@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_null_tracer'
+require 'zipkin-tracer/zipkin_null_sender'
 require 'lib/middleware_shared_examples'
 
 describe ZipkinTracer::FaradayHandler do

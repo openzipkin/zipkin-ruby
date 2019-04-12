@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'zipkin-tracer/zipkin_null_tracer'
+require 'zipkin-tracer/zipkin_null_sender'
 
 describe ZipkinTracer::TraceClient do
   let(:lc_value) { 'lc_value' }
@@ -7,7 +7,7 @@ describe ZipkinTracer::TraceClient do
   subject { ZipkinTracer::TraceClient }
 
   before do
-    Trace.tracer = Trace::NullTracer.new
+    Trace.tracer = Trace::NullSender.new
     allow(Trace).to receive(:default_endpoint).and_return(Trace::Endpoint.new('127.0.0.1', '80', 'service_name'))
     Trace.sample_rate = 1
     ZipkinTracer::TraceContainer.cleanup!
