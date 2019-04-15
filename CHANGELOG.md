@@ -1,3 +1,6 @@
+# 0.36.1
+* Bugfix: Prevent uninitialized constant AsyncHttpApiClient::ZipkinHttpSender error
+
 # 0.36.0
 * Add ZipkinSqsSender to send spans via Amazon SQS
 * Rename ZipkinJsonTracer to ZipkinHttpSender and rename others to replace the term "tracer" with "sender"
