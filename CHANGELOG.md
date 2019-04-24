@@ -1,3 +1,6 @@
+# 0.36.2
+* Cleanup the gemspec. No code changes.
+
 # 0.36.1
 * Bugfix: Prevent uninitialized constant AsyncHttpApiClient::ZipkinHttpSender error
 
