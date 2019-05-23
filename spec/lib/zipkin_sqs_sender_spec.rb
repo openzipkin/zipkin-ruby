@@ -30,6 +30,33 @@ describe Trace::ZipkinSqsSender do
     end
   end
 
+  describe ":async option" do
+    context "default value" do
+      it "runs asynchronously" do
+        expect(Trace::SqsClient).to receive(:perform_async)
+        tracer.flush!
+      end
+    end
+
+    context ":async is anything but a boolean with a value of 'false'" do
+      it "runs asynchronously" do
+        [nil, 0, "", " ", [], {}].each do |value|
+          tracer = described_class.new(logger: logger, queue_name: queue_name, region: region, async: value)
+          expect(Trace::SqsClient).to receive(:perform_async)
+          tracer.flush!
+        end
+      end
+    end
+
+    context ":async is a boolean with a value of 'false'" do
+      it "runs synchronously" do
+        tracer = described_class.new(logger: logger, queue_name: queue_name, region: region, async: false)
+        expect(Trace::SqsClient).to receive_message_chain(:new, :perform)
+        tracer.flush!
+      end
+    end
+  end
+
   describe "#flush!" do
     before do
       Aws.config[:sqs] = {

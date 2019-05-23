@@ -12,6 +12,7 @@ require 'sucker_punch/testing/inline'
 
 RSpec.configure do |config|
   config.order = :random
+  Kernel.srand config.seed
   RSpec::Mocks.configuration.allow_message_expectations_on_nil = true
 
   config.after(:each) do

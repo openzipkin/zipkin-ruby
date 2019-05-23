@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'aws-sdk-sqs', '~> 1.0'
   s.add_development_dependency 'excon', '~> 0.53'
   s.add_development_dependency 'rspec', '~> 3.8'
+  s.add_development_dependency 'rspec-json_expectations', '~> 2.2'
   s.add_development_dependency 'rack-test', '~> 1.1'
   s.add_development_dependency 'rake', '~> 10.0'
   s.add_development_dependency 'timecop', '~> 0.8'

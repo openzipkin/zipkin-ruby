@@ -18,7 +18,12 @@ module ZipkinTracer
           Trace::ZipkinKafkaSender.new(options)
         when :sqs
           require 'zipkin-tracer/zipkin_sqs_sender'
-          options = { logger: config.logger, queue_name: config.sqs_queue_name , region: config.sqs_region }
+          options = {
+            async: config.async,
+            logger: config.logger,
+            queue_name: config.sqs_queue_name,
+            region: config.sqs_region
+          }
           Trace::ZipkinSqsSender.new(options)
         when :logger
           require 'zipkin-tracer/zipkin_logger_sender'

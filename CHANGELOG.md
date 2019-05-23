@@ -1,3 +1,9 @@
+# 0.37.0
+* Add an `async` option
+  * only used by the SQS sender now.
+* Allow the `logger` option to be provided.
+* Add the TraceWrapper utility class.
+
 # 0.36.2
 * Cleanup the gemspec. No code changes.
 

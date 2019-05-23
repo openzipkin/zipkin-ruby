@@ -5,7 +5,7 @@ require "zipkin-tracer/zipkin_sender_base"
 require "zipkin-tracer/hostname_resolver"
 
 module Trace
-  class AsyncSqsClient
+  class SqsClient
     include SuckerPunch::Job
 
     def perform(sqs_options, queue_name, spans)
@@ -13,9 +13,10 @@ module Trace
         ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans, ZipkinSqsSender::IP_FORMAT).map(&:to_h)
       sqs = Aws::SQS::Client.new(**sqs_options)
       queue_url = sqs.get_queue_url(queue_name: queue_name).queue_url
-      sqs.send_message(queue_url: queue_url, message_body: JSON.generate(spans_with_ips))
+      body = JSON.generate(spans_with_ips)
+      sqs.send_message(queue_url: queue_url, message_body: body)
     rescue Aws::SQS::Errors::NonExistentQueue
-      error_message = "A queue named '#{@queue_name}' does not exist."
+      error_message = "The queue '#{queue_name}' does not exist."
       SuckerPunch.logger.error(error_message)
     rescue => e
       SuckerPunch.logger.error(e)
@@ -28,12 +29,17 @@ module Trace
     def initialize(options)
       @sqs_options = options[:region] ? { region: options[:region] } : {}
       @queue_name = options[:queue_name]
+      @async = options[:async] != false
       SuckerPunch.logger = options[:logger]
       super(options)
     end
 
     def flush!
-      AsyncSqsClient.perform_async(@sqs_options, @queue_name, spans.dup)
+      if @async
+        SqsClient.perform_async(@sqs_options, @queue_name, spans.dup)
+      else
+        SqsClient.new.perform(@sqs_options, @queue_name, spans.dup)
+      end
     end
   end
 end

@@ -8,6 +8,7 @@ shared_examples 'makes requests without tracing' do
     end
     include_examples 'make requests', false
   end
+
   context 'We are not sampling this request' do
     before do
       Trace.tracer = Trace::NullSender.new
@@ -25,16 +26,16 @@ shared_examples 'makes requests with tracing' do
       example.run
     end
   end
+
   before do
     allow(::Trace).to receive(:default_endpoint).and_return(::Trace::Endpoint.new('127.0.0.1', '80', service_name))
     allow(::Trace::Endpoint).to receive(:host_to_i32).with(hostname).and_return(host_ip)
   end
-   include_examples 'make requests', true
+
+  include_examples 'make requests', true
 end
 
-
 shared_examples 'make requests' do |expect_to_trace_request|
-
   let(:hostname) { 'service.example.com' }
   let(:host_ip) { 0x11223344 }
   let(:url_path) { '/some/path/here' }
@@ -114,7 +115,6 @@ shared_examples 'make requests' do |expect_to_trace_request|
   end
 
   context 'without tracing id' do
-
     it 'expects tracing' do
       if expect_to_trace_request
         expect_tracing
@@ -183,6 +183,5 @@ shared_examples 'make requests' do |expect_to_trace_request|
         process('', url)
       end
     end
-
   end
 end

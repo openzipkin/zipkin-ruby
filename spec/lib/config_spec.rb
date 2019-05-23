@@ -5,6 +5,7 @@ module ZipkinTracer
     before do
       allow(Application).to receive(:logger).and_return(Logger.new(nil))
     end
+
     [:service_name, :json_api_host,
       :zookeeper, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
@@ -26,10 +27,33 @@ module ZipkinTracer
       end
     end
 
+    describe 'async' do
+      it 'uses "true" by default' do
+        config = Config.new(nil, {})
+        expect(config.async).to be true
+      end
+
+      it 'uses "false" only if a boolean with a value of "false" is passed' do
+        config = Config.new(nil, async: false)
+        expect(config.async).to be false
+
+        [nil, 0, "", " ", [], {}].each do |value|
+          config = Config.new(nil, async: value)
+          expect(config.async).to be true
+        end
+      end
+    end
+
     describe 'logger' do
       it 'uses the application logger' do
         config = Config.new(nil, {})
         expect(config.logger).to eq(Application.logger)
+      end
+
+      it 'uses the logger provided in the configuration' do
+        logger = Logger.new(STDERR)
+        config = Config.new(nil, logger: logger)
+        expect(config.logger).to eq(logger)
       end
     end
 
@@ -94,6 +118,8 @@ module ZipkinTracer
 
       context 'sqs' do
         context 'Aws::SQS is defined' do
+          before { stub_const("Aws::SQS", "fake SQS") unless defined?(Aws::SQS) }
+
           it 'returns :sqs if sqs_queue_name has been set' do
             config = Config.new(nil, sqs_queue_name: 'zipkin-sqs')
             expect(config.adapter).to eq(:sqs)
