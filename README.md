@@ -18,19 +18,19 @@ use ZipkinTracer::RackHandler, config
 ### Configuration options
 
 #### Common
-- `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
-- `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
-- `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
-- `:trace_id_128bit` - When set to true, high 8-bytes will be prepended to trace_id. The upper 4-bytes are epoch seconds and the lower 4-bytes are random. This makes it convertible to Amazon X-Ray trace ID format v1. (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
-- `:async` - By default senders will flush traces asynchronously. Set to `false` to make that process synchronous. Only supported by the SQS sender.
-- `:logger` - The default logger for Rails apps is `Rails.logger`, else it is `STDOUT`. Use this option to pass a custom logger.
+* `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
+* `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
+* `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
+* `:trace_id_128bit` - When set to true, high 8-bytes will be prepended to trace_id. The upper 4-bytes are epoch seconds and the lower 4-bytes are random. This makes it convertible to Amazon X-Ray trace ID format v1. (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
+* `:async` - By default senders will flush traces asynchronously. Set to `false` to make that process synchronous. Only supported by the SQS sender.
+* `:logger` - The default logger for Rails apps is `Rails.logger`, else it is `STDOUT`. Use this option to pass a custom logger.
 
 #### Sender specific
-- `:json_api_host` - Hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
-- `:zookeeper` - The address of the zookeeper server to use by the Kafka sender
-- `:sqs_queue_name` - The name of the Amazon SQS queue to use the SQS sender
-- `:sqs_region` - The AWS region for the Amazon SQS queue (optional)
-- `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
+* `:json_api_host` - Hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
+* `:zookeeper` - The address of the zookeeper server to use by the Kafka sender
+* `:sqs_queue_name` - The name of the Amazon SQS queue to use the SQS sender
+* `:sqs_region` - The AWS region for the Amazon SQS queue (optional)
+* `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
 
 #### Plugins
 * `:annotate_plugin` - Receives the Rack env, the response status, headers, and body to record annotations
@@ -82,7 +82,7 @@ Sidekiq.configure_server do |config|
 end
 ```
 
-By default workers aren't traced. You can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
+By default workers aren't traced. you can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
 
 ### Local tracing
 
@@ -225,12 +225,12 @@ This class provides a `.wrap_in_custom_span` method which expects a configuratio
 You may also pass a span kind and an Application object using respectively `span_kind:` and `app:` keyword arguments.
 
 The block You pass will be executed in the context of a custom span.
-This is useful when your application doesn't use the rack handler but still needs to generate complete traces, for instance background jobs or lambda calling remote services.
+This is useful when your application doesn't use the rack handler but still needs to generate complete traces, for instance background jobs or lambdas calling remote services.
 
 The following code will create a trace starting with a span of the (default) `SERVER` kind named "custom span" and then a span of the `CLIENT` kind will be added by the Faraday middleware. Afterwards the configured sender will call `flush!`.
 
 ```ruby
-TraceWrapper.wrap_in_custom_span(config, "custom span") do
+TraceWrapper.wrap_in_custom_span(config, "custom span") do |span|
   conn = Faraday.new(url: remote_service_url) do |builder|
     builder.use ZipkinTracer::FaradayHandler, config[:service_name]
     builder.adapter Faraday.default_adapter
