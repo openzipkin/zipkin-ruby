@@ -23,6 +23,21 @@ describe ZipkinTracer::TraceWrapper do
       expect { described_class.wrap_in_custom_span(config, "custom span") }.to raise_error(ArgumentError)
     end
 
+    it "passes back a NullSpan if the trace is not sampled" do
+      config[:sample_rate] = 0
+      described_class.wrap_in_custom_span(config, "custom span") do |span|
+        expect(span).to be_instance_of(ZipkinTracer::NullSpan)
+      end
+    end
+
+    it "passes back the custom span if the trace is sampled" do
+      described_class.wrap_in_custom_span(config, "custom span") do |span|
+        expect(span).to be_instance_of(Trace::Span)
+        expect(span.name).to eq("custom span")
+        expect(span.kind).to eq("SERVER")
+      end
+    end
+
     it "wraps the given block in a custom span" do
       trace_id = nil
       described_class.wrap_in_custom_span(config, "custom span") do

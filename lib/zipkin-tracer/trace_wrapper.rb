@@ -8,9 +8,13 @@ module ZipkinTracer
       trace_id = ZipkinTracer::TraceGenerator.new.next_trace_id
 
       ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
-        tracer.with_new_span(trace_id, span_name) do |span|
-          span.kind = span_kind
-          yield
+        if trace_id.sampled?
+          tracer.with_new_span(trace_id, span_name) do |span|
+            span.kind = span_kind
+            yield(span)
+          end
+        else
+          yield(ZipkinTracer::NullSpan.new)
         end
       end
     end
