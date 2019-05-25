@@ -82,7 +82,7 @@ Sidekiq.configure_server do |config|
 end
 ```
 
-By default workers aren't traced. you can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
+By default workers aren't traced. You can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
 
 ### Local tracing
 
@@ -224,7 +224,7 @@ lambda { |env| KNOWN_DEVICES.include?(env['HTTP_X_DEVICE_ID']) }
 This class provides a `.wrap_in_custom_span` method which expects a configuration hash, a span name and a block.
 You may also pass a span kind and an Application object using respectively `span_kind:` and `app:` keyword arguments.
 
-The block You pass will be executed in the context of a custom span.
+The block you pass will be executed in the context of a custom span.
 This is useful when your application doesn't use the rack handler but still needs to generate complete traces, for instance background jobs or lambdas calling remote services.
 
 The following code will create a trace starting with a span of the (default) `SERVER` kind named "custom span" and then a span of the `CLIENT` kind will be added by the Faraday middleware. Afterwards the configured sender will call `flush!`.
