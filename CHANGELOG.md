@@ -1,6 +1,5 @@
 # 0.37.0
-* Add an `async` option
-  * only used by the SQS sender now.
+* Add an `async` option to the HTTP and SQS senders.
 * Allow the `logger` option to be provided.
 * Add the TraceWrapper utility class.
 

@@ -1,4 +1,5 @@
 require "spec_helper"
+require "support/shared_examples"
 require "zipkin-tracer/zipkin_sqs_sender"
 
 describe Trace::ZipkinSqsSender do
@@ -31,29 +32,10 @@ describe Trace::ZipkinSqsSender do
   end
 
   describe ":async option" do
-    context "default value" do
-      it "runs asynchronously" do
-        expect(Trace::SqsClient).to receive(:perform_async)
-        tracer.flush!
-      end
-    end
-
-    context ":async is anything but a boolean with a value of 'false'" do
-      it "runs asynchronously" do
-        [nil, 0, "", " ", [], {}].each do |value|
-          tracer = described_class.new(logger: logger, queue_name: queue_name, region: region, async: value)
-          expect(Trace::SqsClient).to receive(:perform_async)
-          tracer.flush!
-        end
-      end
-    end
-
-    context ":async is a boolean with a value of 'false'" do
-      it "runs synchronously" do
-        tracer = described_class.new(logger: logger, queue_name: queue_name, region: region, async: false)
-        expect(Trace::SqsClient).to receive_message_chain(:new, :perform)
-        tracer.flush!
-      end
+    include_examples "async option passed to senders" do
+      let(:sender_class) { described_class }
+      let(:job_class) { Trace::SqsClient }
+      let(:options) { { queue_name: queue_name, region: region, logger: logger } }
     end
   end
 
