@@ -42,7 +42,7 @@ module Trace
       if @async
         HttpApiClient.perform_async(@json_api_host, spans.dup)
       else
-        HttpApiClient.new.perform(@json_api_host, spans.dup)
+        HttpApiClient.new.perform(@json_api_host, spans)
       end
     end
   end

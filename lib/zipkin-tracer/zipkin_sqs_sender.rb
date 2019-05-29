@@ -38,7 +38,7 @@ module Trace
       if @async
         SqsClient.perform_async(@sqs_options, @queue_name, spans.dup)
       else
-        SqsClient.new.perform(@sqs_options, @queue_name, spans.dup)
+        SqsClient.new.perform(@sqs_options, @queue_name, spans)
       end
     end
   end
