@@ -8,27 +8,34 @@ Rack and Faraday integration middlewares for Zipkin tracing.
 
 ### Sending traces on incoming requests
 
-Options can be provided via Rails.config for a Rails 3+ app, or can be passed as a hash argument to the Rack plugin.
+Options can be provided as a hash via `Rails.config.zipkin_tracer` for Rails apps or directly to the Rack middleware:
 
 ```ruby
 require 'zipkin-tracer'
-use ZipkinTracer::RackHandler, config # config is optional
+use ZipkinTracer::RackHandler, config
 ```
 
-where `Rails.config.zipkin_tracer` or `config` is a hash that can contain the following keys:
+### Configuration options
 
+#### Common
 * `:service_name` **REQUIRED** - the name of the service being traced. There are two ways to configure this value. Either write the service name in the config file or set the "DOMAIN" environment variable (e.g. 'test-service.example.com' or 'test-service'). The environment variable takes precedence over the config file value.
 * `:sample_rate` (default: 0.1) - the ratio of requests to sample, from 0 to 1
-* `:json_api_host` - hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
-* `:zookeeper` - the address of the zookeeper server to use by the Kafka sender
-* `:sqs_queue_name` - the name of the Amazon SQS queue to use the SQS sender
-* `:sqs_region` - the AWS region for the Amazon SQS queue
-* `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
-* `:annotate_plugin` - plugin function which receives the Rack env, the response status, headers, and body to record annotations
-* `:filter_plugin` - plugin function which receives the Rack env and will skip tracing if it returns false
-* `:whitelist_plugin` - plugin function which receives the Rack env and will force sampling if it returns true
 * `:sampled_as_boolean` - When set to true (default but deprecrated), it uses true/false for the `X-B3-Sampled` header. When set to false uses 1/0 which is preferred.
 * `:trace_id_128bit` - When set to true, high 8-bytes will be prepended to trace_id. The upper 4-bytes are epoch seconds and the lower 4-bytes are random. This makes it convertible to Amazon X-Ray trace ID format v1. (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
+* `:async` - By default senders will flush traces asynchronously. Set to `false` to make that process synchronous. Only supported by the HTTP and SQS senders.
+* `:logger` - The default logger for Rails apps is `Rails.logger`, else it is `STDOUT`. Use this option to pass a custom logger.
+
+#### Sender specific
+* `:json_api_host` - Hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
+* `:zookeeper` - The address of the zookeeper server to use by the Kafka sender
+* `:sqs_queue_name` - The name of the Amazon SQS queue to use the SQS sender
+* `:sqs_region` - The AWS region for the Amazon SQS queue (optional)
+* `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
+
+#### Plugins
+* `:annotate_plugin` - Receives the Rack env, the response status, headers, and body to record annotations
+* `:filter_plugin` - Receives the Rack env and will skip tracing if it returns false
+* `:whitelist_plugin` - Receives the Rack env and will force sampling if it returns true
 
 ### Sending traces on outgoing requests with Faraday
 
@@ -209,6 +216,29 @@ For example:
 # sample if request header specifies known device identifier
 lambda { |env| KNOWN_DEVICES.include?(env['HTTP_X_DEVICE_ID']) }
 ```
+
+## Utility classes
+
+### TraceWrapper
+
+This class provides a `.wrap_in_custom_span` method which expects a configuration hash, a span name and a block.
+You may also pass a span kind and an Application object using respectively `span_kind:` and `app:` keyword arguments.
+
+The block you pass will be executed in the context of a custom span.
+This is useful when your application doesn't use the rack handler but still needs to generate complete traces, for instance background jobs or lambdas calling remote services.
+
+The following code will create a trace starting with a span of the (default) `SERVER` kind named "custom span" and then a span of the `CLIENT` kind will be added by the Faraday middleware. Afterwards the configured sender will call `flush!`.
+
+```ruby
+TraceWrapper.wrap_in_custom_span(config, "custom span") do |span|
+  conn = Faraday.new(url: remote_service_url) do |builder|
+    builder.use ZipkinTracer::FaradayHandler, config[:service_name]
+    builder.adapter Faraday.default_adapter
+  end
+  conn.get("/")
+end
+```
+
 
 ## Development
 

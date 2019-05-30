@@ -1,4 +1,5 @@
 require "spec_helper"
+require "support/shared_examples"
 require "zipkin-tracer/zipkin_sqs_sender"
 
 describe Trace::ZipkinSqsSender do
@@ -27,6 +28,14 @@ describe Trace::ZipkinSqsSender do
       it "sets region in sqs_options" do
         expect(tracer.instance_variable_get(:@sqs_options)).to eq(region: "us-west-2")
       end
+    end
+  end
+
+  describe ":async option" do
+    include_examples "async option passed to senders" do
+      let(:sender_class) { described_class }
+      let(:job_class) { Trace::SqsClient }
+      let(:options) { { queue_name: queue_name, region: region, logger: logger } }
     end
   end
 

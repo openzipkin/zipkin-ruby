@@ -4,11 +4,12 @@ require 'zipkin-tracer/sidekiq/middleware'
 require 'zipkin-tracer/trace_client'
 require 'zipkin-tracer/trace_container'
 require 'zipkin-tracer/trace_generator'
+require 'zipkin-tracer/trace_wrapper'
 
 begin
   require 'faraday'
   require 'zipkin-tracer/faraday/zipkin-tracer'
-rescue LoadError #Faraday is not available, we do not load our code.
+rescue LoadError # Faraday is not available, we do not load our code.
 end
 
 begin

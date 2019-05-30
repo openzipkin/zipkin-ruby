@@ -4,7 +4,7 @@ require 'zipkin-tracer/zipkin_sender_base'
 require 'zipkin-tracer/hostname_resolver'
 
 module Trace
-  class AsyncHttpApiClient
+  class HttpApiClient
     include SuckerPunch::Job
     SPANS_PATH = '/api/v2/spans'
 
@@ -32,13 +32,18 @@ module Trace
     IP_FORMAT = :string
 
     def initialize(options)
-      SuckerPunch.logger = options[:logger]
       @json_api_host = options[:json_api_host]
+      @async = options[:async] != false
+      SuckerPunch.logger = options[:logger]
       super(options)
     end
 
     def flush!
-      AsyncHttpApiClient.perform_async(@json_api_host, spans.dup)
+      if @async
+        HttpApiClient.perform_async(@json_api_host, spans.dup)
+      else
+        HttpApiClient.new.perform(@json_api_host, spans)
+      end
     end
   end
 end

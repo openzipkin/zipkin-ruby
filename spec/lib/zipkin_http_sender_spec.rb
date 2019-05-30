@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'support/shared_examples'
 require 'zipkin-tracer/zipkin_http_sender'
 
 describe Trace::ZipkinHttpSender do
@@ -12,6 +13,14 @@ describe Trace::ZipkinHttpSender do
     it 'sets the SuckerPunch logger' do
       expect(SuckerPunch).to receive(:logger=).with(logger)
       tracer
+    end
+  end
+
+  describe ":async option" do
+    include_examples "async option passed to senders" do
+      let(:sender_class) { described_class }
+      let(:job_class) { Trace::HttpApiClient }
+      let(:options) { { json_api_host: json_api_host, logger: logger } }
     end
   end
 
