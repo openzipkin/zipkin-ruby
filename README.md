@@ -65,7 +65,7 @@ the tracing will default to a service name derived from the first section of the
 
 ### Tracing Sidekiq workers
 
-Sidekiq tracing can be turned on by adding ZipkinTracer::Sidekiq::Middleware to your sidekiq middleware chain:
+Sidekiq tracing can be turned on by adding ZipkinTracer::Sidekiq::ServerMiddleware to your sidekiq middleware chain:
 
 ```ruby
 zipkin_tracer_config = {
@@ -77,7 +77,7 @@ zipkin_tracer_config = {
 
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
-    chain.add ZipkinTracer::Sidekiq::Middleware, zipkin_tracer_config
+    chain.add ZipkinTracer::Sidekiq::ServerMiddleware, zipkin_tracer_config
   end
 end
 ```

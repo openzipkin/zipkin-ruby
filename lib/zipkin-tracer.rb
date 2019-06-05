@@ -1,6 +1,7 @@
 require 'zipkin-tracer/trace'
 require 'zipkin-tracer/rack/zipkin-tracer'
-require 'zipkin-tracer/sidekiq/middleware'
+require 'zipkin-tracer/sidekiq/server_middleware'
+require 'zipkin-tracer/sidekiq/client_middleware'
 require 'zipkin-tracer/trace_client'
 require 'zipkin-tracer/trace_container'
 require 'zipkin-tracer/trace_generator'

@@ -1,6 +1,6 @@
 module ZipkinTracer
   module Sidekiq
-    class Middleware
+    class ServerMiddleware
       attr_reader :config, :tracer, :traceable_workers
 
       def initialize(config)
@@ -12,6 +12,8 @@ module ZipkinTracer
       def call(worker, job, queue, &block)
         return block.call unless traceable_worker?(worker)
 
+        set_trace_stack(job.fetch('trace_stack', []))
+
         trace(worker, job, queue, &block)
       end
 
@@ -19,6 +21,21 @@ module ZipkinTracer
 
       def traceable_worker?(worker)
         traceable_workers.include?(:all) || traceable_workers.include?(worker_name(worker))
+      end
+
+      def set_trace_stack(trace_stack)
+        # Thread.current[:trace_stack] = trace_stack.map { |trace| Marshal::load(trace) }
+        Thread.current[:trace_stack] =
+          trace_stack.map do |trace|
+            Trace::TraceId.new(
+              trace.dig('trace_id', 'value'),
+              trace.dig('parent_id', 'value'),
+              trace.dig('span_id', 'value'),
+              trace.dig('sampled'),
+              trace.dig('flags'),
+              trace.dig('shared'),
+            )
+          end
       end
 
       def trace(worker, job, queue, &block)
