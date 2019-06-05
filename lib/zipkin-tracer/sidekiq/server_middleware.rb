@@ -41,10 +41,19 @@ module ZipkinTracer
       def trace(worker, job, queue, &block)
         trace_id = TraceGenerator.new.next_trace_id
         span_name = worker_name(worker)
+        tags = job.except('trace_stack').tap do |job|
+          job['created_at'] = Time.at(job['created_at'])
+          job['enqueued_at'] = Time.at(job['enqueued_at'])
+          job['failed_at'] = Time.at(job['failed_at']) if job['failed_at'].present?
+          job['retried_at'] = Time.at(job['retried_at']) if job['retried_at'].present?
+        end
+
+        # zipkin will ignore whole trace if values in tags are other then strings
+        tags = tags.map { |k, v| [k, v.to_s] }.to_h
 
         result = TraceContainer.with_trace_id(trace_id) do
           if trace_id.sampled?
-            tracer.with_new_span(trace_id, span_name) do
+            tracer.with_new_span(trace_id, span_name, tags) do
               result = block.call
             end
           else

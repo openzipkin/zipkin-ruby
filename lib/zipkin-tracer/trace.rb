@@ -179,14 +179,14 @@ module Trace
 
     attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
 
-    def initialize(name, span_id)
+    def initialize(name, span_id, tags = {})
       @name = name
       @span_id = span_id
       @kind = nil
       @local_endpoint = nil
       @remote_endpoint = nil
       @annotations = []
-      @tags = {}
+      @tags = tags
       @debug = span_id.debug?
       @timestamp = to_microseconds(Time.now)
       @duration = UNKNOWN_DURATION

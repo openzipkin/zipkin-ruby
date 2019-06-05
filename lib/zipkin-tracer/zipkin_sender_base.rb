@@ -13,8 +13,8 @@ module Trace
       reset
     end
 
-    def with_new_span(trace_id, name)
-      span = start_span(trace_id, name)
+    def with_new_span(trace_id, name, tags = {})
+      span = start_span(trace_id, name, tags)
       result = yield span
       end_span(span)
       result
@@ -31,8 +31,8 @@ module Trace
       end
     end
 
-    def start_span(trace_id, name)
-      span = Span.new(name, trace_id)
+    def start_span(trace_id, name, tags = {})
+      span = Span.new(name, trace_id, tags)
       span.local_endpoint = Trace.default_endpoint
       store_span(trace_id, span)
       span
