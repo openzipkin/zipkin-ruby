@@ -39,7 +39,7 @@ module ZipkinTracer
     }.freeze
 
     def span_name(env)
-      "#{env[REQUEST_METHOD].to_s.downcase} #{Application.route(env)}".strip
+      "#{env[REQUEST_METHOD].to_s.downcase} #{env[PATH_INFO]}".strip
     end
 
     def annotate_plugin(span, env, status, response_headers, response_body)
