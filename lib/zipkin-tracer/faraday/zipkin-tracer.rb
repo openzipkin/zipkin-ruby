@@ -41,11 +41,14 @@ module ZipkinTracer
       method = env[:method].to_s
       url = env[:url].respond_to?(:host) ? env[:url] : URI.parse(env[:url].to_s)
       remote_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name) # The endpoint we are calling.
-      Trace.tracer.with_new_span(trace_id, method.downcase) do |span|
+      span_name = "#{method.downcase} #{url}"
+
+      Trace.tracer.with_new_span(trace_id, span_name) do |span|
         @span = span # So we can record on exceptions
         # annotate with method (GET/POST/etc.) and uri path
         span.kind = Trace::Span::Kind::CLIENT
         span.remote_endpoint = remote_endpoint
+        span.local_endpoint = Trace::Endpoint.remote_endpoint(url, @service_name)
         span.record_tag(Trace::Span::Tag::METHOD, method.upcase)
         span.record_tag(Trace::Span::Tag::PATH, url.path)
         response = @app.call(env).on_complete do |renv|
