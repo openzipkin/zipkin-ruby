@@ -18,3 +18,9 @@ begin
   require 'zipkin-tracer/excon/zipkin-tracer'
 rescue LoadError
 end
+
+begin
+  require 'net/http/middleware'
+  require 'zipkin-tracer/net-http/zipkin-tracer'
+rescue LoadError
+end
