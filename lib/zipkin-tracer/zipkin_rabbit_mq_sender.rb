@@ -34,8 +34,7 @@ module Trace
         .spans_with_ips(spans, ZipkinRabbitMqSender::IP_FORMAT)
         .map(&:to_h)
 
-      # message = JSON.generate(spans_with_ips)
-      message = spans_with_ips.to_json
+      message = JSON.generate(spans_with_ips)
 
       @publisher.publish(@exchange, @routing_key, message)
     end
