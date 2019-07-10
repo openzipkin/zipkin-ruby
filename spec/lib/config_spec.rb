@@ -136,6 +136,15 @@ module ZipkinTracer
         end
       end
 
+      context 'rabbit_mq' do
+        let(:rabbit_mq_connection) { double('rabbit mq connection') }
+
+        it 'returns :rabbit_mq if connection is passed' do
+          config = Config.new(nil, rabbit_mq_connection: rabbit_mq_connection)
+          expect(config.adapter).to eq(:rabbit_mq)
+        end
+      end
+
       context 'no domain environment variable' do
         before do
           ENV['DOMAIN'] = ''

@@ -7,7 +7,8 @@ module ZipkinTracer
   class Config
     attr_reader :service_name, :sample_rate, :sampled_as_boolean, :trace_id_128bit, :async, :logger,
       :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
-      :annotate_plugin, :filter_plugin, :whitelist_plugin
+      :annotate_plugin, :filter_plugin, :whitelist_plugin, :rabbit_mq_connection, :rabbit_mq_exchange,
+      :rabbit_mq_routing_key
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -23,6 +24,10 @@ module ZipkinTracer
       # Amazon SQS queue information
       @sqs_queue_name    = config[:sqs_queue_name]
       @sqs_region        = config[:sqs_region]
+      # Rabbit MQ information
+      @rabbit_mq_connection   = config[:rabbit_mq_connection]
+      @rabbit_mq_exchange     = config[:rabbit_mq_exchange]
+      @rabbit_mq_routing_key  = config[:rabbit_mq_routing_key]
       # Percentage of traces which by default this service traces (as float, 1.0 means 100%)
       @sample_rate       = config[:sample_rate] || DEFAULTS[:sample_rate]
       # A block of code which can be called to do extra annotations of traces
@@ -66,6 +71,8 @@ module ZipkinTracer
         :kafka_producer
       elsif present?(@sqs_queue_name) && defined?(Aws::SQS)
         :sqs
+      elsif @rabbit_mq_connection
+        :rabbit_mq
       elsif !!@log_tracing
         :logger
       else

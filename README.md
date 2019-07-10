@@ -30,6 +30,9 @@ use ZipkinTracer::RackHandler, config
 * `:zookeeper` - The address of the zookeeper server to use by the Kafka sender
 * `:sqs_queue_name` - The name of the Amazon SQS queue to use the SQS sender
 * `:sqs_region` - The AWS region for the Amazon SQS queue (optional)
+* `:rabbit_mq_connection` - The bunny connection to be used by the RabbitMQ sender
+* `:rabbit_mq_exchange` - The name of the exchange to be used by the RabbitMQ sender (optional)
+* `:rabbit_mq_routing_key` - The name of the routing key to be used by the RabbitMQ sender (optional)
 * `:log_tracing` - Set to true to log all traces. Only used if traces are not sent to the API or Kafka.
 
 #### Plugins
@@ -141,6 +144,12 @@ The following [Amazon SQS permissions](https://docs.aws.amazon.com/AWSSimpleQueu
 - `sqs:GetQueueUrl`
 
 Optionally, you can set `:sqs_region` to specify the AWS region to connect to.
+
+### RabbitMQ
+Uses RabbitMQ as the transport
+
+If `:rabbit_mq_connection` is set in the config, then the gem will use RabbitMQ. You will need to pass a [Bunny](https://github.com/ruby-amqp/bunny) connection.
+You can optionally set the exchange name and routing key using `:rabbit_mq_exchange` and `:rabbit_mq_routing_key`
 
 ### Logger
 
