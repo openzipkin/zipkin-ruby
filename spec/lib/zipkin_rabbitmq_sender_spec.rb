@@ -59,7 +59,7 @@ describe Trace::ZipkinRabbitMqSender do
     end
 
     context 'when all parameters are configured' do
-      it 'flushes the list of spans to to to publisher' do
+      it 'flushes the list of spans to the publisher' do
         expect(publisher)
           .to receive(:publish)
           .with(rabbit_mq_exchange, rabbit_mq_routing_key, expected_message)
@@ -71,7 +71,7 @@ describe Trace::ZipkinRabbitMqSender do
     context 'when exchange is not configured' do
       let(:rabbit_mq_exchange) { nil }
 
-      it 'flushes the list of spans to to to publisher with default exchange' do
+      it 'flushes the list of spans to the publisher with default exchange' do
         expect(publisher)
           .to receive(:publish)
           .with('', rabbit_mq_routing_key, expected_message)
@@ -83,7 +83,7 @@ describe Trace::ZipkinRabbitMqSender do
     context 'when routing key is not configured' do
       let(:rabbit_mq_routing_key) { nil }
 
-      it 'flushes the list of spans to to to publisher with default routing key' do
+      it 'flushes the list of spans to the publisher with default routing key' do
         expect(publisher)
           .to receive(:publish)
           .with(rabbit_mq_exchange, 'zipkin', expected_message)
