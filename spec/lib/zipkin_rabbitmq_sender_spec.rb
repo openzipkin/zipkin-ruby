@@ -29,11 +29,6 @@ describe Trace::ZipkinRabbitMqSender do
         spn.remote_endpoint = endpoint
       end
     end
-    let(:spans) do
-      ::ZipkinTracer::HostnameResolver.new
-        .spans_with_ips([span], described_class::IP_FORMAT)
-        .map(&:to_h)
-    end
     let(:ipv4) { '10.10.10.10' }
     let(:hostname) { 'hostname' }
     let(:endpoint) { Trace::Endpoint.new(hostname, 80, name) }
