@@ -7,52 +7,66 @@ describe Trace::ZipkinRabbitMqSender do
   let(:rabbit_mq_connection) { double('RabbitMQ connection') }
   let(:rabbit_mq_exchange) { 'zipkin.exchange' }
   let(:rabbit_mq_routing_key) { 'routing.key' }
-  let(:publisher) { double('publisher') }
+  let(:channel) { double('channel') }
+  let(:exchange) { double('exchange') }
+  let(:logger) { Logger.new(nil) }
   let(:tracer) do
     described_class.new(
       rabbit_mq_connection: rabbit_mq_connection,
       rabbit_mq_exchange: rabbit_mq_exchange,
-      rabbit_mq_routing_key: rabbit_mq_routing_key
+      rabbit_mq_routing_key: rabbit_mq_routing_key,
+      logger: logger
     )
   end
 
   before do
-    allow(publisher).to receive(:publish)
-    allow(Trace::RabbitMqPublisher).to receive(:new).and_return(publisher)
+    allow(rabbit_mq_connection).to receive(:create_channel).and_return(channel)
+    allow(channel).to receive(:exchange).and_return(exchange)
+    allow(exchange).to receive(:publish)
+    allow(SuckerPunch).to receive(:logger=)
   end
 
   describe '#initialize' do
     subject { tracer }
 
-    it 'correctly initializes the publisher' do
+    it 'sets the SuckerPunch logger' do
       subject
 
-      expect(Trace::RabbitMqPublisher)
-        .to have_received(:new)
-        .with(rabbit_mq_connection, rabbit_mq_exchange, rabbit_mq_routing_key)
+      expect(SuckerPunch).to have_received(:logger=).with(logger)
     end
 
-    context 'when exchange is not configured' do
-      let(:rabbit_mq_exchange) { nil }
-
-      it 'correctly initializes the publisher with the default exchange' do
-        subject
-
-        expect(Trace::RabbitMqPublisher)
-          .to have_received(:new)
-          .with(rabbit_mq_connection, '', rabbit_mq_routing_key)
+    describe ':async option' do
+      include_examples 'async option passed to senders' do
+        let(:sender_class) { described_class }
+        let(:job_class) { Trace::RabbitMqPublisher }
+        let(:options) do
+          {
+            rabbit_mq_connection: rabbit_mq_connection,
+            rabbit_mq_exchange: rabbit_mq_exchange,
+            rabbit_mq_routing_key: rabbit_mq_routing_key,
+            logger: logger
+          }
+        end
       end
     end
 
-    context 'when routing key is not configured' do
-      let(:rabbit_mq_routing_key) { nil }
+    describe 'exchange' do
+      context 'when rabbit_mq_exchange is configured' do
+        it 'sets the exchange correctly' do
+          subject
 
-      it 'correctly initializes the publisher with the default exchange' do
-        subject
+          expect(channel).to have_received(:exchange).with(rabbit_mq_exchange)
+        end
+      end
 
-        expect(Trace::RabbitMqPublisher)
-          .to have_received(:new)
-          .with(rabbit_mq_connection, rabbit_mq_exchange, 'zipkin')
+      context 'when rabbit_mq_exchange is not configured' do
+        let(:rabbit_mq_exchange) { nil }
+
+        it 'sets the exchange using the default exchange value' do
+          subject
+
+          expect(channel).to have_received(:exchange).with('')
+        end
       end
     end
   end
@@ -95,12 +109,24 @@ describe Trace::ZipkinRabbitMqSender do
     end
 
     context 'when all parameters are configured' do
-      it 'flushes the list of spans to the publisher' do
-        expect(publisher)
-          .to receive(:publish)
-          .with(expected_message)
-
+      it 'flushes the list of spans' do
         tracer.end_span(span)
+
+        expect(exchange)
+          .to have_received(:publish)
+          .with(expected_message, routing_key: rabbit_mq_routing_key)
+      end
+    end
+
+    context 'when routing_key is not configured' do
+      let(:rabbit_mq_routing_key) { nil }
+
+      it 'flushes the list of spans to the default routing key' do
+        tracer.end_span(span)
+
+        expect(exchange)
+          .to have_received(:publish)
+          .with(expected_message, routing_key: 'zipkin')
       end
     end
   end

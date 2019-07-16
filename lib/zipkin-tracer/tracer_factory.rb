@@ -30,7 +30,9 @@ module ZipkinTracer
           options = {
             rabbit_mq_connection: config.rabbit_mq_connection,
             rabbit_mq_exchange: config.rabbit_mq_exchange,
-            rabbit_mq_routing_key: config.rabbit_mq_routing_key
+            rabbit_mq_routing_key: config.rabbit_mq_routing_key,
+            async: config.async,
+            logger: config.logger
           }
           Trace::ZipkinRabbitMqSender.new(options)
         when :logger
