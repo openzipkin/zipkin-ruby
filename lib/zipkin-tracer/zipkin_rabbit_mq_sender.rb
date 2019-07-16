@@ -4,14 +4,15 @@ require 'zipkin-tracer/hostname_resolver'
 
 module Trace
   class RabbitMqPublisher
-    def initialize(connection)
+    def initialize(connection, exchange, routing_key)
       @connection = connection
-      @channel = @connection.create_channel
+      channel = @connection.create_channel
+      @exchange = channel.exchange(exchange)
+      @routing_key = routing_key
     end
 
-    def publish(exchange, routing_key, message)
-      exchange = @channel.exchange(exchange)
-      exchange.publish(message, routing_key: routing_key)
+    def publish(message)
+      @exchange.publish(message, routing_key: @routing_key)
     end
   end
 
@@ -22,9 +23,10 @@ module Trace
     DEAFULT_ROUTING_KEY = 'zipkin'
 
     def initialize(options)
-      @publisher = RabbitMqPublisher.new(options[:rabbit_mq_connection])
-      @exchange = options[:rabbit_mq_exchange] || DEFAULT_EXCHANGE
-      @routing_key = options[:rabbit_mq_routing_key] || DEAFULT_ROUTING_KEY
+      connection = options[:rabbit_mq_connection]
+      exchange = options[:rabbit_mq_exchange] || DEFAULT_EXCHANGE
+      routing_key = options[:rabbit_mq_routing_key] || DEAFULT_ROUTING_KEY
+      @publisher = RabbitMqPublisher.new(connection, exchange, routing_key)
 
       super(options)
     end
@@ -36,7 +38,7 @@ module Trace
 
       message = JSON.generate(spans_with_ips)
 
-      @publisher.publish(@exchange, @routing_key, message)
+      @publisher.publish(message)
     end
   end
 end
