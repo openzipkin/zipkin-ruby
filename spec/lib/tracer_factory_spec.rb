@@ -5,6 +5,7 @@ require 'rack/mock'
 require 'spec_helper'
 require 'zipkin-tracer/zipkin_http_sender'
 require 'zipkin-tracer/zipkin_null_sender'
+require 'zipkin-tracer/zipkin_rabbit_mq_sender'
 
 describe ZipkinTracer::TracerFactory do
   def middleware(app, config={})
@@ -66,6 +67,17 @@ describe ZipkinTracer::TracerFactory do
 
       it 'creates a sqs tracer' do
         allow(Trace::ZipkinSqsSender).to receive(:new) { tracer }
+        expect(Trace).to receive(:tracer=).with(tracer)
+        expect(described_class.new.tracer(config)).to eq(tracer)
+      end
+    end
+
+    context 'configured to use RabbitMQ' do
+      let(:connection) { double('RabbitMQ connection', create_channel: {}) }
+      let(:config) { configuration(rabbit_mq_connection: connection) }
+
+      it 'creates a rabbit mq tracer' do
+        allow(Trace::ZipkinRabbitMqSender).to receive(:new) { tracer }
         expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
       end

@@ -25,6 +25,16 @@ module ZipkinTracer
             region: config.sqs_region
           }
           Trace::ZipkinSqsSender.new(options)
+        when :rabbit_mq
+          require 'zipkin-tracer/zipkin_rabbit_mq_sender'
+          options = {
+            rabbit_mq_connection: config.rabbit_mq_connection,
+            rabbit_mq_exchange: config.rabbit_mq_exchange,
+            rabbit_mq_routing_key: config.rabbit_mq_routing_key,
+            async: config.async,
+            logger: config.logger
+          }
+          Trace::ZipkinRabbitMqSender.new(options)
         when :logger
           require 'zipkin-tracer/zipkin_logger_sender'
           Trace::ZipkinLoggerSender.new(logger: config.logger)

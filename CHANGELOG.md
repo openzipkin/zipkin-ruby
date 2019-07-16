@@ -1,3 +1,6 @@
+# 0.38.0
+* Add RabbitMQ sender
+
 # 0.37.0
 * Add an `async` option to the HTTP and SQS senders.
 * Allow the `logger` option to be provided.
