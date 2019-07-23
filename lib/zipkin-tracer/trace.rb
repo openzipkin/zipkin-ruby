@@ -179,7 +179,7 @@ module Trace
 
     attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
 
-    def initialize(name, span_id)
+    def initialize(name, span_id, timestamp = Time.now)
       @name = name
       @span_id = span_id
       @kind = nil
@@ -188,12 +188,12 @@ module Trace
       @annotations = []
       @tags = {}
       @debug = span_id.debug?
-      @timestamp = to_microseconds(Time.now)
+      @timestamp = to_microseconds(timestamp)
       @duration = UNKNOWN_DURATION
     end
 
-    def close
-      @duration = to_microseconds(Time.now) - @timestamp
+    def close(timestamp = Time.now)
+      @duration = to_microseconds(timestamp) - @timestamp
     end
 
     def to_h

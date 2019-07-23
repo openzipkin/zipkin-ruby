@@ -1,3 +1,6 @@
+# 0.39.0
+* Allow clients to provide an explicit timestamp when starting and stopping spans
+
 # 0.38.0
 * Add RabbitMQ sender
 
