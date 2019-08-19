@@ -1,4 +1,5 @@
 language: ruby
+dist: trusty
 jdk:
   - oraclejdk8
 rvm:
