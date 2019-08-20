@@ -20,8 +20,8 @@ module Trace
       result
     end
 
-    def end_span(span)
-      span.close
+    def end_span(span, timestamp = Time.now)
+      span.close(timestamp)
       # If in a thread not handling incoming http requests, it will not have Kind::SERVER, so the span
       # will never be flushed and will cause memory leak.
       # If no parent span, then current span needs to flush when it ends.
@@ -31,8 +31,8 @@ module Trace
       end
     end
 
-    def start_span(trace_id, name)
-      span = Span.new(name, trace_id)
+    def start_span(trace_id, name, timestamp = Time.now)
+      span = Span.new(name, trace_id, timestamp)
       span.local_endpoint = Trace.default_endpoint
       store_span(trace_id, span)
       span

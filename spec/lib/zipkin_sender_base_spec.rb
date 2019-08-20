@@ -59,6 +59,12 @@ describe Trace::ZipkinSenderBase do
       expect(tracer).to receive(:store_span).with(trace_id, anything)
       span
     end
+    it 'allows you pass an explicit timestamp' do
+      timestamp = Time.utc(2016, 1, 16, 23, 45, 2)
+      microseconds = 1452987902000000
+      span = tracer.start_span(trace_id, rpc_name, timestamp)
+      expect(microseconds).to eq(span.to_h[:timestamp])
+    end
   end
 
   describe '#end_span' do
@@ -81,6 +87,13 @@ describe Trace::ZipkinSenderBase do
       expect(tracer).to receive(:flush!)
       expect(tracer).to receive(:reset)
       tracer.end_span(span)
+    end
+    it 'allows you pass an explicit timestamp' do
+      span #touch it so it happens before we freeze time again
+      timestamp = Time.utc(2016, 1, 16, 23, 45, 2)
+      expect(tracer).to receive(:flush!)
+      tracer.end_span(span, timestamp)
+      expect(span.to_h[:duration]).to eq(2_000_000)
     end
   end
 
