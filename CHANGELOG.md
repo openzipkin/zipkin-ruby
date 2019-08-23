@@ -1,3 +1,6 @@
+# 0.39.1
+* Duplicate rack environment strings so that applications that depend on this call only happening once don't break
+
 # 0.39.0
 * Allow clients to provide an explicit timestamp when starting and stopping spans
 

@@ -12,13 +12,16 @@ module ZipkinTracer
       false
     end
 
+    def self.stub_env(env)
+      {
+        "PATH_INFO" => env[ZipkinTracer::RackHandler::PATH_INFO].dup,
+        "REQUEST_METHOD" => env[ZipkinTracer::RackHandler::REQUEST_METHOD].dup
+      }
+    end
+
     def self.route(env)
       return nil unless defined?(Rails)
-      stub_env = {
-        "PATH_INFO" => env[ZipkinTracer::RackHandler::PATH_INFO],
-        "REQUEST_METHOD" => env[ZipkinTracer::RackHandler::REQUEST_METHOD]
-      }
-      req = Rack::Request.new(stub_env)
+      req = Rack::Request.new(stub_env(env))
       # Returns a string like /some/path/:id
       Rails.application.routes.router.recognize(req) do |route|
         return route.path.spec.to_s

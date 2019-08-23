@@ -113,4 +113,17 @@ module ZipkinTracer
       end
     end
   end
+
+  describe '.stub_env' do
+    context 'using a gem that modifies the path in place' do
+      let(:env) { { "PATH_INFO" => "path", "REQUEST_METHOD" => "METHOD" } }
+
+      it 'dups the strings so the rack environment is not accidentally modified in place' do
+        ZipkinTracer::Application.stub_env(env).each do |key, value|
+          expect(value).to eq(env[key])
+          expect(value.object_id).not_to eq(env[key].object_id)
+        end
+      end
+    end
+  end
 end
