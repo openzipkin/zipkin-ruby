@@ -1,11 +1,14 @@
+# 0.39.2
+* Make Faraday 0.13 the minimum requirement.
+
 # 0.39.1
-* Duplicate rack environment strings so that applications that depend on this call only happening once don't break
+* Duplicate rack environment strings so that applications that depend on this call only happening once don't break.
 
 # 0.39.0
-* Allow clients to provide an explicit timestamp when starting and stopping spans
+* Allow clients to provide an explicit timestamp when starting and stopping spans.
 
 # 0.38.0
-* Add RabbitMQ sender
+* Add RabbitMQ sender.
 
 # 0.37.0
 * Add an `async` option to the HTTP and SQS senders.

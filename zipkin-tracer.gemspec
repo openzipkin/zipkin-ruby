@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   end
   s.require_paths = ['lib']
 
-  s.add_dependency 'faraday', '~> 0.8'
+  s.add_dependency 'faraday', '~> 0.13'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
