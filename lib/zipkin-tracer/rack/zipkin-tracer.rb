@@ -35,11 +35,13 @@ module ZipkinTracer
 
     SERVER_RECV_TAGS = {
       Trace::Span::Tag::PATH => PATH_INFO,
-      Trace::Span::Tag::METHOD => REQUEST_METHOD
+      Trace::Span::Tag::METHOD => REQUEST_METHOD,
     }.freeze
 
     def span_name(env)
-      "#{env[REQUEST_METHOD].to_s.downcase} #{env[PATH_INFO]}".strip
+      url = "#{env[REQUEST_METHOD].to_s.downcase} #{env[PATH_INFO]}".strip
+
+      id_present?(url) ? swap_id(url) : url
     end
 
     def annotate_plugin(span, env, status, response_headers, response_body)
@@ -51,6 +53,9 @@ module ZipkinTracer
     ensure
       trace_server_information(span, zipkin_env, status)
 
+      url = zipkin_env.env[PATH_INFO]
+      span.record_tag('id', get_id(url)) if id_present?(url)
+
       annotate_plugin(span, zipkin_env.env, status, headers, body)
     end
 
@@ -58,6 +63,34 @@ module ZipkinTracer
       span.kind = Trace::Span::Kind::SERVER
       span.record_status(status)
       SERVER_RECV_TAGS.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
+    end
+
+    def id_present?(url)
+      @config.id_regexps.each do |regexp|
+        return true if url.match?(regexp)
+      end
+
+      false
+    end
+
+    def swap_id(url)
+      @config.id_regexps.each do |regexp|
+        new_url = url.gsub(regexp, ':id')
+
+        return new_url if new_url != url
+      end
+
+      url
+    end
+
+    def get_id(url)
+      @config.id_regexps.each do |regexp|
+        id = url.match(regexp).try(:[], 0)
+
+        return id if !id.nil?
+      end
+
+      nil
     end
   end
 end

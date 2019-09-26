@@ -7,7 +7,7 @@ module ZipkinTracer
   class Config
     attr_reader :service_name, :sample_rate, :sampled_as_boolean, :trace_id_128bit, :async, :logger,
       :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
-      :annotate_plugin, :filter_plugin, :whitelist_plugin
+      :annotate_plugin, :filter_plugin, :whitelist_plugin, :id_regexps
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -48,6 +48,11 @@ module ZipkinTracer
       # This makes it convertible to Amazon X-Ray trace ID format v1.
       # (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
       @trace_id_128bit = config[:trace_id_128bit].nil? ? DEFAULTS[:trace_id_128bit] : config[:trace_id_128bit]
+
+      # Array of regexp to swap uniq ids in url to reduce the number on values in Operation dropdown
+      # example: get /api/v4/accounts/acc_nCVShX4b => get /api/v4/accounts/:id
+      # id value(in this example acc_nCVShX4b) saves in tag of the trace by the key 'id'
+      @id_regexps = config[:id_regexps].nil? ? [] : config[:id_regexps]
 
       Trace.sample_rate = @sample_rate
       Trace.trace_id_128bit = @trace_id_128bit
