@@ -1,7 +1,7 @@
 module ZipkinTracer
   # This format corresponds to the propagation key "b3" (or "B3").
   # b3: {x-b3-traceid}-{x-b3-spanid}-{if x-b3-flags 'd' else x-b3-sampled}-{x-b3-parentspanid}
-  # For details, see: https://github.com/apache/incubator-zipkin-b3-propagation
+  # For details, see: https://github.com/openzipkin/b3-propagation
   class B3SingleHeaderFormat
     attr_reader :trace_id, :span_id, :parent_span_id, :sampled, :flags
 
