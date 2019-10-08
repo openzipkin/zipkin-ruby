@@ -10,10 +10,14 @@ module ZipkinTracer
     end
 
     def trace_id(default_flags = Trace::Flags::EMPTY)
-      trace_id, span_id, parent_span_id, shared = retrieve_or_generate_ids
-      sampled = sampled_header_value(@env['HTTP_X_B3_SAMPLED'])
-      flags = (@env['HTTP_X_B3_FLAGS'] || default_flags).to_i
+      trace_id, span_id, parent_span_id, sampled, flags, shared = retrieve_or_generate_ids
+      sampled = sampled_header_value(sampled)
+      flags = (flags || default_flags).to_i
       Trace::TraceId.new(trace_id, parent_span_id, span_id, sampled, flags, shared)
+    end
+
+    def called_with_zipkin_b3_single_header?
+      @called_with_zipkin_b3_single_header ||= @env.key?(B3_SINGLE_HEADER)
     end
 
     def called_with_zipkin_headers?
@@ -22,21 +26,28 @@ module ZipkinTracer
 
     private
 
-    B3_REQUIRED_HEADERS = %w(HTTP_X_B3_TRACEID HTTP_X_B3_SPANID).freeze
-    B3_OPT_HEADERS = %w(HTTP_X_B3_PARENTSPANID HTTP_X_B3_SAMPLED HTTP_X_B3_FLAGS).freeze
+    B3_SINGLE_HEADER = 'HTTP_B3'.freeze
+    B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_SPANID].freeze
+    B3_OPT_HEADERS = %w[HTTP_X_B3_PARENTSPANID HTTP_X_B3_SAMPLED HTTP_X_B3_FLAGS].freeze
 
     def retrieve_or_generate_ids
-      if called_with_zipkin_headers?
-        trace_id, span_id = @env.values_at(*B3_REQUIRED_HEADERS)
-        parent_span_id = @env['HTTP_X_B3_PARENTSPANID']
+      if called_with_zipkin_b3_single_header?
+        trace_id, span_id, parent_span_id, sampled, flags =
+          B3SingleHeaderFormat.parse_from_header(@env[B3_SINGLE_HEADER]).to_a
         shared = true
-      else
+      elsif called_with_zipkin_headers?
+        trace_id, span_id, parent_span_id, sampled, flags = @env.values_at(*B3_REQUIRED_HEADERS, *B3_OPT_HEADERS)
+        shared = true
+      end
+
+      unless trace_id
         span_id = TraceGenerator.new.generate_id
         trace_id = TraceGenerator.new.generate_id_from_span_id(span_id)
         parent_span_id = nil
         shared = false
       end
-      [trace_id, span_id, parent_span_id, shared]
+
+      [trace_id, span_id, parent_span_id, sampled, flags, shared]
     end
 
     def new_sampled_header_value(sampled)

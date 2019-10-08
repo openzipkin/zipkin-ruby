@@ -213,4 +213,90 @@ describe ZipkinTracer::ZipkinEnv do
       end
     end
   end
+
+  context 'with zipkin b3 single header' do
+    let(:id) { "e457b5a2e4d86bd1" }
+    let(:zipkin_headers) { { 'HTTP_B3' => b3_single_header } }
+    let(:env) { mock_env(zipkin_headers) }
+
+    context 'not yet sampled root span' do
+      let(:b3_single_header) { "#{id}-#{id}" }
+
+      it '#called_with_zipkin_b3_single_header? returns true' do
+        expect(zipkin_env.called_with_zipkin_b3_single_header?).to eq(true)
+      end
+
+      it 'shared is true' do
+        expect(zipkin_env.trace_id.shared).to eq(true)
+      end
+
+      it 'sampling information is set' do
+        # Because sample rate == 1
+        expect(zipkin_env.trace_id.sampled?).to eq(true)
+      end
+
+      context 'parent_id is not provided' do
+        it 'uses the trace_id and span_id' do
+          trace_id = zipkin_env.trace_id
+          expect(trace_id.trace_id.to_s).to eq(id)
+          expect(trace_id.span_id.to_s).to eq(id)
+        end
+
+        it 'parent_id is empty' do
+          expect(zipkin_env.trace_id.parent_id).to eq(nil)
+        end
+      end
+    end
+
+    context 'all information is provided' do
+      let(:parent_id) { "05e3ac9a4f6e3b90" }
+      let(:b3_single_header) { "#{id}-#{id}-1-#{parent_id}" }
+
+      it 'uses the trace_id and span_id' do
+        trace_id = zipkin_env.trace_id
+        expect(trace_id.trace_id.to_s).to eq(id)
+        expect(trace_id.span_id.to_s).to eq(id)
+      end
+
+      it 'uses the parent_id' do
+        expect(zipkin_env.trace_id.parent_id.to_s).to eq(parent_id.to_s)
+      end
+
+      it 'uses the sampling information' do
+        expect(zipkin_env.trace_id.sampled?).to eq(true)
+      end
+
+      it 'uses the flags' do
+        expect(zipkin_env.trace_id.flags.to_i).to eq(0)
+      end
+    end
+
+    context 'debug flag only' do
+      let(:b3_single_header) { "d" }
+
+      it 'generates a trace_id and a span_id' do
+        trace_id = zipkin_env.trace_id
+        expect(trace_id.trace_id).not_to eq(nil)
+        expect(trace_id.span_id).not_to eq(nil)
+        expect(trace_id.span_id.to_s).to eq(trace_id.trace_id.to_s)
+      end
+
+      it 'parent_id is nil' do
+        expect(zipkin_env.trace_id.parent_id).to eq(nil)
+      end
+
+      it 'flags is debug' do
+        expect(zipkin_env.trace_id.flags).to eq(Trace::Flags::DEBUG)
+      end
+
+      it 'sampling information is set' do
+        # Because sample rate == 1
+        expect(zipkin_env.trace_id.sampled?).to eq(true)
+      end
+
+      it 'shared is false' do
+        expect(zipkin_env.trace_id.shared).to eq(false)
+      end
+    end
+  end
 end

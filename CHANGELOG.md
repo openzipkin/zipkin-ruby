@@ -1,3 +1,6 @@
+# 0.40.0
+* Add support for reading B3 single header.
+
 # 0.39.2
 * Make Faraday 0.13 the minimum requirement.
 
