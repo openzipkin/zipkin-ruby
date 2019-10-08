@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ZipkinTracer
   # This format corresponds to the propagation key "b3" (or "B3").
   # b3: {x-b3-traceid}-{x-b3-spanid}-{if x-b3-flags 'd' else x-b3-sampled}-{x-b3-parentspanid}
