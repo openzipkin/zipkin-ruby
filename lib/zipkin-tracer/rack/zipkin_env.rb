@@ -33,7 +33,7 @@ module ZipkinTracer
     def retrieve_or_generate_ids
       if called_with_zipkin_b3_single_header?
         trace_id, span_id, parent_span_id, sampled, flags =
-          B3SingleHeaderFormat.parse_from_header(@env[B3_SINGLE_HEADER]).to_a
+          B3SingleHeaderFormat.parse_from_header(@env[B3_SINGLE_HEADER])
         shared = true
       elsif called_with_zipkin_headers?
         trace_id, span_id, parent_span_id, sampled, flags = @env.values_at(*B3_REQUIRED_HEADERS, *B3_OPT_HEADERS)
