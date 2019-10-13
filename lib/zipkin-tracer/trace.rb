@@ -8,7 +8,7 @@ module Trace
   # Most of these are set by the config class and then used around.
   # TODO: Move this out of the Trace module , take out that extend self and be happier
   extend self
-  attr_accessor :trace_id_128bit
+  attr_accessor :trace_id_128bit, :write_b3_single_format
 
   # This method is deprecated, please use TraceGenerator.current
   # Note that this method will always return a trace, it will

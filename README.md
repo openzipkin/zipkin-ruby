@@ -24,6 +24,7 @@ use ZipkinTracer::RackHandler, config
 * `:trace_id_128bit` - When set to true, high 8-bytes will be prepended to trace_id. The upper 4-bytes are epoch seconds and the lower 4-bytes are random. This makes it convertible to Amazon X-Ray trace ID format v1. (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
 * `:async` - By default senders will flush traces asynchronously. Set to `false` to make that process synchronous. Only supported by the HTTP, RabbitMQ, and SQS senders.
 * `:logger` - The default logger for Rails apps is `Rails.logger`, else it is `STDOUT`. Use this option to pass a custom logger.
+* `:write_b3_single_format` - When set to true, only writes a single b3 header for outbound propagation.
 
 #### Sender specific
 * `:json_api_host` - Hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender

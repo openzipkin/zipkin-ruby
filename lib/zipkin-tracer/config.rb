@@ -8,7 +8,7 @@ module ZipkinTracer
     attr_reader :service_name, :sample_rate, :sampled_as_boolean, :trace_id_128bit, :async, :logger,
       :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin, :rabbit_mq_connection, :rabbit_mq_exchange,
-      :rabbit_mq_routing_key
+      :rabbit_mq_routing_key, :write_b3_single_format
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -53,9 +53,13 @@ module ZipkinTracer
       # This makes it convertible to Amazon X-Ray trace ID format v1.
       # (See http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
       @trace_id_128bit = config[:trace_id_128bit].nil? ? DEFAULTS[:trace_id_128bit] : config[:trace_id_128bit]
+      # When set to true, only writes a single b3 header for outbound propagation.
+      @write_b3_single_format =
+        config[:write_b3_single_format].nil? ? DEFAULTS[:write_b3_single_format] : config[:write_b3_single_format]
 
       Trace.sample_rate = @sample_rate
       Trace.trace_id_128bit = @trace_id_128bit
+      Trace.write_b3_single_format = @write_b3_single_format
 
       Trace.default_endpoint = Trace::Endpoint.local_endpoint(
         domain_service_name(@service_name)
@@ -91,7 +95,8 @@ module ZipkinTracer
     DEFAULTS = {
       sample_rate: 0.1,
       sampled_as_boolean: true,
-      trace_id_128bit: false
+      trace_id_128bit: false,
+      write_b3_single_format: false
     }
 
     def present?(str)

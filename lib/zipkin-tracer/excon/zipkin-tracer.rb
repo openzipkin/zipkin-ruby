@@ -3,6 +3,8 @@ require 'excon'
 
 module ZipkinTracer
   class ExconHandler < Excon::Middleware::Base
+    include B3HeaderHelper
+
     def initialize(_)
       super
     end
@@ -15,10 +17,7 @@ module ZipkinTracer
       trace_id = TraceGenerator.new.next_trace_id
 
       TraceContainer.with_trace_id(trace_id) do
-        b3_headers.each do |method, header|
-          datum[:headers][header] = trace_id.send(method).to_s
-        end
-
+        set_b3_header(datum[:headers], trace_id)
         trace!(datum, trace_id) if Trace.tracer && trace_id.sampled?
       end
 
@@ -35,16 +34,6 @@ module ZipkinTracer
     end
 
     private
-
-    def b3_headers
-      {
-        trace_id: 'X-B3-TraceId',
-        parent_id: 'X-B3-ParentSpanId',
-        span_id: 'X-B3-SpanId',
-        sampled: 'X-B3-Sampled',
-        flags: 'X-B3-Flags'
-      }
-    end
 
     def remote_endpoint(url, service_name)
       Trace::Endpoint.remote_endpoint(url, service_name) # The endpoint we are calling.
