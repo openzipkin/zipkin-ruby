@@ -35,7 +35,7 @@ describe ZipkinTracer::B3HeaderHelper do
         request_headers = {}
         MockHandler.new.call(request_headers, trace_id)
 
-        expect(request_headers['B3']).to eq('0000000000000001-0000000000000003-d-0000000000000002')
+        expect(request_headers['b3']).to eq('0000000000000001-0000000000000003-d-0000000000000002')
       end
     end
   end
@@ -64,7 +64,7 @@ describe ZipkinTracer::B3HeaderHelper do
         request_headers = {}
         MockHandler.new.call(request_headers, trace_id)
 
-        expect(request_headers['B3']).to eq('0000000000000001-0000000000000003-d')
+        expect(request_headers['b3']).to eq('0000000000000001-0000000000000003-d')
       end
     end
   end

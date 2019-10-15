@@ -27,7 +27,7 @@ describe ZipkinTracer::ExconHandler do
         'X-B3-SpanId' => req.headers['X-B3-Spanid'],
         'X-B3-Sampled' => req.headers['X-B3-Sampled'],
         'X-B3-Flags' => req.headers['X-B3-Flags'],
-        'B3' => req.headers['B3']
+        'b3' => req.headers['B3']
       }
     }).to have_been_made
 

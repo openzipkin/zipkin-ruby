@@ -4,7 +4,7 @@ module ZipkinTracer
   module B3HeaderHelper
     private
 
-    B3_SINGLE_HEADER = 'B3'
+    B3_SINGLE_HEADER = 'b3'
 
     def set_b3_header(headers, trace_id)
       if Trace.write_b3_single_format

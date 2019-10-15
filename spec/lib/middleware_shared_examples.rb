@@ -118,7 +118,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
           request_headers = process('', url)
         end
 
-        expect(request_headers['B3']).to match(/\A0000000000000001-\h{16}-d-0000000000000003\z/)
+        expect(request_headers['b3']).to match(/\A0000000000000001-\h{16}-d-0000000000000003\z/)
       end
     end
 
@@ -157,7 +157,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
       it 'generates a new ID, and sets the B3 single request header' do
         request_headers = process('', url)
 
-        expect(request_headers['B3']).to match(/\A\h{16}-\h{16}-[01d]-\h{16}\z/)
+        expect(request_headers['b3']).to match(/\A\h{16}-\h{16}-[01d]-\h{16}\z/)
       end
     end
   end
@@ -190,7 +190,7 @@ shared_examples 'make requests' do |expect_to_trace_request|
           request_headers = process('', url)
         end
 
-        expect(request_headers['B3']).to match(/\A0000000000000001-\h{16}-0-0000000000000003\z/)
+        expect(request_headers['b3']).to match(/\A0000000000000001-\h{16}-0-0000000000000003\z/)
       end
     end
 
