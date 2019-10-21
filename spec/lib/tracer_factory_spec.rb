@@ -13,9 +13,15 @@ describe ZipkinTracer::TracerFactory do
     described_class.new(app, configuration)
   end
 
-   def configuration(options)
-     ZipkinTracer::Config.new(nil, options)
-   end
+  def configuration(options)
+    ZipkinTracer::Config.new(nil, options)
+  end
+
+  def should_read_config(*attrs)
+    attrs.each do |attr|
+      expect(config).to receive(attr)
+    end
+  end
 
   let(:logger) { Logger.new(nil) }
   let(:subject) { described_class.new(config) }
@@ -35,6 +41,7 @@ describe ZipkinTracer::TracerFactory do
         let(:config) { configuration(zookeeper: zookeeper) }
 
         it 'creates a zipkin kafka sender' do
+          should_read_config(:zookeeper)
           allow(Trace::ZipkinKafkaSender).to receive(:new) { tracer }
           expect(Trace).to receive(:tracer=).with(tracer)
           expect(described_class.new.tracer(config)).to eq(tracer)
@@ -46,6 +53,7 @@ describe ZipkinTracer::TracerFactory do
       let(:config) { configuration(json_api_host: 'fake_json_api_host') }
 
       it 'creates a zipkin json tracer' do
+        should_read_config(:async, :json_api_host, :logger)
         allow(Trace::ZipkinHttpSender).to receive(:new) { tracer }
         expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
@@ -56,6 +64,7 @@ describe ZipkinTracer::TracerFactory do
       let(:config) { configuration(log_tracing: true) }
 
       it 'creates a logger tracer' do
+        should_read_config(:logger)
         allow(Trace::ZipkinLoggerSender).to receive(:new) { tracer }
         expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
@@ -66,6 +75,7 @@ describe ZipkinTracer::TracerFactory do
       let(:config) { configuration(sqs_queue_name: 'zipkin-sqs') }
 
       it 'creates a sqs tracer' do
+        should_read_config(:async, :logger, :sqs_queue_name, :sqs_region)
         allow(Trace::ZipkinSqsSender).to receive(:new) { tracer }
         expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
@@ -77,6 +87,7 @@ describe ZipkinTracer::TracerFactory do
       let(:config) { configuration(rabbit_mq_connection: connection) }
 
       it 'creates a rabbit mq tracer' do
+        should_read_config(:rabbit_mq_connection, :rabbit_mq_exchange, :rabbit_mq_routing_key, :async, :logger)
         allow(Trace::ZipkinRabbitMqSender).to receive(:new) { tracer }
         expect(Trace).to receive(:tracer=).with(tracer)
         expect(described_class.new.tracer(config)).to eq(tracer)
