@@ -6,7 +6,11 @@ module ZipkinTracer
       tracer = case adapter
         when :json
           require 'zipkin-tracer/zipkin_http_sender'
-          options = { json_api_host: config.json_api_host, logger: config.logger }
+          options = {
+            async: config.async,
+            json_api_host: config.json_api_host,
+            logger: config.logger
+          }
           Trace::ZipkinHttpSender.new(options)
         when :kafka
           require 'zipkin-tracer/zipkin_kafka_sender'
