@@ -6,6 +6,7 @@ require 'zipkin-tracer/trace_container'
 require 'zipkin-tracer/trace_generator'
 require 'zipkin-tracer/trace_wrapper'
 require 'zipkin-tracer/zipkin_b3_single_header_format'
+require 'zipkin-tracer/zipkin_b3_header_helper'
 
 begin
   require 'faraday'

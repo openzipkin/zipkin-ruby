@@ -42,6 +42,8 @@ shared_examples 'make requests' do |expect_to_trace_request|
   let(:raw_url) { "https://#{hostname}#{url_path}" }
   let(:tracer) { Trace.tracer }
   let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, true, ::Trace::Flags::DEBUG) }
+  let(:write_b3_single_format) { false }
+  before { allow(Trace).to receive(:write_b3_single_format).and_return(write_b3_single_format) }
 
   # helper to check host component of annotation
   def expect_host(host, host_ip, service_name)
@@ -91,18 +93,33 @@ shared_examples 'make requests' do |expect_to_trace_request|
       end
     end
 
-    it 'sets the X-B3 request headers with a new spanID' do
-      request_headers  = nil
-      ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
-        request_headers = process('', url)
-      end
+    context 'write_b3_single_format is false' do
+      it 'sets the X-B3 request headers with a new spanID' do
+        request_headers  = nil
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          request_headers = process('', url)
+        end
 
-      expect(request_headers['X-B3-TraceId']).to eq('0000000000000001')
-      expect(request_headers['X-B3-ParentSpanId']).to eq('0000000000000003')
-      expect(request_headers['X-B3-SpanId']).not_to eq('0000000000000003')
-      expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
-      expect(request_headers['X-B3-Sampled']).to eq('true')
-      expect(request_headers['X-B3-Flags']).to eq('1')
+        expect(request_headers['X-B3-TraceId']).to eq('0000000000000001')
+        expect(request_headers['X-B3-ParentSpanId']).to eq('0000000000000003')
+        expect(request_headers['X-B3-SpanId']).not_to eq('0000000000000002')
+        expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
+        expect(request_headers['X-B3-Sampled']).to eq('true')
+        expect(request_headers['X-B3-Flags']).to eq('1')
+      end
+    end
+
+    context 'write_b3_single_format is true' do
+      let(:write_b3_single_format) { true }
+
+      it 'sets the B3 single request header with a new spanID' do
+        request_headers  = nil
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          request_headers = process('', url)
+        end
+
+        expect(request_headers['b3']).to match(/\A0000000000000001-\h{16}-d-0000000000000003\z/)
+      end
     end
 
     it 'the original spanID is restored after the calling the middleware' do
@@ -122,32 +139,59 @@ shared_examples 'make requests' do |expect_to_trace_request|
       end
     end
 
-    it 'generates a new ID, and sets the X-B3 request headers' do
-      request_headers = process('', url)
+    context 'write_b3_single_format is false' do
+      it 'generates a new ID, and sets the X-B3 request headers' do
+        request_headers = process('', url)
 
-      expect(request_headers['X-B3-TraceId']).to match(HEX_REGEX)
-      expect(request_headers['X-B3-ParentSpanId']).to match(HEX_REGEX)
-      expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
-      expect(request_headers['X-B3-Sampled']).to match(/(true|false)/)
-      expect(request_headers['X-B3-Flags']).to match(/(1|0)/)
+        expect(request_headers['X-B3-TraceId']).to match(HEX_REGEX)
+        expect(request_headers['X-B3-ParentSpanId']).to match(HEX_REGEX)
+        expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
+        expect(request_headers['X-B3-Sampled']).to match(/(true|false)/)
+        expect(request_headers['X-B3-Flags']).to match(/(1|0)/)
+      end
+    end
+
+    context 'write_b3_single_format is true' do
+      let(:write_b3_single_format) { true }
+
+      it 'generates a new ID, and sets the B3 single request header' do
+        request_headers = process('', url)
+
+        expect(request_headers['b3']).to match(/\A\h{16}-\h{16}-[01d]-\h{16}\z/)
+      end
     end
   end
 
   context 'Trace has not been sampled' do
     let(:trace_id) { ::Trace::TraceId.new(1, 2, 3, false, 0) }
 
-    it 'sets the X-B3 request headers with a new spanID' do
-      request_headers = nil
-      ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
-        request_headers = process('', url)
-      end
+    context 'write_b3_single_format is false' do
+      it 'sets the X-B3 request headers with a new spanID' do
+        request_headers = nil
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          request_headers = process('', url)
+        end
 
-      expect(request_headers['X-B3-TraceId']).to eq('0000000000000001')
-      expect(request_headers['X-B3-ParentSpanId']).to eq('0000000000000003')
-      expect(request_headers['X-B3-SpanId']).not_to eq('0000000000000003')
-      expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
-      expect(request_headers['X-B3-Sampled']).to eq('false')
-      expect(request_headers['X-B3-Flags']).to eq('0')
+        expect(request_headers['X-B3-TraceId']).to eq('0000000000000001')
+        expect(request_headers['X-B3-ParentSpanId']).to eq('0000000000000003')
+        expect(request_headers['X-B3-SpanId']).not_to eq('0000000000000003')
+        expect(request_headers['X-B3-SpanId']).to match(HEX_REGEX)
+        expect(request_headers['X-B3-Sampled']).to eq('false')
+        expect(request_headers['X-B3-Flags']).to eq('0')
+      end
+    end
+
+    context 'write_b3_single_format is true' do
+      let(:write_b3_single_format) { true }
+
+      it 'sets the B3 single request header with a new spanID' do
+        request_headers = nil
+        ZipkinTracer::TraceContainer.with_trace_id(trace_id) do
+          request_headers = process('', url)
+        end
+
+        expect(request_headers['b3']).to match(/\A0000000000000001-\h{16}-0-0000000000000003\z/)
+      end
     end
 
     it 'the original spanID is restored after the calling the middleware' do

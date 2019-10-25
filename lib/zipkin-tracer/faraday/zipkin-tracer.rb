@@ -4,6 +4,8 @@ require 'uri'
 module ZipkinTracer
   # Faraday middleware. It will add CR/CS annotations to outgoing connections done by Faraday
   class FaradayHandler < ::Faraday::Middleware
+    include B3HeaderHelper
+
     def initialize(app, service_name = nil)
       @app = app
       @service_name = service_name
@@ -12,9 +14,7 @@ module ZipkinTracer
     def call(env)
       trace_id = TraceGenerator.new.next_trace_id
       TraceContainer.with_trace_id(trace_id) do
-        b3_headers.each do |method, header|
-          env[:request_headers][header] = trace_id.send(method).to_s
-        end
+        set_b3_header(env[:request_headers], trace_id)
         if Trace.tracer && trace_id.sampled?
           trace!(env, trace_id)
         else
@@ -24,16 +24,6 @@ module ZipkinTracer
     end
 
     private
-
-    def b3_headers
-      {
-        trace_id: 'X-B3-TraceId',
-        parent_id: 'X-B3-ParentSpanId',
-        span_id: 'X-B3-SpanId',
-        sampled: 'X-B3-Sampled',
-        flags: 'X-B3-Flags'
-      }
-    end
 
     def trace!(env, trace_id)
       response = nil
