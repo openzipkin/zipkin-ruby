@@ -2,6 +2,9 @@
 * Add support for writing B3 single header.
 * Omit ParentSpanId header for root spans.
 
+# 0.40.1
+* Fix to pass `async` option to the HTTP sender.
+
 # 0.40.0
 * Add support for reading B3 single header.
 
