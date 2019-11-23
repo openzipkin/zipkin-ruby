@@ -17,6 +17,7 @@ describe ZipkinTracer::TraceWrapper do
     before do
       stub_request(:get, service_url)
       stub_request(:post, zipkin_url)
+      Trace.tracer = nil
     end
 
     it "raises if no block is given" do
@@ -75,6 +76,22 @@ describe ZipkinTracer::TraceWrapper do
             ]
           )
         )
+    end
+
+    it "generates a new sender" do
+      expect(ZipkinTracer::TracerFactory).to receive(:new).and_call_original
+      described_class.wrap_in_custom_span(config, "custom span") {}
+    end
+
+    context "reuse sender if already exists" do
+      before do
+        Trace.tracer = Trace::NullSender.new
+      end
+
+      it "does not generate a new sender" do
+        expect(ZipkinTracer::TracerFactory).not_to receive(:new)
+        described_class.wrap_in_custom_span(config, "custom span") {}
+      end
     end
   end
 end

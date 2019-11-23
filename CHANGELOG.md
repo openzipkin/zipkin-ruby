@@ -1,3 +1,6 @@
+# 0.42.0
+* Reuse existing tracer(sender) in the TraceWrapper utility class.
+
 # 0.41.0
 * Add support for writing B3 single header.
 * Omit ParentSpanId header for root spans.
