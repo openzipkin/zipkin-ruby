@@ -1,14 +1,15 @@
 language: ruby
-dist: trusty
+dist: bionic
 jdk:
-  - oraclejdk8
+  - openjdk11
 rvm:
-  - 2.6.3
-  - 2.5.5
-  - 2.4.6
-  - 2.3.8
-  - jruby-9.1.17.0
-  - jruby-9.2.8.0
+  - 2.7
+  - 2.6
+  - 2.5
+  - 2.4
+  - 2.3
+  - jruby-9.1
+  - jruby-9.2
 deploy:
   provider: rubygems
   api_key:
@@ -17,7 +18,7 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-ruby
-    condition: "$TRAVIS_RUBY_VERSION == 2.6.3"
+    condition: "$TRAVIS_RUBY_VERSION == 2.6"
 notifications:
   webhooks:
     urls:
