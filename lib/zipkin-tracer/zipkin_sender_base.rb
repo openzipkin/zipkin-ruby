@@ -25,7 +25,7 @@ module Trace
       # If in a thread not handling incoming http requests, it will not have Kind::SERVER, so the span
       # will never be flushed and will cause memory leak.
       # If no parent span, then current span needs to flush when it ends.
-      if !span.has_parent_span? || span.kind == Trace::Span::Kind::SERVER
+      if !span.has_parent_span? || span.kind == Trace::Span::Kind::SERVER || span.kind == Trace::Span::Kind::CONSUMER
         flush!
         reset
       end

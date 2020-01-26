@@ -67,7 +67,7 @@ describe Trace::ZipkinSenderBase do
     end
   end
 
-  describe '#end_span' do
+  describe '#end_span without parent span' do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
     it 'closes the span' do
       span #touch it so it happens before we freeze time again
@@ -76,17 +76,16 @@ describe Trace::ZipkinSenderBase do
       tracer.end_span(span)
       expect(span.to_h).to eq(span_hash.merge(duration: 1_000_000))
     end
-    it 'flush if kind is SERVER in this span' do
-      span.kind = Trace::Span::Kind::SERVER
-      expect(tracer).to receive(:flush!)
-      expect(tracer).to receive(:reset)
-      tracer.end_span(span)
-    end
-    it 'flush if kind is CLIENT in this span and the span does not have parent span' do
-      span.kind = Trace::Span::Kind::CLIENT
-      expect(tracer).to receive(:flush!)
-      expect(tracer).to receive(:reset)
-      tracer.end_span(span)
+    [
+      Trace::Span::Kind::SERVER, Trace::Span::Kind::CLIENT,
+      Trace::Span::Kind::PRODUCER, Trace::Span::Kind::CONSUMER
+    ].each do |kind|
+      it "flush if kind is #{kind} in this span" do
+        span.kind = kind
+        expect(tracer).to receive(:flush!)
+        expect(tracer).to receive(:reset)
+        tracer.end_span(span)
+      end
     end
     it 'allows you pass an explicit timestamp' do
       span #touch it so it happens before we freeze time again
@@ -99,11 +98,22 @@ describe Trace::ZipkinSenderBase do
 
   describe '#end_span with parent span' do
     let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
-    it 'does not flush if the current span has a parent span' do
-      span.kind = Trace::Span::Kind::CLIENT
-      expect(tracer).not_to receive(:flush!)
-      expect(tracer).not_to receive(:reset)
-      tracer.end_span(span)
+
+    [Trace::Span::Kind::SERVER, Trace::Span::Kind::CONSUMER].each do |kind|
+      it "flush if kind is #{kind} in this span" do
+        span.kind = kind
+        expect(tracer).to receive(:flush!)
+        expect(tracer).to receive(:reset)
+        tracer.end_span(span)
+      end
+    end
+    [Trace::Span::Kind::CLIENT, Trace::Span::Kind::PRODUCER].each do |kind|
+      it "does not flush if kind is #{kind} in this span" do
+        span.kind = kind
+        expect(tracer).not_to receive(:flush!)
+        expect(tracer).not_to receive(:reset)
+        tracer.end_span(span)
+      end
     end
   end
 

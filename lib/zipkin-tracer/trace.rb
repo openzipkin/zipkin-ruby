@@ -175,6 +175,22 @@ module Trace
     module Kind
       CLIENT = "CLIENT".freeze
       SERVER = "SERVER".freeze
+
+      # When present, "timestamp" is the moment a producer sent a message to a destination.
+      # "duration" represents delay sending the message, such as batching, while
+      # "remote_endpoint" indicates the destination, such as a broker.
+      #
+      # Unlike CLIENT, messaging spans never share a span ID. For example, the
+      # CONSUMER of the same message has "patient_id" set to this span's id.
+      PRODUCER = "PRODUCER".freeze
+
+      # When present, "timestamp" is the moment a consumer received a message from an origin.
+      # "duration" represents delay consuming the message, such as from backlog,
+      # while "remote_endpoint" indicates the origin, such as a broker.
+      #
+      # Unlike SERVER, messaging spans never share a span ID. For example, the
+      # PRODUCER of this message is the "parent_id" of this span.
+      CONSUMER = "CONSUMER".freeze
     end
 
     attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug

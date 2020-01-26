@@ -1,3 +1,6 @@
+# 0.43.0
+* Add the `PRODUCER` and `CONSUMER` span kinds.
+
 # 0.42.0
 * Reuse existing tracer(sender) in the TraceWrapper utility class.
 
