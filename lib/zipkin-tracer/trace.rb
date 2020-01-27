@@ -181,7 +181,7 @@ module Trace
       # "remote_endpoint" indicates the destination, such as a broker.
       #
       # Unlike CLIENT, messaging spans never share a span ID. For example, the
-      # CONSUMER of the same message has "patient_id" set to this span's id.
+      # CONSUMER of the same message has "parent_id" set to this span's id.
       PRODUCER = "PRODUCER".freeze
 
       # When present, "timestamp" is the moment a consumer received a message from an origin.
