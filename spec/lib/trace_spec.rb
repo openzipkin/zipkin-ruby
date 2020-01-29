@@ -209,6 +209,38 @@ describe Trace do
           expect(shared_server_span.to_h).to eq(expected_hash)
         end
       end
+
+      shared_examples 'message tracing' do |kind|
+        let(:mistakenly_shared_span) do
+          Trace::Span.new('get', Trace::TraceId.new(span_id, nil, span_id, true, Trace::Flags::EMPTY, true))
+        end
+        let(:expected_hash) do
+          {
+            name: 'get',
+            kind: kind,
+            traceId: span_id,
+            localEndpoint: dummy_endpoint.to_h,
+            remoteEndpoint: dummy_endpoint.to_h,
+            id: span_id,
+            debug: false,
+            timestamp: timestamp,
+            duration: duration
+          }
+        end
+
+        before do
+          mistakenly_shared_span.kind = kind
+          mistakenly_shared_span.local_endpoint = dummy_endpoint
+          mistakenly_shared_span.remote_endpoint = dummy_endpoint
+        end
+
+        it 'returns a hash representation of a span without shared' do
+          expect(mistakenly_shared_span.to_h).to eq(expected_hash)
+        end
+      end
+
+      include_examples 'message tracing', Trace::Span::Kind::PRODUCER
+      include_examples 'message tracing', Trace::Span::Kind::CONSUMER
     end
 
     describe '#record' do

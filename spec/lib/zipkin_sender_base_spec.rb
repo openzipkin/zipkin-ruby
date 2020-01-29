@@ -114,7 +114,7 @@ describe Trace::ZipkinSenderBase do
 
     include_examples 'flushes span', Trace::Span::Kind::SERVER
     include_examples 'does not flush span', Trace::Span::Kind::CLIENT
-    include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
+    include_examples 'flushes span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
   end
 
