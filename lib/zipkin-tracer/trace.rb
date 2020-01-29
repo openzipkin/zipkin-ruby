@@ -195,8 +195,6 @@ module Trace
       CONSUMER = "CONSUMER"
     end
 
-    SHAREABLE_SPANS = [Kind::SERVER, Kind::CLIENT].freeze
-
     attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
 
     def initialize(name, span_id, timestamp = Time.now)
@@ -231,7 +229,7 @@ module Trace
       h[:remoteEndpoint] = @remote_endpoint.to_h unless @remote_endpoint.nil?
       h[:annotations] = @annotations.map(&:to_h) unless @annotations.empty?
       h[:tags] = @tags unless @tags.empty?
-      h[:shared] = true if @span_id.shared && SHAREABLE_SPANS.include?(@kind)
+      h[:shared] = true if @span_id.shared && @kind == Kind::SERVER
       h
     end
 
