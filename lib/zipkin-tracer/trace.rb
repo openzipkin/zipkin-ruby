@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'zipkin-tracer/zipkin_sender_base'
 require 'zipkin-tracer/trace_container'
 # Most of this code is copied from Finagle
@@ -165,16 +167,32 @@ module Trace
   # A span may contain many annotations
   class Span
     module Tag
-      METHOD = "http.method".freeze
-      PATH = "http.path".freeze
-      STATUS = "http.status_code".freeze
-      LOCAL_COMPONENT = "lc".freeze # TODO: Remove LOCAL_COMPONENT and related methods when no longer needed
-      ERROR = "error".freeze
+      METHOD = "http.method"
+      PATH = "http.path"
+      STATUS = "http.status_code"
+      LOCAL_COMPONENT = "lc" # TODO: Remove LOCAL_COMPONENT and related methods when no longer needed
+      ERROR = "error"
     end
 
     module Kind
-      CLIENT = "CLIENT".freeze
-      SERVER = "SERVER".freeze
+      CLIENT = "CLIENT"
+      SERVER = "SERVER"
+
+      # When present, "timestamp" is the moment a producer sent a message to a destination.
+      # "duration" represents delay sending the message, such as batching, while
+      # "remote_endpoint" indicates the destination, such as a broker.
+      #
+      # Unlike CLIENT, messaging spans never share a span ID. For example, the
+      # CONSUMER of the same message has "parent_id" set to this span's id.
+      PRODUCER = "PRODUCER"
+
+      # When present, "timestamp" is the moment a consumer received a message from an origin.
+      # "duration" represents delay consuming the message, such as from backlog,
+      # while "remote_endpoint" indicates the origin, such as a broker.
+      #
+      # Unlike SERVER, messaging spans never share a span ID. For example, the
+      # PRODUCER of this message is the "parent_id" of this span.
+      CONSUMER = "CONSUMER"
     end
 
     attr_accessor :name, :kind, :local_endpoint, :remote_endpoint, :annotations, :tags, :debug
@@ -211,7 +229,7 @@ module Trace
       h[:remoteEndpoint] = @remote_endpoint.to_h unless @remote_endpoint.nil?
       h[:annotations] = @annotations.map(&:to_h) unless @annotations.empty?
       h[:tags] = @tags unless @tags.empty?
-      h[:shared] = true if @span_id.shared
+      h[:shared] = true if @span_id.shared && @kind == Kind::SERVER
       h
     end
 
