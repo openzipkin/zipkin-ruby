@@ -1,3 +1,6 @@
+# 0.43.1
+* Fix to not flush `PRODUCER` span when a server span is in the stack.
+
 # 0.43.0
 * Add the `PRODUCER` and `CONSUMER` span kinds.
 
