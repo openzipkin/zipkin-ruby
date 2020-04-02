@@ -43,11 +43,6 @@ use ZipkinTracer::RackHandler, config
 
 ### Sending traces on outgoing requests with Faraday
 
-First, Faraday has to be part of your Gemfile:
-```
-gem 'faraday', '~> 0.8'
-```
-
 For the Faraday middleware to have the correct trace ID, the rack middleware should be used in your application as explained above.
 
 Then include `ZipkinTracer::FaradayHandler` as a Faraday middleware:
@@ -56,10 +51,8 @@ Then include `ZipkinTracer::FaradayHandler` as a Faraday middleware:
 require 'faraday'
 require 'zipkin-tracer'
 
-conn = Faraday.new(:url => 'http://localhost:9292/') do |faraday|
+conn = Faraday.new(url: 'http://localhost:9292/') do |faraday|
   faraday.use ZipkinTracer::FaradayHandler, 'service_name' # 'service_name' is optional (but recommended)
-  # default Faraday stack
-  faraday.request :url_encoded
   faraday.adapter Faraday.default_adapter
 end
 ```

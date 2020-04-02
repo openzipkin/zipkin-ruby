@@ -1,3 +1,6 @@
+# 0.44.0
+* Depend on Faraday `~> 1.0`.
+
 # 0.43.1
 * Fix to not flush `PRODUCER` span when a server span is in the stack.
 

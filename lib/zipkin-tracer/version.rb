@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ZipkinTracer
-  VERSION = '0.43.1'.freeze
+  VERSION = '0.44.0'
 end
