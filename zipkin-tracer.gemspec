@@ -24,10 +24,11 @@ Gem::Specification.new do |s|
   end
   s.require_paths = ['lib']
 
-  s.add_dependency 'faraday', '~> 1.0'
+  s.add_dependency 'faraday', '>= 0.13', '< 2.0'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
+  s.add_development_dependency 'appraisal'
   s.add_development_dependency 'aws-sdk-sqs', '~> 1.0'
   s.add_development_dependency 'excon', '~> 0.53'
   s.add_development_dependency 'rspec', '~> 3.8'

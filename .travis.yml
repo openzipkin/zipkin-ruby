@@ -1,15 +1,22 @@
 language: ruby
 dist: bionic
-jdk:
-  - openjdk11
+jdk: openjdk11
+
 rvm:
-  - 2.7
-  - 2.6
-  - 2.5
-  - 2.4
   - 2.3
+  - 2.4
+  - 2.5
+  - 2.6
+  - 2.7
   - jruby-9.1
   - jruby-9.2
+
+gemfile:
+  - gemfiles/faraday_0.x.gemfile
+  - gemfiles/faraday_1.x.gemfile
+
+script: bundle exec rspec
+
 deploy:
   provider: rubygems
   api_key:
@@ -19,6 +26,7 @@ deploy:
     tags: true
     repo: openzipkin/zipkin-ruby
     condition: "$TRAVIS_RUBY_VERSION == 2.7"
+
 notifications:
   webhooks:
     urls:
@@ -26,4 +34,3 @@ notifications:
       - https://webhooks.gitter.im/e/e57478303f87ecd7bffc
     on_success: change
     on_failure: always
-script: "bundle exec rspec"
