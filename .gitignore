@@ -9,15 +9,19 @@
 /test/version_tmp/
 /tmp/
 
-## Documentation cache and generated files:
+# Documentation cache and generated files:
 /.yardoc/
 /_yardoc/
 /doc/
 /rdoc/
 
-## Environment normalisation:
+# Environment normalisation:
 /.bundle/
 /lib/bundler/man/
+
+# Appraisal related files
+/gemfiles/.bundle/
+/gemfiles/*.gemfile.lock
 
 # for a library or gem, you might want to ignore these files since the code is
 # intended to run in multiple environments; otherwise, check them in:
