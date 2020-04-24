@@ -25,7 +25,7 @@ deploy:
   on:
     tags: true
     repo: openzipkin/zipkin-ruby
-    condition: "$TRAVIS_RUBY_VERSION == 2.7"
+    condition: $TRAVIS_RUBY_VERSION == 2.7 && $BUNDLE_GEMFILE == $TRAVIS_BUILD_DIR/gemfiles/faraday_1.x.gemfile
 
 notifications:
   webhooks:
