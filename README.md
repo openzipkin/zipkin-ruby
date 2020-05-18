@@ -242,6 +242,14 @@ TraceWrapper.wrap_in_custom_span(config, "custom span") do |span|
 end
 ```
 
+The `trace_context:` keyword argument can be used to retrieve trace data:
+```ruby
+trace_context = { trace_id: '234555b04cf7e099', span_id: '234555b04cf7e099' }
+
+TraceWrapper.wrap_in_custom_span(config, "custom span", trace_context: trace_context) do |span|
+  :
+end
+```
 
 ## Development
 
