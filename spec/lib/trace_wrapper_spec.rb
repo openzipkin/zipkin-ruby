@@ -95,7 +95,7 @@ describe ZipkinTracer::TraceWrapper do
     end
 
     context "trace_context option" do
-      let(:trace_context) { { trace_id: '234555b04cf7e099', span_id: '234555b04cf7e099', sampled: 'true', flags: '0' } }
+      let(:trace_context) { { trace_id: '234555b04cf7e099', span_id: '234555b04cf7e099', sampled: 'true' } }
 
       it "generates next trace_id from given trace_context hash" do
         expect(Trace::TraceId).to receive(:new).with('234555b04cf7e099', nil, '234555b04cf7e099', 'true', 0)
