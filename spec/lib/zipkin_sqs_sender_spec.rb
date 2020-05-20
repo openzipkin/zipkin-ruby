@@ -41,22 +41,20 @@ describe Trace::ZipkinSqsSender do
 
   describe "#flush!" do
     before do
-      Aws.config[:sqs] = {
-        stub_responses: {
-          get_queue_url: {
-            queue_url: "http://#{queue_name}.com"
-          }
-        }
-      }
+      allow(Aws::SQS::Client).to receive(:new).and_return(sqs_client)
       Timecop.freeze
     end
 
     let(:name) { "test" }
     let(:span) { tracer.start_span(trace_id, name) }
+    let(:sqs_client) { double }
 
     it "flushes the list of spans to SQS" do
       spans = ::ZipkinTracer::HostnameResolver.new.spans_with_ips([span], described_class::IP_FORMAT).map(&:to_h)
-      expect_any_instance_of(Aws::SQS::Client)
+      expect(sqs_client)
+        .to receive(:get_queue_url).with(queue_name: queue_name)
+        .and_return(double(queue_url: "http://#{queue_name}.com"))
+      expect(sqs_client)
         .to receive(:send_message).with(queue_url: "http://#{queue_name}.com", message_body: spans.to_json)
       tracer.end_span(span)
     end

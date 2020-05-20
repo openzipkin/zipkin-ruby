@@ -277,8 +277,8 @@ module Trace
     end
 
     def self.remote_endpoint(url, remote_service_name)
-      service_name = remote_service_name || url.host.split('.').first || UNKNOWN_URL # default to url-derived service name
-      Endpoint.new(url.host, url.port, service_name)
+      service_name = remote_service_name || url&.host&.split('.')&.first || UNKNOWN_URL # default to url-derived service name
+      Endpoint.new(url&.host, url&.port, service_name)
     end
 
     def to_h

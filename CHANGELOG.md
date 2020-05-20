@@ -1,3 +1,6 @@
+# 0.46.0
+* Add Amazon SQS tracer.
+
 # 0.45.0
 * Add a `trace_context` option to the TraceWrapper utility class to retrieve trace data.
 

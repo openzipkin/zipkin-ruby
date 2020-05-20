@@ -132,6 +132,20 @@ describe Trace::ZipkinSenderBase do
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
   end
 
+  describe '#end_span with another consumer span' do
+    before do
+      span = tracer.start_span(trace_id, rpc_name)
+      span.kind = Trace::Span::Kind::CONSUMER
+    end
+
+    let(:span) { tracer.start_span(trace_id, rpc_name) }
+
+    include_examples 'flushes span', Trace::Span::Kind::SERVER
+    include_examples 'flushes span', Trace::Span::Kind::CLIENT
+    include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
+    include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+  end
+
   describe '#with_new_span' do
     let(:result) { 'result' }
     it 'returns the value of the block' do
