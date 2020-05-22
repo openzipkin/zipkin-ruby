@@ -93,5 +93,20 @@ describe ZipkinTracer::TraceWrapper do
         described_class.wrap_in_custom_span(config, "custom span") {}
       end
     end
+
+    context "trace_context option" do
+      let(:trace_context) { { trace_id: '234555b04cf7e099', span_id: '234555b04cf7e099', sampled: 'true' } }
+
+      it "generates next trace_id from given trace_context hash" do
+        expect(Trace::TraceId).to receive(:new).with('234555b04cf7e099', nil, '234555b04cf7e099', 'true', 0)
+          .and_return(double(next_id: double(sampled?: false)))
+        described_class.wrap_in_custom_span(config, "custom span", trace_context: trace_context) {}
+      end
+
+      it "generates next trace_id from ZipkinTracer::TraceGenerator when trace_context is not given" do
+        expect(ZipkinTracer::TraceGenerator).to receive(:new).and_call_original
+        described_class.wrap_in_custom_span(config, "custom span") {}
+      end
+    end
   end
 end

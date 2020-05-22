@@ -115,21 +115,21 @@ module Trace
     end
 
     def next_id
-      TraceId.new(@trace_id, @span_id, ZipkinTracer::TraceGenerator.new.generate_id, @sampled, @flags)
+      TraceId.new(trace_id, span_id, ZipkinTracer::TraceGenerator.new.generate_id, sampled, flags)
     end
 
     # the debug flag is used to ensure the trace passes ALL samplers
     def debug?
-      @flags & Flags::DEBUG == Flags::DEBUG
+      flags & Flags::DEBUG == Flags::DEBUG
     end
 
     def sampled?
-      debug? || ['1', 'true'].include?(@sampled)
+      debug? || %w[1 true].include?(sampled)
     end
 
     def to_s
-      "TraceId(trace_id = #{@trace_id.to_s}, parent_id = #{@parent_id.to_s}, span_id = #{@span_id.to_s}," \
-      " sampled = #{@sampled.to_s}, flags = #{@flags.to_s}, shared = #{@shared.to_s})"
+      "TraceId(trace_id = #{trace_id}, parent_id = #{parent_id}, span_id = #{span_id}," \
+      " sampled = #{sampled}, flags = #{flags}, shared = #{shared})"
     end
   end
 
