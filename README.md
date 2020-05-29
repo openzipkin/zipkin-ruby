@@ -81,6 +81,38 @@ end
 
 By default workers aren't traced. You can specify the workers that you want to trace with traceable_workers config option. If you want all your workers to be traced pass [:all] to traceable_workers option (traceable_workers: [:all]).
 
+### Tracing Amazon SQS messages
+
+Amazon SQS tracing can be turned on by requiring [zipkin-tracer/sqs/adapter](lib/zipkin-tracer/sqs/adapter.rb):
+```ruby
+require 'zipkin-tracer/sqs/adapter'
+```
+
+This SQS adapter overrides the `send_message` and `send_message_batch` methods to add trace data as message attributes and to generate a producer span when the methods are called. Since all SQS messages are affected, it is not recommended to use this feature with the [SQS sender](lib/zipkin-tracer/zipkin_sqs_sender.rb).
+
+When receiving messages, you need to pass the `message_attribute_names: ['All']` option to retrive message attributes:
+```ruby
+resp = sqs.receive_message(
+  queue_url: queue_url,
+  message_attribute_names: ['All']
+)
+```
+
+Then you can utilize the [TraceWrapper](#tracewrapper) class to generate a consumer span:
+```ruby
+msg = resp.messages.first
+trace_context = msg.message_attributes.each_with_object({}) { |(key, value), hsh| hsh[key.to_sym] = value.string_value }
+
+TraceWrapper.wrap_in_custom_span(config, 'receive_message',
+  span_kind: Trace::Span::Kind::CONSUMER,
+  trace_context: trace_context
+) do |span|
+  span.remote_endpoint = Trace::Endpoint.remote_endpoint(nil, 'amazon-sqs')
+  span.record_tag('queue.url', queue_url)
+  :
+end
+```
+
 ### Local tracing
 
 `ZipkinTracer::TraceClient` provides an API to record local traces in your application.

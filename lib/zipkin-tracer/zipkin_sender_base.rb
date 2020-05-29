@@ -7,8 +7,7 @@ module Trace
   # Senders dealing with zipkin should inherit from this class and implement the
   # flush! method which actually sends the information
   class ZipkinSenderBase
-
-    def initialize(options={})
+    def initialize(options = {})
       @options = options
       reset
     end
@@ -40,7 +39,10 @@ module Trace
 
     def skip_flush?(span)
       return true if span.kind == Trace::Span::Kind::CLIENT && span.has_parent_span?
-      return true if span.kind == Trace::Span::Kind::PRODUCER && spans.any? { |s| s.kind == Trace::Span::Kind::SERVER }
+
+      if span.kind == Trace::Span::Kind::PRODUCER
+        return true if spans.any? { |s| s.kind == Trace::Span::Kind::SERVER || s.kind == Trace::Span::Kind::CONSUMER }
+      end
     end
 
     def flush!
@@ -62,6 +64,5 @@ module Trace
     def reset
       Thread.current[THREAD_KEY] = []
     end
-
   end
 end

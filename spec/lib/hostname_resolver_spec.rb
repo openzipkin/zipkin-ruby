@@ -12,6 +12,7 @@ describe ZipkinTracer::HostnameResolver do
   let(:endpoint) { Trace::Endpoint.new(hostname, 80, name) }
   let(:local_hostname) { 'MRBADGUY' }
   let(:local_endpoint) { Trace::Endpoint.new(local_hostname, 80, name) }
+  let(:remote_endpoint_for_sqs) { Trace::Endpoint.new(nil, nil, 'amazon-sqs') }
   let(:span) { Trace::Span.new(name, trace_id) }
   let(:ip_format) { :string }
   let(:resolved_spans) { described_class.new.spans_with_ips([span], ip_format) }
@@ -63,7 +64,6 @@ describe ZipkinTracer::HostnameResolver do
     it_should_behave_like 'resolves hostnames'
   end
 
-
   context 'with spans containing local addresses' do
     before do
       span.local_endpoint = local_endpoint
@@ -75,7 +75,6 @@ describe ZipkinTracer::HostnameResolver do
     let(:expected_ip) { ipv4 }
     it_should_behave_like 'resolves hostnames'
   end
-
 
   context 'with spans resolving to string addresses' do
     before do
@@ -97,4 +96,18 @@ describe ZipkinTracer::HostnameResolver do
     it_should_behave_like 'resolves hostnames'
   end
 
+  context 'with spans containing no hostname for remote_endpoint' do
+    before do
+      span.local_endpoint = local_endpoint
+      span.remote_endpoint = remote_endpoint_for_sqs
+      span.record('diary')
+      span.record_tag('secret', 'book')
+      allow(Socket).to receive(:getaddrinfo).with(local_hostname, nil, :INET).and_return([[nil, nil, nil, ipv4]])
+    end
+
+    it 'returns nil for ipv4 of remote_endpoint' do
+      ip = resolved_spans.first.remote_endpoint.ipv4
+      expect(ip).to be_nil
+    end
+  end
 end

@@ -11,15 +11,17 @@ module ZipkinTracer
 
       each_endpoint(spans) do |endpoint|
         hostname = endpoint.ipv4
-        unless resolved_ip_address?(hostname.to_s)
-          endpoint.ipv4 = resolved_hosts[hostname]
-        end
+        next unless hostname
+        next if resolved_ip_address?(hostname.to_s)
+
+        endpoint.ipv4 = resolved_hosts[hostname]
       end
     end
 
     private
+
     LOCALHOST = '127.0.0.1'.freeze
-    LOCALHOST_I32 = 0x7f000001.freeze
+    LOCALHOST_I32 = 0x7f000001
     MAX_I32 = ((2 ** 31) - 1)
     MASK = (2 ** 32) - 1
     IP_FIELD = 3
@@ -49,10 +51,9 @@ module ZipkinTracer
     end
 
     def resolve(hosts, ip_format)
-      hosts.inject({}) do |host_map, host|
+      hosts.each_with_object({}) do |host, host_map|
         hostname = host.ipv4  # This field has been temporarly used to store the hostname.
-        host_map[hostname]  = host_to_format(hostname, ip_format)
-        host_map
+        host_map[hostname] = host_to_format(hostname, ip_format) if hostname
       end
     end
 
