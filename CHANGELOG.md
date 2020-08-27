@@ -1,3 +1,6 @@
+# 0.47.0
+* Add a `check_routes` option to make the routable request check optional.
+
 # 0.46.0
 * Add Amazon SQS tracer.
 

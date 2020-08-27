@@ -71,7 +71,7 @@ module ZipkinTracer
       if parent_trace_sampled # A service upstream decided this goes in all the way
         parent_trace_sampled
       else
-        new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered? && routable_request?)
+        new_sampled_header_value(force_sample? || current_trace_sampled? && !filtered? && traceable_request?)
       end
     end
 
@@ -83,9 +83,10 @@ module ZipkinTracer
       @config.filter_plugin && !@config.filter_plugin.call(@env)
     end
 
-    def routable_request?
+    def traceable_request?
+      return true unless @config.check_routes
+
       Application.routable_request?(@env)
     end
-
   end
 end
