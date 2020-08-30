@@ -5,7 +5,7 @@ require 'zipkin-tracer/rack/zipkin-tracer'
 module ZipkinTracer
   # Configuration of this gem. It reads the configuration and provides default values
   class Config
-    attr_reader :service_name, :sample_rate, :sampled_as_boolean, :trace_id_128bit, :async, :logger,
+    attr_reader :service_name, :sample_rate, :sampled_as_boolean, :check_routes, :trace_id_128bit, :async, :logger,
       :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin, :rabbit_mq_connection, :rabbit_mq_exchange,
       :rabbit_mq_routing_key, :write_b3_single_format
@@ -47,6 +47,8 @@ module ZipkinTracer
       if @sampled_as_boolean
         @logger && @logger.warn("Using a boolean in the Sampled header is deprecated. Consider setting sampled_as_boolean to false")
       end
+      # When set to true, only routable requests are sampled
+      @check_routes      = config[:check_routes].nil? ? DEFAULTS[:check_routes] : config[:check_routes]
 
       # When set to true, high 8-bytes will be prepended to trace_id.
       # The upper 4-bytes are epoch seconds and the lower 4-bytes are random.
@@ -95,6 +97,7 @@ module ZipkinTracer
     DEFAULTS = {
       sample_rate: 0.1,
       sampled_as_boolean: true,
+      check_routes: false,
       trace_id_128bit: false,
       write_b3_single_format: false
     }

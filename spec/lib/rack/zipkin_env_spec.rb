@@ -7,14 +7,19 @@ describe ZipkinTracer::ZipkinEnv do
   end
 
   let(:path) { '/to_the_lighthouse' }
+  let(:filter_plugin) { proc { false } }
+  let(:whitelist_plugin) { proc { true } }
+  let(:sample_rate) { 1 }
   let(:sampled_as_boolean) { true }
+  let(:check_routes) { false }
   let(:config) do
     instance_double(
       ZipkinTracer::Config,
-      filter_plugin: proc { false },
-      whitelist_plugin: proc { true },
-      sample_rate: 1,
-      sampled_as_boolean: sampled_as_boolean
+      filter_plugin: filter_plugin,
+      whitelist_plugin: whitelist_plugin,
+      sample_rate: sample_rate,
+      sampled_as_boolean: sampled_as_boolean,
+      check_routes: check_routes
     )
   end
   let(:env) { mock_env }
@@ -25,15 +30,7 @@ describe ZipkinTracer::ZipkinEnv do
   end
 
   context 'whitelist_plugin returns false' do
-    let(:config) do
-      instance_double(
-        ZipkinTracer::Config,
-        filter_plugin: proc { false },
-        whitelist_plugin: proc { false },
-        sample_rate: 1,
-        sampled_as_boolean: sampled_as_boolean
-      )
-    end
+    let(:whitelist_plugin) { proc { false } }
 
     it 'trace is not sampled' do
       expect(zipkin_env.trace_id.sampled?).to eq(false)
@@ -41,34 +38,40 @@ describe ZipkinTracer::ZipkinEnv do
   end
 
   context 'whitelist_plugin returns true' do
-    let(:config) do
-      instance_double(
-        ZipkinTracer::Config,
-        filter_plugin: proc { false },
-        whitelist_plugin: proc { true },
-        sample_rate: 1,
-        sampled_as_boolean: sampled_as_boolean
-      )
-    end
-
     it 'trace is sampled' do
       expect(zipkin_env.trace_id.sampled?).to eq(true)
     end
   end
 
   context 'Not sampling in this node and not tracing information in the environment' do
-    let(:config) do
-      instance_double(
-        ZipkinTracer::Config,
-        filter_plugin: proc { false },
-        whitelist_plugin: proc { false },
-        sample_rate: 0,
-        sampled_as_boolean: sampled_as_boolean
-      )
-    end
+    let(:whitelist_plugin) { proc { false } }
+    let(:sample_rate) { 0 }
 
     it 'trace is not sampled' do
       expect(zipkin_env.trace_id.sampled?).to eq(false)
+    end
+  end
+
+  describe 'routable_request?' do
+    let(:filter_plugin) { nil }
+    let(:whitelist_plugin) { nil }
+
+    before do
+      allow(ZipkinTracer::Application).to receive(:routable_request?).and_return(false)
+    end
+
+    context 'check_routes is false' do
+      it 'trace is sampled' do
+        expect(zipkin_env.trace_id.sampled?).to eq(true)
+      end
+    end
+
+    context 'check_routes is false' do
+      let(:check_routes) { true }
+
+      it 'trace is not sampled' do
+        expect(zipkin_env.trace_id.sampled?).to eq(false)
+      end
     end
   end
 
