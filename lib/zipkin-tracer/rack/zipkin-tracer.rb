@@ -47,6 +47,7 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
+      span.kind = Trace::Span::Kind::SERVER
       status, headers, body = yield
     ensure
       trace_server_information(span, zipkin_env, status)
@@ -55,7 +56,6 @@ module ZipkinTracer
     end
 
     def trace_server_information(span, zipkin_env, status)
-      span.kind = Trace::Span::Kind::SERVER
       span.record_status(status)
       SERVER_RECV_TAGS.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
     end
