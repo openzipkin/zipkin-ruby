@@ -25,6 +25,7 @@ module ZipkinTracer
           @app.call(env)
         else
           @tracer.with_new_span(trace_id, span_name(env)) do |span|
+            span.kind = Trace::Span::Kind::SERVER
             trace!(span, zipkin_env) { @app.call(env) }
           end
         end
@@ -47,7 +48,6 @@ module ZipkinTracer
     end
 
     def trace!(span, zipkin_env, &block)
-      span.kind = Trace::Span::Kind::SERVER
       status, headers, body = yield
     ensure
       trace_server_information(span, zipkin_env, status)

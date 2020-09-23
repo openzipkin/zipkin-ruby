@@ -215,4 +215,23 @@ describe ZipkinTracer::RackHandler do
 
     end
   end
+
+  context 'SERVER span kind' do
+    subject { middleware(app) }
+
+    let(:span) { double }
+
+    before do
+      allow(tracer).to receive(:start_span).and_return(span)
+    end
+
+    it 'sets SERVER span kind before calling trace!' do
+      expect(ZipkinTracer::TraceContainer).to receive(:with_trace_id).and_call_original
+      expect(tracer).to receive(:with_new_span).ordered.with(anything, 'get').and_call_original
+      expect(span).to receive(:kind=).ordered.with(Trace::Span::Kind::SERVER)
+      expect(subject).to receive(:trace!).ordered
+
+      status, headers, body = subject.call(mock_env)
+    end
+  end
 end
