@@ -1,3 +1,6 @@
+# 0.47.1
+* Fix to set `SERVER` span kind at the beginning to avoid being flushed before closing.
+
 # 0.47.0
 * Add a `check_routes` option to make the routable request check optional.
 

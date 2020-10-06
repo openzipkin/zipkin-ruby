@@ -25,6 +25,7 @@ module ZipkinTracer
           @app.call(env)
         else
           @tracer.with_new_span(trace_id, span_name(env)) do |span|
+            span.kind = Trace::Span::Kind::SERVER
             trace!(span, zipkin_env) { @app.call(env) }
           end
         end
@@ -55,7 +56,6 @@ module ZipkinTracer
     end
 
     def trace_server_information(span, zipkin_env, status)
-      span.kind = Trace::Span::Kind::SERVER
       span.record_status(status)
       SERVER_RECV_TAGS.each { |annotation_key, env_key| span.record_tag(annotation_key, zipkin_env.env[env_key]) }
     end
