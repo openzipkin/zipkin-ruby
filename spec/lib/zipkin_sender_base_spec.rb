@@ -99,6 +99,7 @@ describe Trace::ZipkinSenderBase do
     include_examples 'flushes span', Trace::Span::Kind::CLIENT
     include_examples 'flushes span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'flushes span', nil
 
     it 'allows you pass an explicit timestamp' do
       span #touch it so it happens before we freeze time again
@@ -107,15 +108,6 @@ describe Trace::ZipkinSenderBase do
       tracer.end_span(span, timestamp)
       expect(span.to_h[:duration]).to eq(2_000_000)
     end
-  end
-
-  describe '#end_span with parent span' do
-    let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
-
-    include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
-    include_examples 'flushes span', Trace::Span::Kind::PRODUCER
-    include_examples 'flushes span', Trace::Span::Kind::CONSUMER
   end
 
   describe '#end_span with another server span' do
@@ -127,9 +119,10 @@ describe Trace::ZipkinSenderBase do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
 
     include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'flushes span', Trace::Span::Kind::CLIENT
+    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'does not flush span', nil
   end
 
   describe '#end_span with another consumer span' do
@@ -141,9 +134,10 @@ describe Trace::ZipkinSenderBase do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
 
     include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'flushes span', Trace::Span::Kind::CLIENT
+    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'does not flush span', nil
   end
 
   describe '#with_new_span' do
