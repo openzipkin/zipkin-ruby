@@ -40,7 +40,7 @@ module Trace
     def skip_flush?(span)
       return true if span.kind == Trace::Span::Kind::CLIENT && span.has_parent_span?
 
-      if span.kind == Trace::Span::Kind::PRODUCER
+      if span.kind.nil? || span.kind == Trace::Span::Kind::PRODUCER
         return true if spans.any? { |s| s.kind == Trace::Span::Kind::SERVER || s.kind == Trace::Span::Kind::CONSUMER }
       end
     end

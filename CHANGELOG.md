@@ -1,3 +1,6 @@
+# 0.47.2
+* Fix to not flush local component span when a server span or a consumer span is in the stack.
+
 # 0.47.1
 * Fix to set `SERVER` span kind at the beginning to avoid being flushed before closing.
 

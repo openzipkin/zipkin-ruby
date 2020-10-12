@@ -99,6 +99,7 @@ describe Trace::ZipkinSenderBase do
     include_examples 'flushes span', Trace::Span::Kind::CLIENT
     include_examples 'flushes span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'flushes span', nil
 
     it 'allows you pass an explicit timestamp' do
       span #touch it so it happens before we freeze time again
@@ -116,6 +117,7 @@ describe Trace::ZipkinSenderBase do
     include_examples 'does not flush span', Trace::Span::Kind::CLIENT
     include_examples 'flushes span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'flushes span', nil
   end
 
   describe '#end_span with another server span' do
@@ -130,6 +132,7 @@ describe Trace::ZipkinSenderBase do
     include_examples 'flushes span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'does not flush span', nil
   end
 
   describe '#end_span with another consumer span' do
@@ -144,6 +147,7 @@ describe Trace::ZipkinSenderBase do
     include_examples 'flushes span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
+    include_examples 'does not flush span', nil
   end
 
   describe '#with_new_span' do
