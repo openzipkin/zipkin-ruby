@@ -38,11 +38,9 @@ module Trace
     end
 
     def skip_flush?(span)
-      return true if span.kind == Trace::Span::Kind::CLIENT && span.has_parent_span?
+      return false if span.kind == Trace::Span::Kind::SERVER || span.kind == Trace::Span::Kind::CONSUMER
 
-      if span.kind.nil? || span.kind == Trace::Span::Kind::PRODUCER
-        return true if spans.any? { |s| s.kind == Trace::Span::Kind::SERVER || s.kind == Trace::Span::Kind::CONSUMER }
-      end
+      spans.any? { |s| s.kind == Trace::Span::Kind::SERVER || s.kind == Trace::Span::Kind::CONSUMER }
     end
 
     def flush!

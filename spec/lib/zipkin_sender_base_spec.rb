@@ -110,16 +110,6 @@ describe Trace::ZipkinSenderBase do
     end
   end
 
-  describe '#end_span with parent span' do
-    let(:span) { tracer.start_span(trace_id_with_parent, rpc_name) }
-
-    include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
-    include_examples 'flushes span', Trace::Span::Kind::PRODUCER
-    include_examples 'flushes span', Trace::Span::Kind::CONSUMER
-    include_examples 'flushes span', nil
-  end
-
   describe '#end_span with another server span' do
     before do
       span = tracer.start_span(trace_id, rpc_name)
@@ -129,7 +119,7 @@ describe Trace::ZipkinSenderBase do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
 
     include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'flushes span', Trace::Span::Kind::CLIENT
+    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
     include_examples 'does not flush span', nil
@@ -144,7 +134,7 @@ describe Trace::ZipkinSenderBase do
     let(:span) { tracer.start_span(trace_id, rpc_name) }
 
     include_examples 'flushes span', Trace::Span::Kind::SERVER
-    include_examples 'flushes span', Trace::Span::Kind::CLIENT
+    include_examples 'does not flush span', Trace::Span::Kind::CLIENT
     include_examples 'does not flush span', Trace::Span::Kind::PRODUCER
     include_examples 'flushes span', Trace::Span::Kind::CONSUMER
     include_examples 'does not flush span', nil
