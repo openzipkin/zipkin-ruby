@@ -13,7 +13,6 @@ module Trace
         ::ZipkinTracer::HostnameResolver.new.spans_with_ips(spans, ZipkinHttpSender::IP_FORMAT).map(&:to_h)
 
       resp = Faraday.new(json_api_host).post do |req|
-        req.url SPANS_PATH
         req.headers['Content-Type'] = 'application/json'
         req.body = JSON.generate(spans_with_ips)
       end
