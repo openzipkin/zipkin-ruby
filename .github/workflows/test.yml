@@ -1,0 +1,40 @@
+# yamllint --format github .github/workflows/test.yml
+---
+name: test
+
+# We don't test documentation-only commits.
+on:
+  # We run tests on non-tagged pushes to master
+  push:
+    tags: ''
+    branches: master
+    paths-ignore: '**/*.md'
+  # We also run tests on pull requests targeted at the master branch.
+  pull_request:
+    branches: master
+    paths-ignore: '**/*.md'
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04  # newest available distribution, aka focal
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: [2.5, 2.6, 2.7]
+        gemfile:
+          - gemfiles/faraday_0.x.gemfile
+          - gemfiles/faraday_1.x.gemfile
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1  # full history is not needed
+      - name: Set up Ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Test
+        run: build-bin/configure_test && build-bin/test
+        env:
+          BUNDLE_GEMFILE: ${{ matrix.gemfile }}
