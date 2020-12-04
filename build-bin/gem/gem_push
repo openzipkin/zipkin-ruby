@@ -36,4 +36,4 @@ EOF
 fi
 
 bundle exec rake build
-echo gem push ${gem}-${version}.gem
+gem push ${gem}-${version}.gem
