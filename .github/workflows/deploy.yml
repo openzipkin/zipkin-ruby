@@ -19,9 +19,10 @@ jobs:
         with:
           fetch-depth: 1  # full history is not needed
       - name: Set up Ruby
-        uses: actions/setup-ruby@v1
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7.x
+          ruby-version: 2.7
+          bundler-cache: true
       - name: Deploy
         env:
           # RUBYGEMS_API_KEY=<hex token value>

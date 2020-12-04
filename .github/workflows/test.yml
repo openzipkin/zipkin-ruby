@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 1  # full history is not needed
       - name: Set up Ruby
-        uses: actions/setup-ruby@v1
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
