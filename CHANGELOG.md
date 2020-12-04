@@ -1,5 +1,5 @@
 # 0.47.3
-* Moved CI to [GitHub Actions](https://github.com/openzipkin/zipkin-ruby/workflows) 
+* Moved CI to [GitHub Actions](https://github.com/openzipkin/zipkin-ruby/workflows).
 
 # 0.47.2
 * Fix to not flush local component span when a server span or a consumer span is in the stack.

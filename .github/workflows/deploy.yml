@@ -28,6 +28,6 @@ jobs:
           #   - needs to own the gem
           #   - generated at https://rubygems.org/settings/edit
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
-        run: |  # GITHUB_REF will be refs/tags/N.M.L
+        run: |  # GITHUB_REF will be refs/tags/MAJOR.MINOR.PATCH
           build-bin/configure_deploy &&
           build-bin/deploy $(echo ${GITHUB_REF} | cut -d/ -f 3)

@@ -10,17 +10,17 @@ This repo uses semantic versions. Please keep this in mind when choosing version
 
 1. **Push a git tag**
 
-   The tag should be of the format `N.M.L`, ex `git tag 1.18.1; git push origin 1.18.1`.
+   The tag should formatted `MAJOR.MINOR.PATCH`, ex `git tag 1.18.1 && git push origin 1.18.1`.
 
 1. **Wait for CI**
 
-   The `N.M.L` tag triggers [`build-bin/deploy`](build-bin/deploy), which does the following:
+   The `MAJOR.MINOR.PATCH` tag triggers [`build-bin/deploy`](build-bin/deploy), which does the following:
      * https://rubygems.org/gems/zipkin-tracer [`build-bin/gem/gem_push`](build-bin/gem/gem_push)
 
 ## Credentials
 
 The release process uses various credentials. If you notice something failing due to unauthorized,
-look at the notes in [.github/workflows/deploy.yml] and check the [org secrets](https://github.com/organizations/openzipkin/settings/secrets/actions)
+look at the notes in [.github/workflows/deploy.yml] and check the [org secrets](https://github.com/organizations/openzipkin/settings/secrets/actions).
 
 ## Manually releasing
 
@@ -33,7 +33,7 @@ this is a normal ruby project, and can be released accordingly.
 export RUBYGEMS_API_KEY=your_api_key
 release_version=xx-version-to-release-xx
 
-# now from latest master, create the N.M.L tag
+# now from latest master, create the MAJOR.MINOR.PATCH tag
 git tag ${release_version}
 
 # Run the deploy using the version you added as a tag

@@ -4,10 +4,10 @@ This is a Ruby project, which uses standard conventions for test and deploy.
 
 Test is normal, except there's a matrix in [CI setup](../.github/workflows/test.yml).
 
-To create a release, push a N.M.L tag (ex `0.47.2`). Below are details about the deployment process.
+To create a release, push a MAJOR.MINOR.PATCH tag (ex `0.47.2`). Below are details about the deployment process.
 
 Notably, the [gem version](../lib/zipkin-tracer/version.rb) is lazy set, defaulting to `0.0.0`. When
-a release N.M.L tag (ex `0.47.2`) is pushed, this file is overwritten as a side effect of running
+a release MAJOR.MINOR.PATCH tag (ex `0.47.2`) is pushed, this file is overwritten as a side effect of running
 [deploy]. The release version is not written into git history except as a part of [../CHANGELOG.md]. 
 
 [//]: # (Below here should be standard for all projects)
@@ -149,7 +149,7 @@ jobs:
         env:
           GH_USER: ${{ secrets.GH_USER }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |  # GITHUB_REF will be refs/heads/master or refs/tags/N.M.L
+        run: |  # GITHUB_REF will be refs/heads/master or refs/tags/MAJOR.MINOR.PATCH
           build-bin/configure_deploy &&
           build-bin/deploy $(echo ${GITHUB_REF} | cut -d/ -f 3)
 ```
