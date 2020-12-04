@@ -1,0 +1,34 @@
+# yamllint --format github .github/workflows/deploy.yml
+---
+name: deploy
+
+# We deploy on a release versions, regardless of if the commit is documentation-only or not.
+#
+# See https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+on:
+  push:
+    tags: '[0-9]+.[0-9]+.[0-9]+**'  # Ex. 1.2.3
+    branches: master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04  # newest available distribution, aka focal
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1  # full history is not needed
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+      - name: Deploy
+        env:
+          # RUBYGEMS_API_KEY=<hex token value>
+          #   - needs to own the gem
+          #   - generated at https://rubygems.org/settings/edit
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |  # GITHUB_REF will be refs/tags/MAJOR.MINOR.PATCH
+          build-bin/configure_deploy &&
+          build-bin/deploy $(echo ${GITHUB_REF} | cut -d/ -f 3)

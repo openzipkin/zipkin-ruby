@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Copyright 2014-2020 The OpenZipkin Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+
+set -ue
+
+# This script pushes a gem version, updating version.rb if out-of-date.
+#
+# This assumes `configure_gem_credentials` and `bundle_install` were invoked.
+gem=${1?gem is required. ex zipkin-tracer}
+module=${2?module is required. ex ZipkinTracer}
+version=${3?version is required. ex 0.2.3}
+
+current_version=$(ruby -r ./lib/${gem}/version.rb -e "puts ${module}::VERSION")
+
+if [ "${current_version}" != "${version}" ]; then
+  echo "Updating ${module}::VERSION from ${current_version} to ${version}"
+  cat > lib/${gem}/version.rb <<-EOF
+# frozen_string_literal: true
+
+module ${module}
+  VERSION = '${version}'
+end
+EOF
+fi
+
+bundle exec rake build
+echo gem push ${gem}-${version}.gem

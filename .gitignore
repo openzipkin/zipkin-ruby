@@ -33,3 +33,7 @@
 Gemfile.lock
 
 .byebug_history
+
+# IntelliJ
+.idea
+*.iml
