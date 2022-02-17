@@ -20,10 +20,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:  # https://github.com/ruby/setup-ruby/blob/master/README.md#supported-versions
-        ruby: [2.3, 2.4, 2.5, 2.6, 2.7, jruby-9.1, jruby-9.2]
+        ruby: [2.3, 2.4, 2.5, 2.6, 2.7, '3.0', 3.1, jruby-9.1, jruby-9.2]
         gemfile:
           - gemfiles/faraday_0.x.gemfile
           - gemfiles/faraday_1.x.gemfile
+          - gemfiles/faraday_2.x.gemfile
+        exclude:
+          - ruby: 2.3
+            gemfile: gemfiles/faraday_2.x.gemfile
+          - ruby: 2.4
+            gemfile: gemfiles/faraday_2.x.gemfile
+          - ruby: 2.5
+            gemfile: gemfiles/faraday_2.x.gemfile
+          - ruby: jruby-9.1
+            gemfile: gemfiles/faraday_2.x.gemfile
+          - ruby: jruby-9.2
+            gemfile: gemfiles/faraday_2.x.gemfile
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2

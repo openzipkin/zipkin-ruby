@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   end
   s.require_paths = ['lib']
 
-  s.add_dependency 'faraday', '>= 0.13', '< 2.0'
+  s.add_dependency 'faraday', '>= 0.13', '< 3.0'
   s.add_dependency 'rack', '>= 1.0'
   s.add_dependency 'sucker_punch', '~> 2.0'
 
@@ -37,5 +37,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'timecop', '~> 0.8'
   s.add_development_dependency 'webmock', '~> 3.0'
+  s.add_development_dependency 'webrick'
   s.add_development_dependency 'simplecov', '~> 0.16'
 end
