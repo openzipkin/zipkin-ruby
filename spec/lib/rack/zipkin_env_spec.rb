@@ -19,11 +19,13 @@ describe ZipkinTracer::ZipkinEnv do
       whitelist_plugin: whitelist_plugin,
       sample_rate: sample_rate,
       sampled_as_boolean: sampled_as_boolean,
-      check_routes: check_routes
+      check_routes: check_routes,
+      supports_join: supports_join
     )
   end
   let(:env) { mock_env }
   let(:zipkin_env) { described_class.new(env, config) }
+  let(:supports_join) { true }
 
   it 'allows access to the original environment' do
     expect(zipkin_env.env).to eq(env)
@@ -187,6 +189,20 @@ describe ZipkinTracer::ZipkinEnv do
 
       it 'uses the flags' do
         expect(zipkin_env.trace_id.flags.to_i).to eq(0)
+      end
+
+      context 'supports joins is false' do
+        let(:supports_join) { false }
+
+        it 'generates a new span id' do
+          trace_id = zipkin_env.trace_id
+          expect(trace_id.trace_id.to_i).to eq(id)
+          expect(trace_id.span_id.to_i).not_to eq(id)
+        end
+
+        it 'shared is false' do
+          expect(zipkin_env.trace_id.shared).to eq(false)
+        end
       end
     end
 

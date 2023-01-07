@@ -8,7 +8,7 @@ module ZipkinTracer
     attr_reader :service_name, :sample_rate, :sampled_as_boolean, :check_routes, :trace_id_128bit, :async, :logger,
       :json_api_host, :zookeeper, :kafka_producer, :kafka_topic, :sqs_queue_name, :sqs_region, :log_tracing,
       :annotate_plugin, :filter_plugin, :whitelist_plugin, :rabbit_mq_connection, :rabbit_mq_exchange,
-      :rabbit_mq_routing_key, :write_b3_single_format
+      :rabbit_mq_routing_key, :write_b3_single_format, :supports_join
 
     def initialize(app, config_hash)
       config = config_hash || Application.config(app)
@@ -58,6 +58,10 @@ module ZipkinTracer
       # When set to true, only writes a single b3 header for outbound propagation.
       @write_b3_single_format =
         config[:write_b3_single_format].nil? ? DEFAULTS[:write_b3_single_format] : config[:write_b3_single_format]
+      # When set to false, the it will force client and server spans to have different spanId's. This is important
+      # because zipkin traces may be reported to non-zipkin backends that might not support the concept of
+      # joining spans.
+      @supports_join = config[:supports_join].nil? ? DEFAULTS[:supports_join] : config[:supports_join]
 
       Trace.sample_rate = @sample_rate
       Trace.trace_id_128bit = @trace_id_128bit
@@ -99,7 +103,8 @@ module ZipkinTracer
       sampled_as_boolean: true,
       check_routes: false,
       trace_id_128bit: false,
-      write_b3_single_format: false
+      write_b3_single_format: false,
+      supports_join: true
     }
 
     def present?(str)
