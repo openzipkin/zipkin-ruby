@@ -198,6 +198,7 @@ describe ZipkinTracer::ZipkinEnv do
           trace_id = zipkin_env.trace_id
           expect(trace_id.trace_id.to_i).to eq(id)
           expect(trace_id.span_id.to_i).not_to eq(id)
+          expect(trace_id.parent_id.to_i).to eq(id)
         end
 
         it 'shared is false' do

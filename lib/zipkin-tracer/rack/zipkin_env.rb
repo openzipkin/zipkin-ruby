@@ -45,6 +45,7 @@ module ZipkinTracer
       end
 
       unless supports_join?
+        parent_span_id = span_id
         span_id = TraceGenerator.new.generate_id
         shared = false
       end
