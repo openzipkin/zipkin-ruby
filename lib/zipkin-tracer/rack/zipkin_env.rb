@@ -30,6 +30,10 @@ module ZipkinTracer
     B3_REQUIRED_HEADERS = %w[HTTP_X_B3_TRACEID HTTP_X_B3_SPANID].freeze
     B3_OPT_HEADERS = %w[HTTP_X_B3_PARENTSPANID HTTP_X_B3_SAMPLED HTTP_X_B3_FLAGS].freeze
 
+    def supports_join?
+      @config.supports_join
+    end
+
     def retrieve_or_generate_ids
       if called_with_zipkin_b3_single_header?
         trace_id, span_id, parent_span_id, sampled, flags =
@@ -38,6 +42,12 @@ module ZipkinTracer
       elsif called_with_zipkin_headers?
         trace_id, span_id, parent_span_id, sampled, flags = @env.values_at(*B3_REQUIRED_HEADERS, *B3_OPT_HEADERS)
         shared = true
+      end
+
+      unless supports_join?
+        parent_span_id = span_id
+        span_id = TraceGenerator.new.generate_id
+        shared = false
       end
 
       unless trace_id

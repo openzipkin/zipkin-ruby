@@ -8,7 +8,7 @@ module ZipkinTracer
 
     [:service_name, :json_api_host,
       :zookeeper, :log_tracing,
-      :annotate_plugin, :filter_plugin, :whitelist_plugin].each do |method|
+      :annotate_plugin, :filter_plugin, :whitelist_plugin, :supports_join].each do |method|
       it "can set and read configuration values for #{method}" do
         value = rand(100)
         config = Config.new(nil, { method => value })
@@ -22,7 +22,7 @@ module ZipkinTracer
 
     it 'sets defaults' do
       config = Config.new(nil, {})
-      [:sample_rate, :sampled_as_boolean, :check_routes, :trace_id_128bit, :write_b3_single_format].each do |key|
+      [:sample_rate, :sampled_as_boolean, :check_routes, :trace_id_128bit, :write_b3_single_format, :supports_join].each do |key|
         expect(config.send(key)).to_not eq(nil)
       end
     end

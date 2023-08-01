@@ -28,6 +28,7 @@ use ZipkinTracer::RackHandler, config
 * `:async` - By default senders will flush traces asynchronously. Set to `false` to make that process synchronous. Only supported by the HTTP, RabbitMQ, and SQS senders.
 * `:logger` - The default logger for Rails apps is `Rails.logger`, else it is `STDOUT`. Use this option to pass a custom logger.
 * `:write_b3_single_format` - When set to true, only writes a single b3 header for outbound propagation.
+* `:supports_join` - When set to false, it will force client and server spans to have different spanId's. This may be needed because zipkin traces may be reported to non-zipkin backends that might not support the concept of joining spans.
 
 #### Sender specific
 * `:json_api_host` - Hostname with protocol of a zipkin api instance (e.g. `https://zipkin.example.com`) to use the HTTP sender
